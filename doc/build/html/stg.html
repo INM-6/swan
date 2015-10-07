@@ -1,0 +1,544 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>stg package &mdash; swan 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="swan 1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Packages" href="packages.html" />
+    <link rel="prev" title="src package" href="src.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="src.html" title="src package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">swan 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Packages and modules</a> &raquo;</li>
+          <li><a href="packages.html" accesskey="U">Packages</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="stg-package">
+<h1>stg package<a class="headerlink" href="#stg-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-stg.project">
+<span id="stg-project-module"></span><h2>stg.project module<a class="headerlink" href="#module-stg.project" title="Permalink to this headline">¶</a></h2>
+<p>Created on Apr 3, 2014</p>
+<p>&#64;author: Christoph Gollan</p>
+<dl class="class">
+<dt id="stg.project.Project">
+<em class="property">class </em><tt class="descclassname">stg.project.</tt><tt class="descname">Project</tt><big>(</big><em>pname</em>, <em>pdir</em>, <em>create_dir</em><big>)</big><a class="headerlink" href="#stg.project.Project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>A simple project class for managing
+project files in applications.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>pname</em> (string):</dt>
+<dd>The name of the project.</dd>
+<dt><em>pdir</em> (string):</dt>
+<dd>The directory where the
+project is located.</dd>
+<dt><em>create_dir</em> (boolean):</dt>
+<dd>Whether or not a directory under
+the given name should be created.</dd>
+</dl>
+</div></blockquote>
+<dl class="method">
+<dt id="stg.project.Project.add_file">
+<tt class="descname">add_file</tt><big>(</big><em>filename</em>, <em>sdir=None</em>, <em>create_file=True</em><big>)</big><a class="headerlink" href="#stg.project.Project.add_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a file to a project.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The filename that should be
+added to the project.</dd>
+<dt><em>sdir</em> (string):</dt>
+<dd>Adds the file to the given sub-directory.
+If None, it will be added
+to the default sub-directory
+(the project&#8217;s directory).</dd>
+<dt><em>create_file</em> (boolean):</dt>
+<dd>Whether or not you want to
+create the file.
+Default: True.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.project.ProjectError" title="stg.project.ProjectError"><tt class="xref py py-class docutils literal"><span class="pre">ProjectError</span></tt></a></dt>
+<dd>If the sub-directory doesn&#8217;t exist
+or if the file already exists.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.add_subdir">
+<tt class="descname">add_subdir</tt><big>(</big><em>sdir</em>, <em>create_dir=True</em><big>)</big><a class="headerlink" href="#stg.project.Project.add_subdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a sub-directory to the project.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>sdir</em> (string):</dt>
+<dd>The sub-directory to add.</dd>
+<dt><em>create_dir</em> (boolean):</dt>
+<dd>Whether or not you want to
+create the directory.
+Default: True.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.project.ProjectError" title="stg.project.ProjectError"><tt class="xref py py-class docutils literal"><span class="pre">ProjectError</span></tt></a></dt>
+<dd>If the sub-directory already exists 
+or if the project is not a directory.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_dir">
+<tt class="descname">get_dir</tt><big>(</big><big>)</big><a class="headerlink" href="#stg.project.Project.get_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the project&#8217;s directory.</p>
+<blockquote>
+<div><strong>Returns</strong>: string</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_file_list">
+<tt class="descname">get_file_list</tt><big>(</big><em>sdir=None</em><big>)</big><a class="headerlink" href="#stg.project.Project.get_file_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the file list to a given
+directory.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The file name.</dd>
+<dt><em>sdir</em> (string or None):</dt>
+<dd>The sub-directory where the file 
+is located.
+Default: None.</dd>
+</dl>
+<p><strong>Returns</strong>: list of string</p>
+<dl class="docutils">
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.project.ProjectError" title="stg.project.ProjectError"><tt class="xref py py-class docutils literal"><span class="pre">ProjectError</span></tt></a></dt>
+<dd>If the sub-directory doesn&#8217;t exist.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_file_path">
+<tt class="descname">get_file_path</tt><big>(</big><em>filename</em>, <em>sdir=None</em><big>)</big><a class="headerlink" href="#stg.project.Project.get_file_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the absolute path to a file.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The file name.</dd>
+<dt><em>sdir</em> (string or None):</dt>
+<dd>The sub-directory where the file 
+is located.
+Default: None.</dd>
+</dl>
+<p><strong>Returns</strong>: string</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_full_name">
+<tt class="descname">get_full_name</tt><big>(</big><big>)</big><a class="headerlink" href="#stg.project.Project.get_full_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the absolute path to
+the project.</p>
+<blockquote>
+<div><strong>Returns</strong>: string</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_name">
+<tt class="descname">get_name</tt><big>(</big><big>)</big><a class="headerlink" href="#stg.project.Project.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the project name.</p>
+<blockquote>
+<div><strong>Returns</strong>: string</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.get_subdir_path">
+<tt class="descname">get_subdir_path</tt><big>(</big><em>sdir</em><big>)</big><a class="headerlink" href="#stg.project.Project.get_subdir_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the absolute path to a sub-directory.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>sdir</em> (string):</dt>
+<dd>The sub-directory.</dd>
+</dl>
+<p><strong>Returns</strong>: string</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.has_file">
+<tt class="descname">has_file</tt><big>(</big><em>filename</em>, <em>sdir=None</em><big>)</big><a class="headerlink" href="#stg.project.Project.has_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given file exists.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The file name.</dd>
+<dt><em>sdir</em> (string):</dt>
+<dd>The sub-directory where the file 
+should be located.
+Default: None.</dd>
+<dt><strong>Returns</strong>: boolean</dt>
+<dd>If the file exists.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.has_subdir">
+<tt class="descname">has_subdir</tt><big>(</big><em>sdir</em><big>)</big><a class="headerlink" href="#stg.project.Project.has_subdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given path exists.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>sdir</em> (string):</dt>
+<dd>The sub-directory.</dd>
+<dt><strong>Returns</strong>: boolean</dt>
+<dd>If the sub-directory exists.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.is_dir">
+<tt class="descname">is_dir</tt><big>(</big><big>)</big><a class="headerlink" href="#stg.project.Project.is_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the project is
+a directory, otherwise False.</p>
+<blockquote>
+<div><strong>Returns</strong>: boolean</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.remove_file">
+<tt class="descname">remove_file</tt><big>(</big><em>filename</em>, <em>sdir=None</em>, <em>remove_file=True</em><big>)</big><a class="headerlink" href="#stg.project.Project.remove_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a file from the project.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The name of the file
+that should be removed.</dd>
+<dt><em>sdir</em> (string):</dt>
+<dd>Removes the file from the given 
+sub-directory.
+If None, it will be removed from 
+the default sub-directory
+(the project&#8217;s directory).</dd>
+<dt><em>remove_file</em> (boolean):</dt>
+<dd>Whether or not you want to
+remove the file.
+Default: True.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.project.ProjectError" title="stg.project.ProjectError"><tt class="xref py py-class docutils literal"><span class="pre">ProjectError</span></tt></a></dt>
+<dd>If the file doesn&#8217;t exist or
+if the sub-directory doesn&#8217;t exist.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.project.Project.remove_subdir">
+<tt class="descname">remove_subdir</tt><big>(</big><em>sdir</em>, <em>remove_dir=True</em><big>)</big><a class="headerlink" href="#stg.project.Project.remove_subdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a sub-directory from the project.
+The sub-directory has to be empty.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>sdir</em> (string):</dt>
+<dd>The sub-directory that should be
+removed.</dd>
+<dt><em>remove_dir</em> (boolean):</dt>
+<dd>Whether or not you want to
+remove the directory.
+Default: True.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.project.ProjectError" title="stg.project.ProjectError"><tt class="xref py py-class docutils literal"><span class="pre">ProjectError</span></tt></a></dt>
+<dd>If the sub-directory doesn&#8217;t exist
+or if it&#8217;s not empty or if you are 
+trying to remove the project directory.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="stg.project.ProjectError">
+<em class="property">exception </em><tt class="descclassname">stg.project.</tt><tt class="descname">ProjectError</tt><a class="headerlink" href="#stg.project.ProjectError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-stg.storage">
+<span id="stg-storage-module"></span><h2>stg.storage module<a class="headerlink" href="#module-stg.storage" title="Permalink to this headline">¶</a></h2>
+<p>Created on Apr 3, 2014</p>
+<p>&#64;author: Christoph Gollan</p>
+<dl class="class">
+<dt id="stg.storage.Storage">
+<em class="property">class </em><tt class="descclassname">stg.storage.</tt><tt class="descname">Storage</tt><a class="headerlink" href="#stg.storage.Storage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>A basic storage class for storing objects 
+and read/write files.</p>
+<dl class="method">
+<dt id="stg.storage.Storage.get">
+<tt class="descname">get</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value for the given name.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>name</em> (string):</dt>
+<dd>The key name under which the object
+is accessible.</dd>
+<dt><strong>Returns</strong>: object</dt>
+<dd>The object that is stored.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.storage.StorageError" title="stg.storage.StorageError"><tt class="xref py py-class docutils literal"><span class="pre">StorageError</span></tt></a></dt>
+<dd>If the key doesn&#8217;t exist.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.storage.Storage.is_stored">
+<tt class="descname">is_stored</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.is_stored" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given name is stored.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>name</em> (string):</dt>
+<dd>The key name under which the object
+is accessible.</dd>
+<dt><strong>Returns</strong>: boolean</dt>
+<dd>Whether there is an entry or not.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="stg.storage.Storage.read">
+<em class="property">static </em><tt class="descname">read</tt><big>(</big><em>filename</em>, <em>method='text'</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads data from a file.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The file name where to read from.</dd>
+<dt><em>method</em> (string):</dt>
+<dd><p class="first">The method that should be used.
+Default: text.</p>
+<p>Supported are:</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>text</td>
+<td>Reading a text file</td>
+</tr>
+<tr class="row-odd"><td>pickle</td>
+<td>Reading a pickle file</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Returns</strong>: object</dt>
+<dd>The data that was read.</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.storage.StorageError" title="stg.storage.StorageError"><tt class="xref py py-class docutils literal"><span class="pre">StorageError</span></tt></a></dt>
+<dd>If the method is not supported.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.storage.Storage.remove">
+<tt class="descname">remove</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes an object from the storage.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>name</em> (string):</dt>
+<dd>The key name under which the object
+is accessible.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="stg.storage.Storage.store">
+<tt class="descname">store</tt><big>(</big><em>name</em>, <em>obj</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.store" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores an object.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>name</em> (string):</dt>
+<dd>The key name to access this
+object.</dd>
+<dt><em>obj</em> (object):</dt>
+<dd>The object to store.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="stg.storage.Storage.write">
+<em class="property">static </em><tt class="descname">write</tt><big>(</big><em>filename</em>, <em>data</em>, <em>method='text'</em><big>)</big><a class="headerlink" href="#stg.storage.Storage.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes data to a file.</p>
+<p><strong>Arguments</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><em>filename</em> (string):</dt>
+<dd>The file name where to write.</dd>
+<dt><em>data</em> (object):</dt>
+<dd>The data to write.</dd>
+<dt><em>method</em> (string):</dt>
+<dd><p class="first">The method that should be used.
+Default: text.</p>
+<p>Supported are:</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Name</th>
+<th class="head">Description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>text</td>
+<td>Writing to a text file</td>
+</tr>
+<tr class="row-odd"><td>pickle</td>
+<td>Writing to a pickle file</td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>Raises</strong>: <a class="reference internal" href="#stg.storage.StorageError" title="stg.storage.StorageError"><tt class="xref py py-class docutils literal"><span class="pre">StorageError</span></tt></a></dt>
+<dd>If the method is not supported.</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="stg.storage.StorageError">
+<em class="property">exception </em><tt class="descclassname">stg.storage.</tt><tt class="descname">StorageError</tt><a class="headerlink" href="#stg.storage.StorageError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-stg">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-stg" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">stg package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-stg.project">stg.project module</a></li>
+<li><a class="reference internal" href="#module-stg.storage">stg.storage module</a></li>
+<li><a class="reference internal" href="#module-stg">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="src.html"
+                        title="previous chapter">src package</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/stg.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="src.html" title="src package"
+             >previous</a> |</li>
+        <li><a href="index.html">swan 1.0.0 documentation</a> &raquo;</li>
+          <li><a href="contents.html" >Packages and modules</a> &raquo;</li>
+          <li><a href="packages.html" >Packages</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013-2015, Swan authors and contributors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+*.pyc
+.pydevproject
+.project
+.directory
+/.settings
+*.pkl
+*~
+*.test
+*.vum
+/build
+/dist
+/.idea
