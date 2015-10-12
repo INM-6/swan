@@ -63,7 +63,6 @@
 <p>Here is a list of packages needed by swan:</p>
 <blockquote>
 <div><ul class="simple">
-<li>tkinter (should be part of python)</li>
 <li>matplotlib</li>
 <li>quantities</li>
 <li>PyQt4</li>
@@ -80,8 +79,8 @@
 <h2>Installing swan<a class="headerlink" href="#installing-swan" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="getting-the-packages">
 <h3>Getting the packages<a class="headerlink" href="#getting-the-packages" title="Permalink to this headline">¶</a></h3>
-<p>If you are using Ubuntu - or any other Debian based machine - you can try to install
-the packages via apt.</p>
+<p>If you are using Ubuntu - or any other Debian based machine - you can install
+some of the packages via apt.</p>
 <p>The command looks like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ sudo apt-get install &lt;package_name&gt;
 </pre></div>
@@ -106,95 +105,50 @@ the packages via apt.</p>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td>tkinter</td>
-<td>&nbsp;</td>
-<td>python-tk</td>
-</tr>
-<tr class="row-odd"><td>matplotlib</td>
+<tr class="row-even"><td>matplotlib</td>
 <td>matplotlib</td>
 <td>python-matplotlib</td>
 </tr>
-<tr class="row-even"><td>quantities</td>
+<tr class="row-odd"><td>quantities</td>
 <td>quantities</td>
 <td>python-quantities</td>
 </tr>
-<tr class="row-odd"><td>PyQt4</td>
+<tr class="row-even"><td>PyQt4</td>
 <td>&nbsp;</td>
 <td>python-qt4</td>
 </tr>
-<tr class="row-even"><td>enum</td>
+<tr class="row-odd"><td>enum</td>
 <td>enum</td>
 <td>python-enum</td>
 </tr>
-<tr class="row-odd"><td>lxml</td>
-<td>&nbsp;</td>
+<tr class="row-even"><td>lxml</td>
+<td>lxml</td>
 <td>python-lxml</td>
 </tr>
-<tr class="row-even"><td>pyqtgraph</td>
+<tr class="row-odd"><td>pyqtgraph</td>
 <td>pyqtgraph</td>
 <td>&nbsp;</td>
 </tr>
 </tbody>
 </table>
 </div></blockquote>
-</div>
-<div class="section" id="getting-neo-and-odml">
-<h3>Getting Neo and odML<a class="headerlink" href="#getting-neo-and-odml" title="Permalink to this headline">¶</a></h3>
-<p>The python-neo and python-odml repositories have to be git cloned:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/INM-6/python-neo.git
-$ git clone https://github.com/G-Node/python-odml.git
+<p>In the top-level directory of swan you can find the file <tt class="docutils literal"><span class="pre">install.sh</span></tt> in which the commands for installing the packages can be found.
+You can use this file for installing the packages (this will only work on machines which support <tt class="docutils literal"><span class="pre">apt-get</span> <span class="pre">install</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre>$ ./install.sh
 </pre></div>
 </div>
 </div>
 <div class="section" id="getting-swan">
 <h3>Getting Swan<a class="headerlink" href="#getting-swan" title="Permalink to this headline">¶</a></h3>
 <p>To get the swan repository use the following command in your console:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/INM-6/swan.git
+<div class="highlight-python"><div class="highlight"><pre>$ git clone --recursive https://github.com/INM-6/swan.git
 </pre></div>
 </div>
+<p>The <tt class="docutils literal"><span class="pre">--recursive</span></tt> is very <strong>important</strong> because swan depends on other repositories.</p>
 </div>
 </div>
 <div class="section" id="running-swan">
 <h2>Running swan<a class="headerlink" href="#running-swan" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="setting-up-the-pythonpath">
-<h3>Setting up the PYTHONPATH<a class="headerlink" href="#setting-up-the-pythonpath" title="Permalink to this headline">¶</a></h3>
-<p>To get swan runnable you have to adjust the PYTHONPATH with additional directories.</p>
-<p>These entries should all be <strong>absolute</strong> paths.</p>
-<p>This table shows which entries are added by the application itself
-and which entries the user has to add:</p>
-<blockquote>
-<div><table border="1" class="docutils">
-<colgroup>
-<col width="55%" />
-<col width="45%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Path entry</th>
-<th class="head">To be added by</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>swan</td>
-<td>application</td>
-</tr>
-<tr class="row-odd"><td>swan/src</td>
-<td>application</td>
-</tr>
-<tr class="row-even"><td>swan/res</td>
-<td>application</td>
-</tr>
-<tr class="row-odd"><td>python-neo</td>
-<td>user</td>
-</tr>
-<tr class="row-even"><td>python-odml</td>
-<td>user</td>
-</tr>
-</tbody>
-</table>
-</div></blockquote>
-</div>
-<div class="section" id="running">
-<h3>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h3>
 <p>If you are in the <tt class="docutils literal"><span class="pre">swan/src</span></tt> directory, the command to start swan looks like this:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ python run.py [&lt;home_dir&gt;]
 </pre></div>
@@ -203,7 +157,6 @@ and which entries the user has to add:</p>
 If you are fine with the fact that swan saves all project files
 in your home directory - which is usually <tt class="docutils literal"><span class="pre">~</span></tt> - you don&#8217;t have to provide arguments.</p>
 <p>But if you want to choose another directory you can just provide it as first argument.</p>
-</div>
 </div>
 </div>
 
@@ -219,15 +172,10 @@ in your home directory - which is usually <tt class="docutils literal"><span cla
 <li><a class="reference internal" href="#requirements">Requirements</a></li>
 <li><a class="reference internal" href="#installing-swan">Installing swan</a><ul>
 <li><a class="reference internal" href="#getting-the-packages">Getting the packages</a></li>
-<li><a class="reference internal" href="#getting-neo-and-odml">Getting Neo and odML</a></li>
 <li><a class="reference internal" href="#getting-swan">Getting Swan</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#running-swan">Running swan</a><ul>
-<li><a class="reference internal" href="#setting-up-the-pythonpath">Setting up the PYTHONPATH</a></li>
-<li><a class="reference internal" href="#running">Running</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#running-swan">Running swan</a></li>
 </ul>
 </li>
 </ul>

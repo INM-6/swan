@@ -36,28 +36,7 @@ if __name__ == '__main__':
     sys.path.insert(1, join(p, "res"))
     sys.path.insert(1, join(p, "python-neo"))
     sys.path.insert(1, join(p, "python-odml"))
-
-    ps = [split(el)[1] for el in sys.path]
     
-    tester = False
-    problems = []
-
-    if not "res" in ps:
-        #print("sub-directory res not in the PYTHONPATH")
-        problems.append("PYTHONPATH", "sub-directory res not in the PYTHONPATH")
-        tester = True
-    if not "python-neo" in ps:
-        #print("python-neo repository not in the PYTHONPATH")
-        problems.append("python-neo repository not in the PYTHONPATH")
-        tester = True
-    if not "python-odml" in ps:
-        problems.append("python-odml repository not in the PYTHONPATH")
-        tester = True
-        
-    if tester:
-        from mbox import MBox
-        MBox.info("PYTHONPATH entries missing", "\n".join(problems))
-        sys.exit(1)
     
     from src.main import Main
     from PyQt4.QtGui import QApplication

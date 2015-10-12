@@ -44,14 +44,6 @@ src.matplotlibwidget module
     :undoc-members:
     :show-inheritance:
 
-src.mbox module
----------------
-
-.. automodule:: src.mbox
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 src.movie_settings module
 -------------------------
 

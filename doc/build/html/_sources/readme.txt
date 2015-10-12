@@ -11,7 +11,6 @@ Requirements
     
 Here is a list of packages needed by swan:
 
-    * tkinter (should be part of python)
     * matplotlib
     * quantities
     * PyQt4
@@ -30,8 +29,8 @@ Installing swan
 Getting the packages
 ^^^^^^^^^^^^^^^^^^^^
 
-If you are using Ubuntu - or any other Debian based machine - you can try to install
-the packages via apt.
+If you are using Ubuntu - or any other Debian based machine - you can install
+some of the packages via apt.
 
 The command looks like this::
 
@@ -48,55 +47,30 @@ Look at the table to get the right package name:
     ==================  ==================  ================== 
     package             pip package         apt package
     ==================  ==================  ==================
-    tkinter                                 python-tk
     matplotlib          matplotlib          python-matplotlib
     quantities          quantities          python-quantities
     PyQt4                                   python-qt4
     enum                enum                python-enum
-    lxml                                    python-lxml
+    lxml                lxml                python-lxml
     pyqtgraph           pyqtgraph
     ==================  ==================  ==================
-
-Getting Neo and odML
-^^^^^^^^^^^^^^^^^^^^
     
-The python-neo and python-odml repositories have to be git cloned::
+In the top-level directory of swan you can find the file ``install.sh`` in which the commands for installing the packages can be found.
+You can use this file for installing the packages (this will only work on machines which support ``apt-get install``)::
 
-    $ git clone https://github.com/INM-6/python-neo.git
-    $ git clone https://github.com/G-Node/python-odml.git
+	$ ./install.sh
 
 Getting Swan
 ^^^^^^^^^^^^
 
 To get the swan repository use the following command in your console::
 
-    $ git clone https://github.com/INM-6/swan.git
+    $ git clone --recursive https://github.com/INM-6/swan.git
+
+The ``--recursive`` is very **important** because swan depends on other repositories.
 
 Running swan
 ------------
-
-Setting up the PYTHONPATH
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To get swan runnable you have to adjust the PYTHONPATH with additional directories.
-
-These entries should all be **absolute** paths.
-
-This table shows which entries are added by the application itself
-and which entries the user has to add:
-
-    ==================  ===============
-    Path entry          To be added by
-    ==================  ===============
-    swan                application
-    swan/src            application
-    swan/res            application
-    python-neo          user
-    python-odml         user
-    ==================  ===============
-
-Running
-^^^^^^^
 
 If you are in the ``swan/src`` directory, the command to start swan looks like this::
 
