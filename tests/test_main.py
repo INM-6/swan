@@ -6,13 +6,20 @@ Created on Oct 16, 2014
 Unit test module for the :class:`src.main.Main` class.
 """
 import sys
-from os import remove
-from os.path import join, exists
+from os import remove, pardir
+from os.path import join, exists, abspath, split, realpath
 import unittest
 import csv
 from PyQt4.QtGui import QApplication
 # from PyQt4.QtCore import Qt
 # from PyQt4.QtTest import QTest
+
+p = abspath(join(realpath(__file__), pardir, pardir))
+sys.path.insert(1, p)
+sys.path.insert(1, join(p, "src"))
+sys.path.insert(1, join(p, "res"))
+sys.path.insert(1, join(p, "python-neo"))
+sys.path.insert(1, join(p, "python-odml"))
 
 from src.main import Main
 from src.virtualunitmap import VirtualUnitMap
@@ -26,10 +33,10 @@ class Test(unittest.TestCase):
 
     def setUp(self):
         # setting directories
-        program_dir = "/home/gollan/git-repos/swan"
-        home_dir = "/home/gollan/git-repos/swan/tests/testdata"
+        program_dir = abspath(join(realpath(__file__), pardir, pardir))
+        home_dir = join(program_dir, "tests", "testdata")
         cache_dir = home_dir
-        # creatig the main instance
+        # creating the main instance
         self.app = QApplication(sys.argv)
         self.main = Main(program_dir, home_dir)
         # cache directory
@@ -38,9 +45,9 @@ class Test(unittest.TestCase):
         self.main._mystorage._cache_dir = cache_dir
         self.hdir = home_dir
         self.pdir = program_dir
-        # project file namens
-        self.pname = join(self.pdir, "tests", "testdata", "swan.txt")
-        self.vname = join(self.pdir, "tests", "testdata", "swan_vum.vum")
+        # project file names
+        self.pname = join(self.hdir, "swan.txt")
+        self.vname = join(self.hdir, "swan_vum.vum")
         
     def tearDown(self):
         if exists(self.pname):
@@ -50,8 +57,8 @@ class Test(unittest.TestCase):
     
     def test01_NewProject_CreatingSuccess(self):
         # sessions to load
-        files = [join(self.pdir, "tests", "testdata", "l101015-001"),
-                 join(self.pdir, "tests", "testdata", "l101015-002")]
+        files = [join(self.hdir, "l101015-001"),
+                 join(self.hdir, "l101015-002")]
         channel = self.main._mystorage.get_channel()
         proname = self.main._preferences["defaultProName"]
         # has to successfully create the project
@@ -69,8 +76,8 @@ class Test(unittest.TestCase):
 
     def test04_NewProject_SaveProject(self):
         # sessions to load
-        files = [join(self.pdir, "tests", "testdata", "l101015-001"),
-                 join(self.pdir, "tests", "testdata", "l101015-002")]
+        files = [join(self.hdir, "l101015-001"),
+                 join(self.hdir, "l101015-002")]
         channel = self.main._mystorage.get_channel()
         proname = self.main._preferences["defaultProName"]
         # has to successfully create the project files
@@ -85,7 +92,7 @@ class Test(unittest.TestCase):
         self.assertTrue(exists(self.vname))
 
     def test20_LoadConnectorMapSuccess(self):
-        filename = join(self.pdir, "tests", "testdata", "test_cmap_success.csv")
+        filename = join(self.hdir, "test_cmap_success.csv")
         # reading the channel ids from the file
         with open(filename, "rb") as cfile:
             creader = csv.reader(cfile, delimiter=',', quotechar='"')
@@ -106,7 +113,7 @@ class Test(unittest.TestCase):
         self.assertListEqual(channels, channels_new)
 
     def test21_LoadConnectorMapFail(self):
-        filename = join(self.pdir, "tests", "testdata", "test_cmap_fail.csv")
+        filename = join(self.hdir, "test_cmap_fail.csv")
         # getting the channel ids
         channels = [item.channel for item in self.main.selector._items]
         # must raise an error because the file could not be read

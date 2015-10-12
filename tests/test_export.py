@@ -5,9 +5,17 @@ Created on Sep 22, 2015
 
 Unit test module for the :class:`src.export.Export` class.
 """
+import sys
 from os import remove
-from os.path import exists
+from os.path import exists, pardir, join, realpath, abspath
 import unittest
+
+p = abspath(join(realpath(__file__), pardir, pardir))
+sys.path.insert(1, p)
+sys.path.insert(1, join(p, "src"))
+sys.path.insert(1, join(p, "res"))
+sys.path.insert(1, join(p, "python-neo"))
+sys.path.insert(1, join(p, "python-odml"))
 
 from src.export import Export
 

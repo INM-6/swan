@@ -5,7 +5,16 @@ Created on Sep 22, 2015
 
 Unit test module for the :class:`src.virtualunitmap.VirtualUnitMap` class.
 """
+import sys
+from os.path import pardir, join, realpath, abspath
 import unittest
+
+p = abspath(join(realpath(__file__), pardir, pardir))
+sys.path.insert(1, p)
+sys.path.insert(1, join(p, "src"))
+sys.path.insert(1, join(p, "res"))
+sys.path.insert(1, join(p, "python-neo"))
+sys.path.insert(1, join(p, "python-odml"))
 
 from src.virtualunitmap import VirtualUnitMap
 

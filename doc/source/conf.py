@@ -12,20 +12,19 @@
 # serve to show the default.
 
 import sys, os
+from os.path import pardir, join, realpath, abspath
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
-swan_neo = "/home/gollan/git-repos/python-neo"
-swan_odml = "/home/gollan/git-repos/python-odml"
-sys.path.insert(0, swan_odml)
-sys.path.insert(0, swan_neo)
-swan_home = "/home/gollan/git-repos/swan"
-sys.path.insert(0, os.path.join(swan_home, "gui"))
-sys.path.insert(0, os.path.join(swan_home, "res"))
-sys.path.insert(0, os.path.join(swan_home, "src"))
-sys.path.insert(0, swan_home)
+
+p = abspath(join(realpath(__file__), pardir, pardir, pardir))
+sys.path.insert(1, p)
+sys.path.insert(1, join(p, "src"))
+sys.path.insert(1, join(p, "res"))
+sys.path.insert(1, join(p, "python-neo"))
+sys.path.insert(1, join(p, "python-odml"))
 
 # -- General configuration -----------------------------------------------------
 

@@ -18,7 +18,7 @@ $ python run.py [<home_dir>]
 
 if __name__ == '__main__':
     import sys
-    from os.path import curdir, sep, split, abspath, expanduser
+    from os.path import curdir, split, abspath, expanduser, join, realpath, pardir
     
     if len(sys.argv) > 1:
         home = sys.argv[1]
@@ -26,12 +26,16 @@ if __name__ == '__main__':
         #should only work on windows and unix
         home = expanduser("~")
     
-    p = sys.path[0]
-    p = split(p)[0]
-    if not p:
-        p = curdir
+#     p = sys.path[0]
+#     p = split(p)[0]
+#     if not p:
+#         p = curdir
+    p = abspath(join(realpath(__file__), pardir, pardir))
     sys.path.insert(1, p)
-    sys.path.insert(1, p + sep + "res")
+    sys.path.insert(1, join(p, "src"))
+    sys.path.insert(1, join(p, "res"))
+    sys.path.insert(1, join(p, "python-neo"))
+    sys.path.insert(1, join(p, "python-odml"))
 
     ps = [split(el)[1] for el in sys.path]
     

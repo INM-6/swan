@@ -12,7 +12,8 @@ This is only used by *py2exe*.
 
 if __name__ == '__main__':
     import sys
-    from os.path import curdir, split, abspath, expanduser
+    import os
+    from os.path import curdir, split, abspath, expanduser, join, realpath, pardir, isfile
     
     if len(sys.argv) > 1:
         home = sys.argv[1]
@@ -20,10 +21,11 @@ if __name__ == '__main__':
         #should only work on windows and unix
         home = expanduser("~")
     
-    p = sys.path[0]
-    p = split(p)[0]
-    if not p:
-        p = curdir
+    p = abspath(join(realpath(__file__), pardir, pardir))
+#     p = sys.path[0]
+#     p = split(p)[0]
+#     if not p:
+#         p = curdir
 
     from src.main import Main
     from PyQt4.QtGui import QApplication
