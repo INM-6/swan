@@ -48,8 +48,11 @@ class Test(unittest.TestCase):
         # project file names
         self.pname = join(self.hdir, "swan.txt")
         self.vname = join(self.hdir, "swan_vum.vum")
+        # avoids segmentation fault
+        self.app.deleteLater()
         
     def tearDown(self):
+        # removing the created files
         if exists(self.pname):
             remove(self.pname)
         if exists(self.vname):
