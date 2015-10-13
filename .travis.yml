@@ -1,11 +1,12 @@
+sudo: required
 language: python
 python:
   - "2.7"
-# command to install dependencies
+# commands to install dependencies
 before_install:
   - ./install_pyqt.sh
 install:
-  - pip install -r requirements.txt --use-mirrors
-# command to run tests, e.g. python setup.py test
+  - pip install -r requirements.txt
+# command to run tests
 script:
   nosetests
