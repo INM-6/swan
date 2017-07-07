@@ -140,7 +140,7 @@ class VirtualUnitMap(object):
         
         """
         vunit = self.mapping[i][j]
-        runit = data.blocks[i].recordingchannelgroups[0].units[vunit-1]
+        runit = data.blocks[i].channel_indexes[0].units[vunit-1]
         return runit
     
     def swap(self, m, n1, n2):

@@ -8,12 +8,18 @@ you choose files from one directory.
 """
 import os
 from os import curdir
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
+
+try:
+    from PyQt4.QtCore import QString
+except ImportError:
+    # we are using Python3 so QString is not defined
+    QString = str
+
 from gui.file_dialog_ui import Ui_File_Dialog
 
 
-class File_Dialog(QtGui.QDialog):
+class File_Dialog(QtWidgets.QDialog):
     """
     A file dialog which can be used to choose a directory and 
     after that you can choose specific files in this directory.
@@ -27,7 +33,7 @@ class File_Dialog(QtGui.QDialog):
             The file extension that should be searched for.
             Default: .nev
     
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QDialog`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtWidgets.QDialog`.
     
     """
 
@@ -122,7 +128,7 @@ class File_Dialog(QtGui.QDialog):
         Asks you for an existing directory.
         
         """
-        self.ui.pathEdit.setText(QtGui.QFileDialog.getExistingDirectory(self, QtCore.QString("Choose a directory"), QtCore.QString(curdir)))
+        self.ui.pathEdit.setText(QtGui.QFileDialog.getExistingDirectory(self, str("Choose a directory"), str(curdir)))
         
         
     #### event handler ####
@@ -134,7 +140,7 @@ class File_Dialog(QtGui.QDialog):
         
         **Arguments**
         
-            *newpath* (:class:`PyQt4.QtCore.QString`):
+            *newpath* (:class:`PyQt5.QtCore.QString`):
                 The directory that was selected.
         
         """
@@ -178,7 +184,7 @@ class File_Dialog(QtGui.QDialog):
         
         **Arguments**
         
-            *selection* (list of :class:`PyQt4.QtGui.QListWidgetItem`)
+            *selection* (list of :class:`PyQt5.QtGui.QListWidgetItem`)
                 The selected items.
             *remove* (boolean):
                 Whether or not you want to remove the selected items
@@ -207,7 +213,7 @@ class File_Dialog(QtGui.QDialog):
         
         **Arguments**
         
-            *listWidget* (:class:`PyQt4.QtGui.QListWidgetItem`):
+            *listWidget* (:class:`PyQt5.QtGui.QListWidgetItem`):
                 The list widget you want the file names from.
                 
             **Returns**: list of string

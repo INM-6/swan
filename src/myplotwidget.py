@@ -9,8 +9,7 @@ from :class:`pyqtgraph.PlotWidget`.
 This widget is used by :class:`src.myplotgrid.MyPlotContent` to show
 many of these widgets in a nice overview.
 """
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, mkColor
 
@@ -49,7 +48,7 @@ class MyPlotWidget(PlotWidget):
             *bgs* (dictionary):
                 A dictionary containing the different backgrounds 
                 this widget can have.
-            *_bg* (:class:`PyQt4.QtGui.QColor`):
+            *_bg* (:class:`PyQt5.QtGui.QColor`):
                 The current background color of this widget.
         
         """
@@ -159,7 +158,7 @@ class MyPlotWidget(PlotWidget):
         
         **Arguments**
             
-            *event* (:class:`PyQt4.QtCore.QEvent`)
+            *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
         if event.button() == QtCore.Qt.LeftButton:
@@ -175,7 +174,7 @@ class MyPlotWidget(PlotWidget):
         
         **Arguments**
             
-            *event* (:class:`PyQt4.QtCore.QEvent`)        
+            *event* (:class:`PyQt5.QtCore.QEvent`)        
         
         """
         #super(PlotWidget, self).mouseMoveEvent(event)
@@ -187,7 +186,7 @@ class MyPlotWidget(PlotWidget):
         
         **Arguments**
             
-            *event* (:class:`PyQt4.QtCore.QEvent`)        
+            *event* (:class:`PyQt5.QtCore.QEvent`)        
         
         """
         #super(PlotWidget, self).mouseReleaseEvent(event)
@@ -201,7 +200,7 @@ class MyPlotWidget(PlotWidget):
         
         **Arguments**
             
-            *event* (:class:`PyQt4.QtCore.QEvent`)
+            *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
         self.inFocus = True
@@ -216,7 +215,7 @@ class MyPlotWidget(PlotWidget):
         
         **Arguments**
             
-            *event* (:class:`PyQt4.QtCore.QEvent`)
+            *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
         self.inFocus = False

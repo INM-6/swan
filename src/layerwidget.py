@@ -9,7 +9,7 @@ from :class:`src.mylistwidget.MyListWidget`.
 It is shown in the layer tab on the application and manages the
 layer selection.
 """
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from src.mylistwidget import MyListWidget
 
 
@@ -32,7 +32,7 @@ class LayerWidget(MyListWidget):
         **Properties**
         
             *_layers* (dictionary):
-                A dictionary containing :class:`PyQt4.QtGui.QListWidgetItem`
+                A dictionary containing :class:`PyQt5.QtGui.QListWidgetItem`
                 as key and their row index as value.
         
         """
@@ -97,7 +97,7 @@ class LayerWidget(MyListWidget):
         """
         Getter for the layers.
         
-            **Returns**: list of :class:`PyQt4.QtGui.QListWidgetItem`
+            **Returns**: list of :class:`PyQt5.QtGui.QListWidgetItem`
                 The items of this widget.
         
         """
@@ -129,7 +129,7 @@ class LayerWidget(MyListWidget):
         
         **Arguments**
         
-            *item* (:class:`PyQt4.QtGui.QListWidgetItem`):
+            *item* (:class:`PyQt5.QtGui.QListWidgetItem`):
                 The item that was changed. Unused.
                     
         """

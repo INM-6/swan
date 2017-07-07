@@ -22,8 +22,7 @@ if platform.system() == "Linux":
     import resource
 else:
     onLinux = False
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui
 from src import title, about
 from gui.main_ui import Ui_Main
 from file_dialog import File_Dialog
@@ -37,16 +36,15 @@ try:
 except ImportError:
     import pickle as pkl
 
-
 class MemoryTask(QtCore.QThread):
     """
     A class to show the memory usage on the main window's status bar.
     
     **Arguments**
     
-        *timer* (:class:`PyQt4.QtCore.QTimer`):
+        *timer* (:class:`PyQt5.QtCore.QTimer`):
             The timer that will be called periodic.
-        *statusBar* (:class:`PyQt4.QtGui.QStatusBar`):
+        *statusBar* (:class:`PyQt5.QtGui.QStatusBar`):
             The main window's status bar. 
             The memory usage will be shown here.
             This works only on Linux.
@@ -57,8 +55,8 @@ class MemoryTask(QtCore.QThread):
         """
         **Properties**:
         
-            *timer* (:class:`PyQt4.QtCore.QTimer`)
-            *bar* (:class:`PyQt4.QtGui.QStatusBar`)
+            *timer* (:class:`PyQt5.QtCore.QTimer`)
+            *bar* (:class:`PyQt5.QtGui.QStatusBar`)
         
         """
         super(QtCore.QThread, self).__init__()
@@ -277,7 +275,7 @@ class Main(QtGui.QMainWindow):
         
         """
         self.dirty_project()
-        filename = str(QtGui.QFileDialog.getOpenFileName(self, QtCore.QString("Choose the file which includes the absolute paths"), QtCore.QString(self._prodir)))
+        filename = str(QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir))
         if filename:
             (prodir, proname) = split(filename)
             
@@ -324,7 +322,7 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.check_project():
-            filename = str(QtGui.QFileDialog.getSaveFileName(self, QtCore.QString("Choose a savename"), QtCore.QString(self._prodir)))
+            filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
             if filename:
                 self._mystorage.save_project_as(filename)
                 self.update_project()
@@ -354,7 +352,7 @@ class Main(QtGui.QMainWindow):
         Exports the virtual unit mappings to a csv file.
 
         """
-        filename = str(QtGui.QFileDialog.getSaveFileName(self, QtCore.QString("Choose a savename"), QtCore.QString(self._prodir)))
+        filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
         if filename:
             try:
                 if filename.endswith(".csv"):
@@ -371,7 +369,7 @@ class Main(QtGui.QMainWindow):
         Exports the virtual unit mappings to an odML file.
 
         """
-        filename = str(QtGui.QFileDialog.getSaveFileName(self, QtCore.QString("Choose a savename"), QtCore.QString(self._prodir)))
+        filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
         if filename:
             try:
                 if filename.endswith(".odml"):
@@ -391,7 +389,7 @@ class Main(QtGui.QMainWindow):
         
         **Arguments**
         
-            *event* (:class:`PyQt4.QtCore.QEvent`)
+            *event* (:class:`PyQt5.QtCore.QEvent`)
         """
         self.dirty_project()
         event.accept()
@@ -781,8 +779,8 @@ class Main(QtGui.QMainWindow):
         
         """
         if self._globaldirty:
-            answer = QtGui.QMessageBox.question(self, QtCore.QString("Confirmation"), 
-                                                QtCore.QString("There are changes to be lost.\nDo you want to save your project first?"),
+            answer = QtGui.QMessageBox.question(self, "Confirmation", 
+                                                "There are changes to be lost.\nDo you want to save your project first?",
                                                 buttons = QtGui.QMessageBox.Discard | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
@@ -811,7 +809,7 @@ class Main(QtGui.QMainWindow):
          
         """
         if not self._mystorage.has_project():
-            QtGui.QMessageBox.warning(self, QtCore.QString("Error"), QtCore.QString("No project loaded."))
+            QtGui.QMessageBox.warning(self, "Error", "No project loaded.")
             return False
         else:
             return True
@@ -1002,6 +1000,6 @@ class Main(QtGui.QMainWindow):
                 Default: 5000 
         
         """
-        self.ui.statusbar.showMessage(QtCore.QString(content), duration)
+        self.ui.statusbar.showMessage(content, duration)
                     
  

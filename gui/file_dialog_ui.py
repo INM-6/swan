@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -65,11 +65,11 @@ class Ui_File_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(File_Dialog)
 
     def retranslateUi(self, File_Dialog):
-        File_Dialog.setWindowTitle(QtGui.QApplication.translate("File_Dialog", "File selection", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the parent folder of your data", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("File_Dialog", "Path:", None, QtGui.QApplication.UnicodeUTF8))
-        self.pathBtn.setText(QtGui.QApplication.translate("File_Dialog", "browse...", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the files from the left", None, QtGui.QApplication.UnicodeUTF8))
-        self.addBtn.setText(QtGui.QApplication.translate("File_Dialog", "Add", None, QtGui.QApplication.UnicodeUTF8))
-        self.removeBtn.setText(QtGui.QApplication.translate("File_Dialog", "Remove", None, QtGui.QApplication.UnicodeUTF8))
+        File_Dialog.setWindowTitle(QtGui.QApplication.translate("File_Dialog", "File selection", None))
+        self.groupBox.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the parent folder of your data", None))
+        self.label.setText(QtGui.QApplication.translate("File_Dialog", "Path:", None))
+        self.pathBtn.setText(QtGui.QApplication.translate("File_Dialog", "browse...", None))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the files from the left", None))
+        self.addBtn.setText(QtGui.QApplication.translate("File_Dialog", "Add", None))
+        self.removeBtn.setText(QtGui.QApplication.translate("File_Dialog", "Remove", None))
 

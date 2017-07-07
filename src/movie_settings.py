@@ -8,12 +8,11 @@ by :class:`src.mplwidgetmovie.MplWidgetMovie` to show a settings dialog.
 
 You can change some settings for the movie tab on the main window here.
 """
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.movie_settings_ui import Ui_movieSettings
 
 
-class MovieSettings(QtGui.QDialog):
+class MovieSettings(QtWidgets.QDialog):
     """
     A class to show and change movie settings for 
     a :class:`src.mplwidgetmovie.MplWidgetMovie`.
@@ -132,7 +131,7 @@ class MovieSettings(QtGui.QDialog):
         
         **Arguments**
         
-            *avRange* (:class:`PyQt4.QtCore.QString`):
+            *avRange* (:class:`PyQt5.QtCore.QString`):
                 The current input value for the averaging range.
                 
         """
@@ -150,7 +149,7 @@ class MovieSettings(QtGui.QDialog):
         
         **Arguments**
         
-            *skip* (:class:`PyQt4.QtCore.QString`):
+            *skip* (:class:`PyQt5.QtCore.QString`):
                 The current input value for the slide skip.
                 
         """

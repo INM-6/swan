@@ -8,11 +8,11 @@ the preferences for this application and lets the user change them.
 And of course the user inputs will be checked.
 """
 import re
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from gui.preferences_dialog_ui import Ui_Preferences
 
 
-class Preferences_Dialog(QtGui.QDialog):
+class Preferences_Dialog(QtWidgets.QDialog):
     """
     The class for showing, changing and checking preferences.
     
@@ -47,7 +47,7 @@ class Preferences_Dialog(QtGui.QDialog):
             The default preferences given as (key, value) pares.
             These are needed to restore the defaults.
     
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QDialog`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtWidgets.QDialog`.
     
     """
 

@@ -15,10 +15,8 @@ by :class:`DataTask`. Both are threads.
 import time
 from operator import itemgetter
 import numpy as np
-import quantities as pq
-from PyQt4 import QtGui
-from PyQt4 import QtCore
-from PyQt4.QtCore import pyqtSignal
+from PyQt5 import QtGui, QtCore
+from PyQt5.QtCore import pyqtSignal
 from src.matplotlibwidget import MatplotlibWidget
 from src.movie_settings import MovieSettings
 
@@ -438,7 +436,7 @@ class MplWidgetMovie(MatplotlibWidget):
                 The maximal value.
         
         """
-        self._ylims = (min0-10, max0+10)
+        self._ylims = (min0, max0)
     
 
     #### signal handler ####

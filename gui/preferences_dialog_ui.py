@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'preferences_dialog_ui.ui'
 #
 # Created: Tue Apr 22 12:41:27 2014
-#      by: PyQt4 UI code generator 4.9.1
+#      by: PyQt5 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -165,29 +165,31 @@ class Ui_Preferences(object):
         self.retranslateUi(Preferences)
         self.optionsList.setCurrentRow(0)
         self.optionsView.setCurrentIndex(0)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Preferences.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Preferences.reject)
+        #QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Preferences.accept)
+        self.buttonBox.accepted.connect(Preferences.accept)
+        #QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Preferences.reject)
+        self.buttonBox.rejected.connect(Preferences.reject)
         QtCore.QMetaObject.connectSlotsByName(Preferences)
 
     def retranslateUi(self, Preferences):
-        Preferences.setWindowTitle(QtGui.QApplication.translate("Preferences", "Preferences", None, QtGui.QApplication.UnicodeUTF8))
+        Preferences.setWindowTitle(QtGui.QApplication.translate("Preferences", "Preferences", None))
         __sortingEnabled = self.optionsList.isSortingEnabled()
         self.optionsList.setSortingEnabled(False)
         item = self.optionsList.item(0)
-        item.setText(QtGui.QApplication.translate("Preferences", "General", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("Preferences", "General", None))
         item = self.optionsList.item(1)
-        item.setText(QtGui.QApplication.translate("Preferences", "Overview", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("Preferences", "Overview", None))
         self.optionsList.setSortingEnabled(__sortingEnabled)
-        self.groupBox.setTitle(QtGui.QApplication.translate("Preferences", "Project", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("Preferences", "Default project name:", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_4.setTitle(QtGui.QApplication.translate("Preferences", "Cache", None, QtGui.QApplication.UnicodeUTF8))
-        self.cacheDirBtn.setText(QtGui.QApplication.translate("Preferences", "browse...", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_6.setText(QtGui.QApplication.translate("Preferences", "Location:", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("Preferences", "Resizing", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("Preferences", "Zoom in step:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("Preferences", "Zoom out step:", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_3.setTitle(QtGui.QApplication.translate("Preferences", "Reranging", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("Preferences", "Expand step:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("Preferences", "Collapse step:", None, QtGui.QApplication.UnicodeUTF8))
-        self.defaultBtn.setText(QtGui.QApplication.translate("Preferences", "Restore default", None, QtGui.QApplication.UnicodeUTF8))
+        self.groupBox.setTitle(QtGui.QApplication.translate("Preferences", "Project", None))
+        self.label.setText(QtGui.QApplication.translate("Preferences", "Default project name:", None))
+        self.groupBox_4.setTitle(QtGui.QApplication.translate("Preferences", "Cache", None))
+        self.cacheDirBtn.setText(QtGui.QApplication.translate("Preferences", "browse...", None))
+        self.label_6.setText(QtGui.QApplication.translate("Preferences", "Location:", None))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("Preferences", "Resizing", None))
+        self.label_2.setText(QtGui.QApplication.translate("Preferences", "Zoom in step:", None))
+        self.label_3.setText(QtGui.QApplication.translate("Preferences", "Zoom out step:", None))
+        self.groupBox_3.setTitle(QtGui.QApplication.translate("Preferences", "Reranging", None))
+        self.label_4.setText(QtGui.QApplication.translate("Preferences", "Expand step:", None))
+        self.label_5.setText(QtGui.QApplication.translate("Preferences", "Collapse step:", None))
+        self.defaultBtn.setText(QtGui.QApplication.translate("Preferences", "Restore default", None))
 

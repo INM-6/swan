@@ -14,9 +14,9 @@ figure.
 On default, the figure will not have a :class:`NavigationToolbar`, 
 but you can activate it. 
 """
-from PyQt4 import QtGui
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
+from PyQt5 import QtGui, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -174,7 +174,7 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         self.canvas.draw()
         
  
-class MatplotlibWidget(QtGui.QWidget):
+class MatplotlibWidget(QtWidgets.QWidget):
     """
     A class to have a PyQt widget with a matplotlib figure on it.
     

@@ -9,8 +9,7 @@ from :class:`src.matplotlibwidget.MatplotlibWidget`.
 It is extended by a 2d plot and the plotting methods.
 """
 import numpy as np
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtGui, QtCore
 from src.matplotlibwidget import MatplotlibWidget
 
 
@@ -225,7 +224,7 @@ class MplWidgetIsi(MatplotlibWidget):
                 The color of the line.
         
         """
-        self._axes.bar(y[0], y[1], color=color)
+        self._axes.plot(y[0], y[1], linewidth = 1, color=color)
         
     def do_plot(self, vum, data, layers):
         """

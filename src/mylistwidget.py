@@ -4,21 +4,20 @@ Created on Dec 5, 2013
 @author: Christoph Gollan
 
 In this module you can find the :class:`MyListWidget` which aggregates
-a :class:`PyQt4.QtGui.QListWidget` extended with some functions.
+a :class:`PyQt5.QtGui.QListWidget` extended with some functions.
 
 Is used as a base class to get further extensions.
 """
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.mylistwidget_ui import Ui_Form
 
 
-class MyListWidget(QtGui.QWidget):
+class MyListWidget(QtWidgets.QWidget):
     """
     This class is a base class for other widgets but it
     offers functions to add items to a list and getting them back.
     
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QListWidget`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtGui.QListWidget`.
     
     """
     
@@ -55,7 +54,7 @@ class MyListWidget(QtGui.QWidget):
                 Default: False
             *checkState* (PyQt check state):
                 If checkable, the initial check state of the items.
-                Default: PyQt4.QtCore.Qt.Unchecked
+                Default: PyQt5.QtCore.Qt.Unchecked
         
         """
         self.ui.list.clear()
@@ -73,7 +72,7 @@ class MyListWidget(QtGui.QWidget):
         """
         Getter for the items on the list.
         
-            **Returns**: list of :class:`PyQt4.QtGui.QListWidgetItem`
+            **Returns**: list of :class:`PyQt5.QtGui.QListWidgetItem`
                 The list of items from this widget.
         
         """
@@ -115,7 +114,7 @@ class MyListWidget(QtGui.QWidget):
 
         **Arguments**
         
-            *item* (:class:`PyQt4.QtGui.QListWidgetItem`):
+            *item* (:class:`PyQt5.QtGui.QListWidgetItem`):
                 The item that was changed.
         
         """

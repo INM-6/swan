@@ -13,8 +13,8 @@ The data loading is called in the :class:`Task` which is a thread.
 """
 from os import remove
 from os.path import splitext, basename, exists, split, join
-from PyQt4.QtCore import QThread, QMutex, QObject, pyqtSignal
-from PyQt4.QtGui import QApplication
+from PyQt5.QtCore import QThread, QMutex, QObject, pyqtSignal
+from PyQt5.QtGui import QApplication
 from stg.storage import Storage
 from stg.project import Project
 from src.neodata import NeoData

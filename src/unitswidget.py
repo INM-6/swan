@@ -9,7 +9,7 @@ from :class:`src.mylistwidget.MyListWidget`.
 It is shown in the units tab on the application and manages the
 unit selection.
 """
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from src.mylistwidget import MyListWidget
 
 
@@ -32,7 +32,7 @@ class UnitsWidget(MyListWidget):
         **Properties**
         
             *_units* (dictionary):
-                A dictionary containing :class:`PyQt4.QtGui.QListWidgetItem`
+                A dictionary containing :class:`PyQt5.QtGui.QListWidgetItem`
                 as key and their row index as value.
         
         """
@@ -82,7 +82,7 @@ class UnitsWidget(MyListWidget):
         
         **Arguments**
         
-            *item* (:class:`PyQt4.QtGui.QListWidgetItem`):
+            *item* (:class:`PyQt5.QtGui.QListWidgetItem`):
                 The item that was changed.
                     
         """

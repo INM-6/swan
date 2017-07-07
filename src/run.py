@@ -39,7 +39,7 @@ if __name__ == '__main__':
     
     
     from src.main import Main
-    from PyQt4.QtGui import QApplication
+    from PyQt5.QtGui import QApplication
     
     app = QApplication(sys.argv)
     m = Main(abspath(p), home)

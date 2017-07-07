@@ -3,11 +3,11 @@
 # Form implementation generated from reading ui file 'myplotgrid_ui.ui'
 #
 # Created: Thu Nov 21 15:10:39 2013
-#      by: PyQt4 UI code generator 4.9.1
+#      by: PyQt5 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -25,5 +25,5 @@ class Ui_Form(object):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None, QtGui.QApplication.UnicodeUTF8))
+        Form.setWindowTitle(QtGui.QApplication.translate("Form", "Form", None))
 

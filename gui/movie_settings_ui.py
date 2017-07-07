@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -96,26 +96,28 @@ class Ui_movieSettings(object):
         self.label_4.setBuddy(self.timeCombo)
 
         self.retranslateUi(movieSettings)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), movieSettings.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), movieSettings.reject)
+        #QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), movieSettings.accept)
+        self.buttonBox.accepted.connect(movieSettings.accept)
+        #QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), movieSettings.reject)
+        self.buttonBox.rejected.connect(movieSettings.reject)
         QtCore.QMetaObject.connectSlotsByName(movieSettings)
 
     def retranslateUi(self, movieSettings):
-        movieSettings.setWindowTitle(QtGui.QApplication.translate("movieSettings", "Movie settings", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox.setTitle(QtGui.QApplication.translate("movieSettings", "Play options", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("movieSettings", "Slides per second:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("movieSettings", "Slide skip:", None, QtGui.QApplication.UnicodeUTF8))
-        self.skipEdit.setText(QtGui.QApplication.translate("movieSettings", "0", None, QtGui.QApplication.UnicodeUTF8))
-        self.spsCombo.setItemText(0, QtGui.QApplication.translate("movieSettings", "1", None, QtGui.QApplication.UnicodeUTF8))
-        self.spsCombo.setItemText(1, QtGui.QApplication.translate("movieSettings", "2", None, QtGui.QApplication.UnicodeUTF8))
-        self.spsCombo.setItemText(2, QtGui.QApplication.translate("movieSettings", "4", None, QtGui.QApplication.UnicodeUTF8))
-        self.spsCombo.setItemText(3, QtGui.QApplication.translate("movieSettings", "5", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("movieSettings", "Data options", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("movieSettings", "Averaging range:", None, QtGui.QApplication.UnicodeUTF8))
-        self.rangeEdit.setText(QtGui.QApplication.translate("movieSettings", "0", None, QtGui.QApplication.UnicodeUTF8))
-        self.groupBox_3.setTitle(QtGui.QApplication.translate("movieSettings", "Plot options", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("movieSettings", "Title time unit:", None, QtGui.QApplication.UnicodeUTF8))
-        self.timeCombo.setItemText(0, QtGui.QApplication.translate("movieSettings", "original", None, QtGui.QApplication.UnicodeUTF8))
-        self.timeCombo.setItemText(1, QtGui.QApplication.translate("movieSettings", "seconds", None, QtGui.QApplication.UnicodeUTF8))
-        self.timeCombo.setItemText(2, QtGui.QApplication.translate("movieSettings", "milliseconds", None, QtGui.QApplication.UnicodeUTF8))
+        movieSettings.setWindowTitle(QtGui.QApplication.translate("movieSettings", "Movie settings", None))
+        self.groupBox.setTitle(QtGui.QApplication.translate("movieSettings", "Play options", None))
+        self.label.setText(QtGui.QApplication.translate("movieSettings", "Slides per second:", None))
+        self.label_2.setText(QtGui.QApplication.translate("movieSettings", "Slide skip:", None))
+        self.skipEdit.setText(QtGui.QApplication.translate("movieSettings", "0", None))
+        self.spsCombo.setItemText(0, QtGui.QApplication.translate("movieSettings", "1", None))
+        self.spsCombo.setItemText(1, QtGui.QApplication.translate("movieSettings", "2", None))
+        self.spsCombo.setItemText(2, QtGui.QApplication.translate("movieSettings", "4", None))
+        self.spsCombo.setItemText(3, QtGui.QApplication.translate("movieSettings", "5", None))
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("movieSettings", "Data options", None))
+        self.label_3.setText(QtGui.QApplication.translate("movieSettings", "Averaging range:", None))
+        self.rangeEdit.setText(QtGui.QApplication.translate("movieSettings", "0", None))
+        self.groupBox_3.setTitle(QtGui.QApplication.translate("movieSettings", "Plot options", None))
+        self.label_4.setText(QtGui.QApplication.translate("movieSettings", "Title time unit:", None))
+        self.timeCombo.setItemText(0, QtGui.QApplication.translate("movieSettings", "original", None))
+        self.timeCombo.setItemText(1, QtGui.QApplication.translate("movieSettings", "seconds", None))
+        self.timeCombo.setItemText(2, QtGui.QApplication.translate("movieSettings", "milliseconds", None))
 

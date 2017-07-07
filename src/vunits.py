@@ -14,8 +14,8 @@ from matplotlib import colors
 #from matplotlib import cm
 from matplotlib.ticker import FixedLocator, FormatStrFormatter, MultipleLocator
 from src.matplotlibwidget import MatplotlibWidget
-from PyQt4.QtGui import QComboBox
-from PyQt4 import QtCore
+from PyQt5.QtGui import QComboBox
+from PyQt5 import QtCore
 
 
 class VUnits(MatplotlibWidget):
@@ -230,7 +230,7 @@ class VUnits(MatplotlibWidget):
 
 # if __name__ == "__main__":
 #     import sys
-#     from PyQt4.QtGui import QApplication
+#     from PyQt5.QtGui import QApplication
 #
 #     app = QApplication(sys.argv)
 #     m = VUnits()

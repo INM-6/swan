@@ -5,9 +5,8 @@
 # Created: Tue Jul 28 14:16:32 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
-# WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -255,7 +254,8 @@ class Ui_Main(object):
         self.retranslateUi(Main)
         self.views.setCurrentIndex(0)
         self.tools.setCurrentIndex(0)
-        QtCore.QObject.connect(self.action_Quit, QtCore.SIGNAL(_fromUtf8("triggered()")), Main.close)
+        #QtCore.QObject.connect(self.action_Quit, QtCore.SIGNAL(_fromUtf8("triggered()")), Main.close)
+        self.action_Quit.triggered.connect(Main.close)
         QtCore.QMetaObject.connectSlotsByName(Main)
 
     def retranslateUi(self, Main):

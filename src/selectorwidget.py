@@ -9,16 +9,15 @@ It is used to represent a connector map.
 The electrodes on this map are represented by 
 the :class:`SelectorItem`.
 """
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 from gui.selectorwidget_ui import Ui_Form
 
 
-class SelectorWidget(QtGui.QWidget):
+class SelectorWidget(QtWidgets.QWidget):
     """
     A widget that is used to represent an electrode connector map.
     
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QWidget`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtWidgets.QWidget`.
     
     """
     
@@ -45,7 +44,7 @@ class SelectorWidget(QtGui.QWidget):
                 The currently selected channel.
         
         """
-        QtGui.QWidget.__init__(self, *args, **kwargs)
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         
@@ -230,13 +229,13 @@ class SelectorWidget(QtGui.QWidget):
         self._dirty_items = []
 
 
-class SelectorItem(QtGui.QWidget):
+class SelectorItem(QtWidgets.QWidget):
     """
     Is used by the :class:`SelectorWidget`.
     
     Represents a electrode channel.
 
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QWidget`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtWidgets.QWidget`.
     
     """
     
@@ -267,7 +266,7 @@ class SelectorItem(QtGui.QWidget):
                 Whether or not this widget has a mouse hovering it.
         
         """
-        QtGui.QWidget.__init__(self, *args, **kwargs)      
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)      
         self.resize(100, 100)
         
         self.setMinimumSize(20, 20)
@@ -361,7 +360,7 @@ class SelectorItem(QtGui.QWidget):
         
         """
         if event.button() == QtCore.Qt.LeftButton and self.selectable and not self.selected:
-            QtGui.QWidget.mousePressEvent(self, event)
+            QtWidgets.QWidget.mousePressEvent(self, event)
             self.selected = True
             self.selectChannel.emit(self, self.channel)
             self.repaint()

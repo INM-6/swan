@@ -9,6 +9,7 @@ from :class:`src.matplotlibwidget.MatplotlibWidget`.
 It is extended by a 3d plot and the plotting methods.
 """
 from src.matplotlibwidget import MatplotlibWidget
+from numpy import array, meshgrid
 
 
 class MplWidget3d(MatplotlibWidget):
@@ -33,7 +34,7 @@ class MplWidget3d(MatplotlibWidget):
         
         #properties{
         self._axes = None
-        self._kwargs = {"grid":False, 
+        self._kwargs = {"grid":True, 
                         "xlabel":"time", 
                         "ylabel":"session", 
                         "zlabel":"voltage"}
@@ -87,8 +88,6 @@ class MplWidget3d(MatplotlibWidget):
                 break
         if found:
             for layer in layers:
-                xs = []
-                ys = []
                 zs = []
                 l = 0
                 for i in xrange(len(data.blocks)):
@@ -97,15 +96,17 @@ class MplWidget3d(MatplotlibWidget):
                         datas = data.get_data(layer, runit)
                         col = vum.get_color(j, True, layer)
                         z = datas
-                        l = len(datas)
-                        x = range(len(z[0]))
-                        y = [(i+1) for k in x]
+                        l = len(z)
                         zs.append(z)
-                        xs.append(x)
-                        ys.append(y)
-                for k in xrange(l):
-                    zi = [el[k] for el in zs]
-                    self.plot(xs, ys, zi, col)
+                zs = array(zs)
+                x = range(zs.shape[-1])
+                y = range(zs.shape[0])
+                xs, ys = meshgrid(x, y)        
+                if l > 0:
+                    for k in xrange(l):
+                        self.plot(xs, ys, zs[:, k, :], col)
+                else:
+                    continue
         self.draw()
         
 

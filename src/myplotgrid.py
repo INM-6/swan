@@ -4,24 +4,23 @@ Created on Nov 21, 2013
 @author: Christoph Gollan
 
 In this module you can find the :class:`MyPlotGrid` which is just
-a :class:`PyQt4.QtGui.QScrollArea` with some additions.
+a :class:`PyQt5.QtGui.QScrollArea` with some additions.
 
 More important is the :class:`MyPlotContent`.
 It shows an overview of many :class:`src.myplotwidget.MyPlotWidget`
 and manages them.
 """
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from gui.myplotgrid_ui import Ui_Form
 from src.myplotwidget import MyPlotWidget
 
 
 class MyPlotGrid(QtGui.QScrollArea):
     """
-    A :class:`PyQt4.QtGui.QScrollArea` which is extended to be better 
+    A :class:`PyQt5.QtGui.QScrollArea` which is extended to be better 
     usable with the :class:`MyPlotContent`.
 
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QScrollArea`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtGui.QScrollArea`.
     
     """
 
@@ -47,12 +46,12 @@ class MyPlotGrid(QtGui.QScrollArea):
         #}
 
         
-class MyPlotContent(QtGui.QWidget):
+class MyPlotContent(QtWidgets.QWidget):
     """
     A class that manages :class:`src.myplotwidget.MyPlotWidget` 
     objects in a grid.
     
-    The *args* and *kwargs* are passed to :class:`PyQt4.QtGui.QWidget`.
+    The *args* and *kwargs* are passed to :class:`PyQt5.QtWidgets.QWidget`.
     
     """
     #makePlots = QtCore.pyqtSignal(int, int)
@@ -168,7 +167,7 @@ class MyPlotContent(QtGui.QWidget):
                     runit = vum.get_realunit(i, j, data)
                     d = data.get_data("average", runit)[0]
                     col = vum.get_color(j)
-                    p.plot(d, col)
+                    p.plot(d.T, col)
     
     def find_plot(self, i, j):
         """
