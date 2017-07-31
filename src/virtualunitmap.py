@@ -8,8 +8,6 @@ real units to virtual units. The virtual units can be swapped to have the
 same units in the same row.
 """
 import numpy as np
-import matplotlib.pyplot as plt
-
 
 class VirtualUnitMap(object):
     """        
@@ -90,9 +88,9 @@ class VirtualUnitMap(object):
         n_ = sum(nums)
         self.n_ = n_
         for n in nums:
-            vu = range(1, n+1) + [None for i in xrange(n_ - n)]
+            vu = range(1, n+1) + [0 for i in range(n_ - n)]
             self.mapping.append(vu)
-        self.visible = [True for i in xrange(n_)]
+        self.visible = [True for i in range(n_)]
         
     def set_map(self, nums, vum):
         """
@@ -111,16 +109,16 @@ class VirtualUnitMap(object):
         
         n = len(nums)
         
-        for i in xrange(n):
+        for i in range(n):
             self.mapping.append([])
         
         for l in vum.values():
             if type(l) == list:
-                for i in xrange(n):
+                for i in range(n):
                     unit = l[i][1]
                     self.mapping[i].append(unit)
                 
-        self.visible = [True for i in xrange(n_)]
+        self.visible = [True for i in range(n_)]
         
     def get_realunit(self, i, j, data):
         """
@@ -140,7 +138,7 @@ class VirtualUnitMap(object):
         
         """
         vunit = self.mapping[i][j]
-        runit = data.blocks[i].channel_indexes[0].units[vunit-1]
+        runit = data.blocks[i].channel_indexes[0].units[vunit]
         return runit
     
     def swap(self, m, n1, n2):
@@ -224,27 +222,27 @@ class VirtualUnitMap(object):
         """
         #dis = {}
         #for each block except the last one
-        for i in xrange(len(data.blocks) - 1):
+        for i in range(len(data.blocks) - 1):
             swapped1 = []
             swapped2 = []
             
             #do it so often that each real unit can find a partner
-            for n in xrange(data.nums[i]):
+            for n in range(data.nums[i]):
                 distances = []
 
                 #for each unit in block i
-                for j in xrange(self.n_):
-                    if self.mapping[i][j] is not None:
+                for j in range(self.n_):
+                    if self.mapping[i][j] != 0:
                         unit1 = self.get_realunit(i, j, data)
                         y1 = data.get_data("average", unit1)[0]
                         
                         #for each unit in block i+1
-                        for k in xrange(self.n_):
-                            if self.mapping[i+1][k] is not None:
+                        for k in range(self.n_):
+                            if self.mapping[i+1][k] != 0:
                                 unit2 = self.get_realunit(i+1, k, data)
                                 y2 = data.get_data("average", unit2)[0]
                                 #calculates the distance between the average waveforms
-                                distance = np.sum(np.abs(y2 - y1))
+                                distance = np.linalg.norm(np.subtract(y2, y1))
 
                                 #calculate cross correlation {
                                 #calculates the inter-spike-interval
@@ -292,7 +290,7 @@ class VirtualUnitMap(object):
                     #finds the min of the distances
                     mini = min(distances, key=lambda x: x[2])
                     #swap only if distance is under a threshold
-                    if mini[2] < 500:
+                    if mini[2] < 200:
                         #swaps the units to have them in the same unit row                
                         self.swap(i+1, mini[0], mini[1])
                         swapped1.append(mini[0])
@@ -303,8 +301,8 @@ class VirtualUnitMap(object):
                         if mini[0] == mini[1]:
                             for u, v in enumerate(self.mapping[i+1]):
                                 testing = True
-                                for l in xrange(i+2):
-                                    if self.mapping[l][u] is not None:
+                                for l in range(i+2):
+                                    if self.mapping[l][u] != 0:
                                         testing = False
                                 if testing:
                                     self.swap(i+1, mini[1], u)

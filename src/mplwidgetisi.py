@@ -53,8 +53,8 @@ class MplWidgetIsi(MatplotlibWidget):
         
         #properties{
         self._axes = None
-        self._kwargs = {"xlabel":"time",
-                        "ylabel":"fraction of spikes"}
+        self._kwargs = {"set_xlabel":"time",
+                        "set_ylabel":"fraction of spikes"}
         self._settings = {"binMax":100,
                           "binStep":1}
         #}
@@ -62,7 +62,7 @@ class MplWidgetIsi(MatplotlibWidget):
         
         #setting up the bin options GUI
         self.group = QtGui.QGroupBox("Bin options", self)
-        self.group.setFixedWidth(150)
+        self.group.setFixedWidth(180)
         self.ggl = QtGui.QGridLayout(self.group)
         w = QtGui.QWidget()
         y = QtGui.QWidget()
@@ -242,11 +242,11 @@ class MplWidgetIsi(MatplotlibWidget):
         """
         self.clear_and_reset_axes(**self._kwargs)
         for layer in layers:
-            if layer == "session-ISI":
-                for j in xrange(vum.n_):
+            if layer == "sessions":
+                for j in range(vum.n_):
                     values = []
-                    for i in xrange(len(data.blocks)):
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                    for i in range(len(data.blocks)):
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
@@ -258,9 +258,9 @@ class MplWidgetIsi(MatplotlibWidget):
                         tmp = tmp[:len(tmp)-1]
                         self.plot((tmp, y[0]/(1.0*len(values))), col)
             else:
-                for i in xrange(len(data.blocks)):
-                    for j in xrange(vum.n_):
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                for i in range(len(data.blocks)):
+                    for j in range(vum.n_):
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)

@@ -35,11 +35,11 @@ class MplWidget3d(MatplotlibWidget):
         #properties{
         self._axes = None
         self._kwargs = {"grid":True, 
-                        "xlabel":"time", 
-                        "ylabel":"session", 
-                        "zlabel":"voltage"}
+                        "set_xlabel":"time", 
+                        "set_ylabel":"session", 
+                        "set_zlabel":"voltage"}
         #}
-        self.setup((1, 1), False, True)
+        self.setup((1, 1), True, True)
         
         self._axes = self.get_axes()[0]
         self.clear_and_reset_axes(**self._kwargs)
@@ -63,7 +63,7 @@ class MplWidget3d(MatplotlibWidget):
                 The color of the lines.
         
         """
-        self._axes.plot_surface(x, y, z, color=color, shade=False)
+        self._axes.plot_surface(x, y, z, color=color, shade=True)
 #         self._axes.plot_surface(x, y, z, color=color, shade=False, cmap=plt.cm.get_cmap("jet"))
 
     def do_plot(self, vum, data, layers):
@@ -82,7 +82,7 @@ class MplWidget3d(MatplotlibWidget):
         """
         self.clear_and_reset_axes(**self._kwargs)
         found = False
-        for j in xrange(vum.n_):
+        for j in range(vum.n_):
             if vum.visible[j]:
                 found = True
                 break
@@ -90,7 +90,7 @@ class MplWidget3d(MatplotlibWidget):
             for layer in layers:
                 zs = []
                 l = 0
-                for i in xrange(len(data.blocks)):
+                for i in range(len(data.blocks)):
                     if vum.mapping[i][j] is not None:
                         runit = vum.get_realunit(i, j, data)
                         datas = data.get_data(layer, runit)
@@ -103,7 +103,7 @@ class MplWidget3d(MatplotlibWidget):
                 y = range(zs.shape[0])
                 xs, ys = meshgrid(x, y)        
                 if l > 0:
-                    for k in xrange(l):
+                    for k in range(l):
                         self.plot(xs, ys, zs[:, k, :], col)
                 else:
                     continue

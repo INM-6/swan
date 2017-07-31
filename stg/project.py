@@ -266,12 +266,11 @@ class Project(object):
         
         """
         fn = self.get_file_path(filename, sdir)
-            
         if exists(fn) and create_file:
             raise ProjectError("File {} already exists".format(filename))
         if create_file:    
             open(fn, "w")
-        filelist = self.get_file_list(sdir)
+        filelist = self.get_file_list(sdir, create_file)
         filelist.append(filename)
             
         

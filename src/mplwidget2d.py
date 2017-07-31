@@ -85,18 +85,18 @@ class MplWidget2d(MatplotlibWidget):
         
         """
         self.clear_and_reset_axes()
-        for i in xrange(len(data.blocks)):
-            for j in xrange(vum.n_):
+        for i in range(len(data.blocks)):
+            for j in range(vum.n_):
                 for layer in layers:
                     if layer == "standard deviation":                        
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
                             self.std_plot(datas, col)
                             self._axes.set_ylim(data.get_yscale(layer))
                     else:
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)

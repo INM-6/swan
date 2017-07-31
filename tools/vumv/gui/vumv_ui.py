@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -84,25 +84,25 @@ class Ui_VumV(object):
         VumV.setTabOrder(self.pathEdit, self.content)
 
     def retranslateUi(self, VumV):
-        VumV.setWindowTitle(QtGui.QApplication.translate("VumV", "VUM Viewer", None, QtGui.QApplication.UnicodeUTF8))
-        self.pathEdit.setPlaceholderText(QtGui.QApplication.translate("VumV", "path to vum", None, QtGui.QApplication.UnicodeUTF8))
-        self.browseBtn.setText(QtGui.QApplication.translate("VumV", "browse...", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("VumV", "Electrode:", None, QtGui.QApplication.UnicodeUTF8))
+        VumV.setWindowTitle(QtGui.QApplication.translate("VumV", "VUM Viewer"))
+        self.pathEdit.setPlaceholderText(QtGui.QApplication.translate("VumV", "path to vum"))
+        self.browseBtn.setText(QtGui.QApplication.translate("VumV", "browse..."))
+        self.label.setText(QtGui.QApplication.translate("VumV", "Electrode:"))
         item = self.details.verticalHeaderItem(0)
-        item.setText(QtGui.QApplication.translate("VumV", "Channel", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "Channel"))
         item = self.details.verticalHeaderItem(1)
-        item.setText(QtGui.QApplication.translate("VumV", "Files", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "Files"))
         item = self.details.horizontalHeaderItem(0)
-        item.setText(QtGui.QApplication.translate("VumV", "Value", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "Value"))
         __sortingEnabled = self.details.isSortingEnabled()
         self.details.setSortingEnabled(False)
         item = self.details.item(0, 0)
-        item.setText(QtGui.QApplication.translate("VumV", "-", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "-"))
         item = self.details.item(1, 0)
-        item.setText(QtGui.QApplication.translate("VumV", "-", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "-"))
         self.details.setSortingEnabled(__sortingEnabled)
         item = self.content.verticalHeaderItem(0)
-        item.setText(QtGui.QApplication.translate("VumV", "UNIT", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "UNIT"))
         item = self.content.horizontalHeaderItem(0)
-        item.setText(QtGui.QApplication.translate("VumV", "SESSION", None, QtGui.QApplication.UnicodeUTF8))
+        item.setText(QtGui.QApplication.translate("VumV", "SESSION"))
 

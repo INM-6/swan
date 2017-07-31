@@ -17,8 +17,11 @@ but you can activate it.
 from PyQt5 import QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
+import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
+from numpy import mean
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -71,7 +74,8 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         
         # properties {
         self._firstChange = True
-        self._plot_params = {}
+        self._plot_params = {"xlim": [0, 38],
+                             "ylim": [-300, 300]}
         # }
         
         # custom actions {
@@ -141,36 +145,46 @@ class NavigationToolbar(NavigationToolbar2QTAgg):
         if not self._firstChange:
             axes_list = self.canvas.fig.get_axes()
             for ax in axes_list:
-                lim = self._plot_params['ylim']
-                ax.set_ylim(lim[0], lim[1])
+                limx = self._plot_params['xlim']
+                ax.set_xlim(limx[0], limx[1])
+                limy = self._plot_params['ylim']
+                ax.set_ylim(limy[0], limy[1])
             self.canvas.draw()
     
-    def onPlus(self):
+    def onPlus(self, step = 1.0):
         """
         Expands the ylim of all subplots.
         
         """
         axes_list = self.canvas.fig.get_axes()
         for ax in axes_list:
-            lim = ax.get_ylim()
+            limy = ax.get_ylim()
+            limx = ax.get_xlim()
+            rat = abs((limy[1] - limy[0])/2)/abs((limx[1] - limx[0])/2)
             if self._firstChange:
-                self._plot_params["ylim"] = lim
+                self._plot_params["ylim"] = limy
+                self._plot_params["xlim"] = limx
                 self._firstChange = False
-            ax.set_ylim(lim[0] - 25, lim[1] + 25)
+            ax.set_ylim(limy[0]/rat, limy[1]/rat)
+            ax.set_xlim(limx[0]/rat, limx[1]/rat)
         self.canvas.draw()
 
-    def onMinus(self):
+    def onMinus(self, step = 1.0):
         """
         Reduces the ylim of all subplots.
         
         """
         axes_list = self.canvas.fig.get_axes()
         for ax in axes_list:
-            lim = ax.get_ylim()
+            limy = ax.get_ylim()
+            limx = ax.get_xlim()
+            rat = abs((limy[1] - limy[0])/2)/abs((limx[1] - limx[0])/2)
             if self._firstChange:
-                self._plot_params["ylim"] = lim
+                self._plot_params["ylim"] = limy
+                self._plot_params["xlim"] = limx
                 self._firstChange = False
-            ax.set_ylim(lim[0] + 25, lim[1] - 25)
+            ax.set_ylim(limy[0]*rat, limy[1]*rat)
+            ax.set_xlim(limx[0]*rat, limx[1]*rat)
         self.canvas.draw()
         
  
@@ -186,7 +200,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
     
     """
  
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, c_actions = False):
         """
         
         """
@@ -195,7 +209,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
         vgl = QtGui.QGridLayout(self)
         self.vgl = vgl
         self.canvas = MplCanvas()
-        self.naviBar = NavigationToolbar(self.canvas, self)
+        self.naviBar = NavigationToolbar(self.canvas, self, custom_actions = c_actions)
         self.naviBar.hide()
         vgl.addWidget(self.canvas, 0, 0, 1, 1)
         vgl.addWidget(self.naviBar, 1, 0, 1, 1)
@@ -243,10 +257,10 @@ class MatplotlibWidget(QtWidgets.QWidget):
         m = shape[0]
         n = shape[1]
         if proj3d:
-            for i in xrange(1, n*m + 1):
+            for i in range(1, n*m + 1):
                 self.canvas.fig.add_subplot(m, n, i, projection='3d')
         else:
-            for i in xrange(1, n*m + 1):
+            for i in range(1, n*m + 1):
                 self.canvas.fig.add_subplot(m, n, i)
             
     def get_axes(self):
@@ -265,13 +279,26 @@ class MatplotlibWidget(QtWidgets.QWidget):
         
         """
         self.canvas.draw()
+    
+    def pca_draw(self, axes, patchCollection, kwargs):
+        """
+        Wrapper for the drawing the PCA. Draws only the patch collection (scatter
+        plot) and the background (ax.patch).
+        
+        """
+        
+        axes.draw_artist(axes.patch)
+        axes.draw_artist(patchCollection)
+
+        self.canvas.fig.canvas.update()
+        self.canvas.fig.canvas.flush_events()
             
     def clear_and_reset_axes(self, grid=True, tick_params={"labelsize":7,}, **kwargs):
         """
         Clears the axes and sets the parameter for the axes
         because otherwise they are lost.
         
-        If *kwargs* is set, for every entry *set_<key>(<value>)* will be called.
+        If *kwargs* is set, for every entry *<key>(<value>)* will be called.
         If not, some default *kwargs* will be set.
         
         **Arguments**
@@ -284,13 +311,13 @@ class MatplotlibWidget(QtWidgets.QWidget):
         """
         axes_list = self.canvas.fig.get_axes()
         if not kwargs:
-            kwargs = {"ylim":(-150, 150),
-                     "xlabel":"time",
-                     "ylabel":"voltage"}
+            kwargs = {"set_ylim":(-150, 150),
+                     "set_xlabel":"time",
+                     "set_ylabel":"voltage"}
         for ax in axes_list:
             ax.cla()
             ax.grid(grid)
             ax.tick_params(**tick_params)
-            for k, v in kwargs.iteritems():
-                getattr(ax, "set_" + str(k))(v)
+            for k, v in kwargs.items():
+                getattr(ax, str(k))(v)
     

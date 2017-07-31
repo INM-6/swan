@@ -56,7 +56,7 @@ class VUnits(MatplotlibWidget):
         MatplotlibWidget.__init__(self, *args, **kwargs)
 
         self.setup(naviBar=True)
-        self.naviBar.remove_custom_actions()
+        #self.naviBar.remove_custom_actions()
         self.combo = QComboBox()
         self.combo.addItems(["1", "2", "3", "auto"])
         # self.combo.addItems(["1", "2", "3"])
@@ -139,7 +139,7 @@ class VUnits(MatplotlibWidget):
                 Is needed to get block length.
 
         """
-        kwargs = {"xlabel":"sessions", "ylabel":"electrodes and virtual units"}
+        kwargs = {"set_xlabel":"sessions", "set_ylabel":"electrodes and virtual units"}
         tick_params = {"which":"both", "direction":"out", "labelsize":8}
         self.clear_and_reset_axes(grid=True, tick_params=tick_params, **kwargs)
         num_vu = self._settings["num_vu"]
@@ -152,7 +152,7 @@ class VUnits(MatplotlibWidget):
         values = []
         lens = []
         # for every channel
-        for i in xrange(100):
+        for i in range(100):
             lens.append(0)
             try:
                 m = vum["vum" + str(i+1)]
@@ -161,8 +161,8 @@ class VUnits(MatplotlibWidget):
                     # search for the indexes of the virtual units
                     inds = []
                     kmax = max([key for key in m.keys() if isinstance(key, int)])
-                    for k in xrange(kmax):
-                        for j in xrange(l):
+                    for k in range(kmax):
+                        for j in range(l):
                             v = m[k+1][j][1]
                             if v is not None:
                                 inds.append(k)
@@ -170,13 +170,13 @@ class VUnits(MatplotlibWidget):
                                 break
                 else:
                     kmax = num_vu
-                    inds = xrange(kmax)
+                    inds = range(kmax)
 
                 # for every virtual unit to show
                 for k in inds:
                     val = []
                     # for every session
-                    for j in xrange(l):
+                    for j in range(l):
                         v = m[k+1][j][1]
                         if v is not None:
                             if i % 2 == 0:
@@ -188,23 +188,23 @@ class VUnits(MatplotlibWidget):
                     values.append(val)
             except:
                 if num_vu != "auto":
-                    for k in xrange(num_vu):
-                        values.append([0 for j in xrange(l)])
+                    for k in range(num_vu):
+                        values.append([0 for j in range(l)])
                 else:
                     lens[i] = 1
-                    values.append([0 for j in xrange(l)])
+                    values.append([0 for j in range(l)])
 
         if num_vu != "auto":
-            maj_ticks = [num_vu * i * 2 for i in xrange(50)]
-            min_ticks = [num_vu * i for i in xrange(100)]
+            maj_ticks = [num_vu * i * 2 for i in range(50)]
+            min_ticks = [num_vu * i for i in range(100)]
         else:
-            min_ticks = [sum(lens[:i]) for i in xrange(100)]
-            maj_ticks = [min_ticks[i*2] for i in xrange(50)]
+            min_ticks = [sum(lens[:i]) for i in range(100)]
+            maj_ticks = [min_ticks[i*2] for i in range(50)]
 
         minorLocator = FixedLocator(min_ticks)
         majorLocator = FixedLocator(maj_ticks)
 
-        labels = ["ch. " + str(1+i*2) for i in xrange(0, 50)]
+        labels = ["ch. " + str(1+i*2) for i in range(0, 50)]
 
         # loc = MultipleLocator(1)
         loc = FixedLocator(range(l+1))
@@ -223,7 +223,7 @@ class VUnits(MatplotlibWidget):
         self.draw()
 
         # setting the labels
-        self._axes.set_xticklabels([str(i) for i in xrange(1, l+1)])
+        self._axes.set_xticklabels([str(i) for i in range(1, l+1)])
         self._axes.set_yticklabels(labels)
         self.draw()
 

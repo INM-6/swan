@@ -52,8 +52,8 @@ class SelectorWidget(QtWidgets.QWidget):
         self._items = []
         self._dirty_items = []
         self._sel = None
-        self.lastchannel = 3
-        self.currentchannel = 3
+        self.lastchannel = 1
+        self.currentchannel = 1
         #}
         self.make_grid()
         
@@ -74,8 +74,8 @@ class SelectorWidget(QtWidgets.QWidget):
                 Default: 10.
         
         """
-        for i in xrange(rows):
-            for j in xrange(cols):
+        for i in range(rows):
+            for j in range(cols):
                 s = SelectorItem(self)
                 s.selectChannel.connect(self.select_channel)
                 s.pos = (i, j)
@@ -96,11 +96,11 @@ class SelectorWidget(QtWidgets.QWidget):
         """
         if channel_list is not None:
             j = 0
-            for i in xrange(9, -1, -1):
+            for i in range(9, -1, -1):
                 #channels = range(1+j*10, 11+j*10)
                 channels = channel_list[(j*10):(11+j*10)]
                 items = [s for s in self._items if s.pos[0] == i]
-                for k in xrange(10):
+                for k in range(10):
                     items[k].text = str(channels[k])
                     items[k].channel = channels[k]
                     if channels[k] == -1:
@@ -110,10 +110,10 @@ class SelectorWidget(QtWidgets.QWidget):
                 j += 1
         else:
             j = 0
-            for i in xrange(9, -1, -1):
+            for i in range(9, -1, -1):
                 channels = range(1+j*10, 11+j*10)
                 items = [s for s in self._items if s.pos[0] == i]
-                for k in xrange(10):
+                for k in range(10):
                     items[k].text = str(channels[k])
                     items[k].channel = channels[k]
                 j += 1

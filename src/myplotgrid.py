@@ -117,9 +117,9 @@ class MyPlotContent(QtWidgets.QWidget):
         self._plots = []
         self._rows = {}
         self._cols = {}
-        for i in xrange(rows):
+        for i in range(rows):
             self._rows[i] = []
-            for j in xrange(cols):
+            for j in range(cols):
                 if j not in self._cols:
                     self._cols[j] = []
                 mpw = MyPlotWidget(self)
@@ -160,14 +160,15 @@ class MyPlotContent(QtWidgets.QWidget):
         
         """
         self.clear_plots()
-        for i in xrange(len(data.blocks)):
-            for j in xrange(vum.n_):
-                if vum.mapping[i][j] != None:
+        for i in range(len(data.blocks)):
+            for j in range(vum.n_):
+                if vum.mapping[i][j] != 0:
                     p = self.find_plot(j, i)
                     runit = vum.get_realunit(i, j, data)
-                    d = data.get_data("average", runit)[0]
-                    col = vum.get_color(j)
-                    p.plot(d.T, col)
+                    if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                        d = data.get_data("average", runit)[0]
+                        col = vum.get_color(j)
+                        p.plot(d.T, col)
     
     def find_plot(self, i, j):
         """

@@ -457,13 +457,26 @@ class MyStorage(Storage, QObject):
         tips = []
         vum = self.get_map()
         files = self.get_files()
-        i = 0
-        for f, l in zip(files, vum.mapping):
+        data = self.get_data()
+        spike_nums = []
+        c = 0
+        for i in range(len(data.blocks)):
+            spike_nums.append([])
+            for j in range(len(vum.mapping[i])):
+                runit = vum.get_realunit(i, j, data)
+                if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                    spike_nums[c].append(data.get_data("n_spikes", runit))
+                else:
+                    spike_nums[c].append(0)
+            c += 1
+            
+        c = 0
+        for f, l, n in zip(files, vum.mapping, spike_nums):
             tips.append([])
-            for u in l:
-                tooltip = "File: {}\nUnit: {}".format(basename(f), u)
-                tips[i].append(tooltip)
-            i += 1
+            for u, v in zip(l, n):
+                tooltip = "File: {}\nUnit: {}\nWaveforms: {}".format(basename(f), u, v)
+                tips[c].append(tooltip)
+            c += 1
         return tips
         
     def recalculate(self):
@@ -638,10 +651,10 @@ class MyStorage(Storage, QObject):
         d = {}
         d["channel"] = channel
         
-        for i in xrange(1, len(vum.mapping[0])+1):
+        for i in range(1, len(vum.mapping[0])+1):
             d[i] = []
         for name, vus in zip(files, vum.mapping):
-            for i in xrange(len(vus)):
+            for i in range(len(vus)):
                 d[i+1].append((basename(name), vus[i]))
                 
         name = "vum" + str(channel)

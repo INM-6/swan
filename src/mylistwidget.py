@@ -77,7 +77,7 @@ class MyListWidget(QtWidgets.QWidget):
         
         """
         item_list = []
-        for i in xrange(self.ui.list.count()):
+        for i in range(self.ui.list.count()):
             item_list.append(self.ui.list.item(i))
         return item_list
     

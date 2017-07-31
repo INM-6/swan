@@ -78,22 +78,23 @@ class DataTask(QtCore.QThread):
         
         self.progress.emit(0)
         
-        for i in xrange(blockLen):
+        for i in range(blockLen):
             spiketrains = []
             waveforms = []
             units = []
-            for j in xrange(self.vum.n_):
+            for j in range(self.vum.n_):
                 if self.vum.mapping[i][j] is not None and self.vum.visible[j]:
                     runit = self.vum.get_realunit(i, j, self.neodata)
-                    spiketrain = list(self.neodata.get_data("spiketrain", runit))[0]
-                    waveform = list(self.neodata.get_data("all", runit))
-                    unit = [j for k in xrange(len(spiketrain))]
-                    spiketrains.extend(spiketrain)
-                    waveforms.extend(waveform)
-                    units.extend(unit)
+                    if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                        spiketrain = self.neodata.get_data("spiketrain", runit)
+                        waveform = self.neodata.get_data("all", runit)
+                        unit = j*np.ones_like(spiketrain)
+                        spiketrains.extend(spiketrain)
+                        waveforms.extend(waveform)
+                        units.extend(unit)
             if len(spiketrains) > 0:
                 #sorting the data of one session
-                s, w, u = [list(x) for x in zip(*sorted(zip(spiketrains, waveforms, units), key=itemgetter(0)))]
+                s, w, u = [x for x in zip(*sorted(zip(spiketrains, waveforms, units), key=itemgetter(0)))]
                 l1 = len(self._data)
                 self._data.extend(zip(s, w, u))
                 l2 = len(self._data)
@@ -395,11 +396,11 @@ class MplWidgetMovie(MatplotlibWidget):
                 for d in self._data[i:]:
                     if d[2] != data[2] and d[2] not in found:
                         y2 = d[1]
-                        color2 = self.vum.get_color(d[2], mpl=True)
+                        color2 = self.vum.get_color(int(d[2]), mpl=True)
                         datas.append((y2, color2))
                         found.append(d[2])
             y = data[1]
-            color = self.vum.get_color(data[2], mpl=True)
+            color = self.vum.get_color(int(data[2]), mpl=True)
             return (y, color, datas)
         else:
             return ([], 'w', [])

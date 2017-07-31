@@ -221,7 +221,7 @@ class File_Dialog(QtWidgets.QDialog):
         
         """
         files = []
-        for i in xrange(listWidget.count()):
+        for i in range(listWidget.count()):
             files.append(listWidget.item(i).text())
         return files
     

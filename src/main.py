@@ -190,7 +190,7 @@ class Main(QtGui.QMainWindow):
         self.vu.load.connect(self.load_channel)
         
         #setting the horizontal widgets with equal sizes
-        self.ui.splitter_2.setSizes([int(self.ui.splitter_2.width()/2) for i in xrange(2)])
+        self.ui.splitter_2.setSizes([int(self.ui.splitter_2.width()/2) for i in range(2)])
         
         #shortcut reference
         self.plots = self.ui.plotGrid.child
@@ -255,7 +255,7 @@ class Main(QtGui.QMainWindow):
             if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
                 filesStr = self._mystorage.get_files(True)
                 #setting filelist detail
-                self.set_detail(4, filesStr)
+                self.set_detail(1, filesStr)
                 
                 self.save_project()
                 self.update_project()
@@ -623,13 +623,16 @@ class Main(QtGui.QMainWindow):
             #plotting
             self.plots.make_plots(n, m)
             data = self._mystorage.get_data()
-            min0, max0 = data.get_yscale()
+            if any(data.nums):
+                min0, max0 = data.get_yscale()
+            else:
+                min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
             self.ui.view_2.set_range(min0, max0)
             self.plot_all()
             
             #setting channel detail
-            self.set_detail(3, str(channel))
+            self.set_detail(1, str(channel))
             
             #setting tooltips
             self.plots.set_tooltips(self._mystorage.get_tooltips())
@@ -673,7 +676,7 @@ class Main(QtGui.QMainWindow):
                 vum.set_visible(i, visible)
             
             l1 = ["average", "standard deviation"]
-            l2 = ["units-ISI", "session-ISI"]
+            l2 = ["units", "sessions"]
             
             #plotting
             #plots: pyqtgraph plotwidget overview
@@ -688,6 +691,8 @@ class Main(QtGui.QMainWindow):
             self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
             #view_4: ISI mpl plot
             self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_4: PCA mpl plot
+            self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #vu: Virtual unit overview
             self.vu.do_plot(vum_all, data)
 
@@ -704,7 +709,7 @@ class Main(QtGui.QMainWindow):
         
         """
         l1 = ["average", "standard deviation"]
-        l2 = ["units-ISI", "session-ISI"]
+        l2 = ["units", "sessions"]
         if i == 0:
             #view_1: 2D mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
@@ -719,7 +724,11 @@ class Main(QtGui.QMainWindow):
         elif i == 3:
             #view_4: ISI mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)            
+            self.ui.layers.enable_layers(True, l2)
+        elif i == 4:
+            #view_4: PCA mpl plot
+            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.layers.enable_layers(True, l2)
             
     def setProgress(self, i):
         """

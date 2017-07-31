@@ -78,6 +78,9 @@ class Ui_Main(object):
         self.view_4 = MplWidgetIsi()
         self.view_4.setObjectName(_fromUtf8("view_4"))
         self.views.addTab(self.view_4, _fromUtf8(""))
+        self.view_5 = MplWidgetPCA()
+        self.view_5.setObjectName(_fromUtf8("view_5"))
+        self.views.addTab(self.view_5, _fromUtf8(""))
         self.tools = QtGui.QTabWidget(self.splitter)
         self.tools.setObjectName(_fromUtf8("tools"))
         self.tab = QtGui.QWidget()
@@ -254,7 +257,6 @@ class Ui_Main(object):
         self.retranslateUi(Main)
         self.views.setCurrentIndex(0)
         self.tools.setCurrentIndex(0)
-        #QtCore.QObject.connect(self.action_Quit, QtCore.SIGNAL(_fromUtf8("triggered()")), Main.close)
         self.action_Quit.triggered.connect(Main.close)
         QtCore.QMetaObject.connectSlotsByName(Main)
 
@@ -271,6 +273,7 @@ class Ui_Main(object):
         self.views.setTabText(self.views.indexOf(self.view_2), _translate("Main", "Movie", None))
         self.views.setTabText(self.views.indexOf(self.view_3), _translate("Main", "3D", None))
         self.views.setTabText(self.views.indexOf(self.view_4), _translate("Main", "ISI", None))
+        self.views.setTabText(self.views.indexOf(self.view_5), _translate("Main", "PCA", None))
         self.tools.setTabText(self.tools.indexOf(self.tab), _translate("Main", "Electrodes", None))
         self.tools.setTabText(self.tools.indexOf(self.tab2), _translate("Main", "Layers", None))
         self.tools.setTabText(self.tools.indexOf(self.tab3), _translate("Main", "Units", None))
@@ -360,5 +363,6 @@ from layerwidget import LayerWidget
 from mplwidgetmovie import MplWidgetMovie
 from myplotgrid import MyPlotGrid
 from mplwidgetisi import MplWidgetIsi
+from mplwidgetpca import MplWidgetPCA
 from unitswidget import UnitsWidget
 import icons_rc
