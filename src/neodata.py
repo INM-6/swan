@@ -17,6 +17,7 @@ from numpy.linalg import norm
 from PyQt5.QtCore import QObject, pyqtSignal
 from neo.io.pickleio import PickleIO
 from neo.io import BlackrockIO
+from copy import deepcopy
 
 
 class NeoData(QObject):
@@ -171,17 +172,17 @@ class NeoData(QObject):
         elif layer == "spiketrain":
             return unit.spiketrains[0].magnitude
         elif layer == "units":
-            vek = unit.spiketrains[0].copy()
+            vek = deepcopy(unit.spiketrains[0])
             vek.units = "ms"
             vek.sort()
-            d = vek[1:] - vek[:len(vek)-1]
+            d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
             return (d, )
         elif layer == "sessions":
-            vek = unit.spiketrains[0].copy()
+            vek = deepcopy(unit.spiketrains[0])
             vek.units = "ms"
             vek.sort()
-            d = vek[1:] - vek[:len(vek)-1]
+            d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
             return (d, )
         elif layer == "n_spikes":

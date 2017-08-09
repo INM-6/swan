@@ -21,8 +21,6 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
-from numpy import mean
-
 
 class MplCanvas(FigureCanvasQTAgg):
     """
@@ -280,18 +278,21 @@ class MatplotlibWidget(QtWidgets.QWidget):
         """
         self.canvas.draw()
     
-    def pca_draw(self, axes, patchCollection, kwargs):
+    def pca_draw(self, axis, patchCollection, kwargs):
         """
         Wrapper for the drawing the PCA. Draws only the patch collection (scatter
         plot) and the background (ax.patch).
         
         """
         
-        axes.draw_artist(axes.patch)
-        axes.draw_artist(patchCollection)
+        axis.draw_artist(axis.patch)
+        axis.draw_artist(patchCollection)
 
         self.canvas.fig.canvas.update()
         self.canvas.fig.canvas.flush_events()
+        
+        for k, v in kwargs.items():
+            getattr(axis, str(k))(v)
             
     def clear_and_reset_axes(self, grid=True, tick_params={"labelsize":7,}, **kwargs):
         """

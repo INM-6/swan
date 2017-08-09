@@ -34,6 +34,7 @@ from export import Export
 try:
     import cPickle as pkl
 except ImportError:
+    print("Importing Pickle, not cPickle")
     import pickle as pkl
 
 class MemoryTask(QtCore.QThread):
@@ -306,6 +307,8 @@ class Main(QtGui.QMainWindow):
         """
         if self.check_project():
             self.save_project()
+        else:
+            print("Ooh Lala!")
                 
     @QtCore.pyqtSlot(bool)
     def on_action_Save_as_triggered(self):
@@ -771,7 +774,7 @@ class Main(QtGui.QMainWindow):
 
         """
         item = self.selector.get_item(channel)
-        if item is not None:
+        if item != 0:
             if item.selectable:
                 self.selector.select_channel(item, channel)
                 self.selector.select_only(channel)
@@ -789,7 +792,7 @@ class Main(QtGui.QMainWindow):
         """
         if self._globaldirty:
             answer = QtGui.QMessageBox.question(self, "Confirmation", 
-                                                "There are changes to be lost.\nDo you want to save your project first?",
+                                                "There are unsaved changes.\nDo you want to save your project first?",
                                                 buttons = QtGui.QMessageBox.Discard | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:

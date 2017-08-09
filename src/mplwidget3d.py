@@ -91,8 +91,8 @@ class MplWidget3d(MatplotlibWidget):
                 zs = []
                 l = 0
                 for i in range(len(data.blocks)):
-                    if vum.mapping[i][j] is not None:
-                        runit = vum.get_realunit(i, j, data)
+                    runit = vum.get_realunit(i, j, data)
+                    if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
                         datas = data.get_data(layer, runit)
                         col = vum.get_color(j, True, layer)
                         z = datas

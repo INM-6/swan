@@ -110,7 +110,7 @@ class MplWidgetLDA(MatplotlibWidget):
             
             m_dom_channel, lv_dom_channel = self.merge_channel(dom_channel)
             
-            pca = PCA(n_components = 3)
+            lda = LDA(n_components = 3)
             
             dom_pca = pca.fit_transform(m_dom_channel)
             dom_ch_pca = self.split_waves(dom_pca, lv_dom_channel, 'all')

@@ -64,21 +64,31 @@ class VUnits(MatplotlibWidget):
         self.combo.currentIndexChanged.connect(self.settings_changed)
         self.canvas.mpl_connect("pick_event", self.on_pick)
 
-        clist = ['w',
-            (0, 0, 1), #blue
-            (0, 0.5, 1),
-            (0, 0.4, 0.7),
-            (0, 0, 0.5),
-            (0, 0, 1),
-            (0.5, 0.25, 0), #orange
-            (1, 0.4, 0),
-            (0.94, 0.4, 0),
-            (0.7, 0.35, 0),
-            (1, 0.5, 0)]
-
+        clist = [(0,     0,      0  ),
+                 (31,	119,	    180),
+                 (174,	199,	    232),
+                 (255,	127,	    14),
+                 (255,	187,	    120),
+                 (44,	160,	    44),
+                 (152,	223,	    138),
+                 (214,	39, 	    40),
+                 (255,	152,	    150),
+                 (148,	103,	    189),
+                 (197,	176,	    213),
+                 (140,	86, 	    75),
+                 (196,	156,	    148),
+                 (227,	119,	    194),
+                 (247,	182,	    210),
+                 (127,	127,	    127),
+                 (199,	199,	    199),
+                 (188,	189,	    34),
+                 (219,	219,	    141),
+                 (23,	190,	    207),
+                 (158,	218,	    229)]
+        clist = [(line[0]/255., line[1]/255., line[2]/255.) for line in clist]
         #properties{
         self._axes = self.get_axes()[0]
-        self._cmap = colors.ListedColormap(clist, N=11)
+        self._cmap = colors.ListedColormap(clist, N=20)
         self._settings = {"num_vu":"1"}
         #}
 

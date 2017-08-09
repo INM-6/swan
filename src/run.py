@@ -37,7 +37,6 @@ if __name__ == '__main__':
     sys.path.insert(1, join(p, "python-neo"))
     sys.path.insert(1, join(p, "python-odml"))
     
-    
     from src.main import Main
     from PyQt5.QtGui import QApplication
     

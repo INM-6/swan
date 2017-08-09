@@ -8,6 +8,7 @@ from os.path import join, isdir, exists, abspath
 
 
 class ProjectError(ValueError):
+    print("Project Error raised")
     pass
 
 
@@ -270,7 +271,7 @@ class Project(object):
             raise ProjectError("File {} already exists".format(filename))
         if create_file:    
             open(fn, "w")
-        filelist = self.get_file_list(sdir, create_file)
+        filelist = self.get_file_list(sdir)
         filelist.append(filename)
             
         

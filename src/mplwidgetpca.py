@@ -45,6 +45,7 @@ class MplWidgetPCA(MatplotlibWidget):
         self._axes = self.get_axes()[0]
         self.clear_and_reset_axes(**self._kwargs)
         self._first = True
+        self.wave_length = 38
         
     
     #### general methods ####    
@@ -126,11 +127,18 @@ class MplWidgetPCA(MatplotlibWidget):
             
             if self._first:
                 self.canvas.draw()
+                axes_list = self.canvas.fig.get_axes()
+                for ax in axes_list:
+                    ax.cla()
+                    for k, v in self._kwargs.items():
+                        getattr(ax, str(k))(v)
                 self._first = False
             else:
                 axes_list = self.canvas.fig.get_axes()
                 for ax in axes_list:
                     ax.cla()
+                    for k, v in self._kwargs.items():
+                        getattr(ax, str(k))(v)
             
             for layer in layers:
                 if layer == "units":
@@ -143,24 +151,30 @@ class MplWidgetPCA(MatplotlibWidget):
                                 if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
                                     channel.append(data.get_data("all", runit))
                             
+                            print(len(channel))
+                            
                             merged_channel, len_vec = self.merge_channel(channel)
-                            pca_channel = self.split_waves(pca.transform(merged_channel), len_vec, 'all')
+                            try:    
+                                pca_channel = self.split_waves(pca.transform(merged_channel), len_vec, 'all')
+                                
+                                axes = self.return_axes(pca_channel)
+                                
+                                c = 0
+                                for u in range(len(nums[i])):
+                                    if found[u] and nums[i][u] != 0:
+                                        col = vum.get_color(u, True, None)
+                                        self.plot(axes[0][c], axes[1][c], axes[2][c], s = 1, color = col, alpha = 0.05, marker = '.')
+                                        self.plot(np.mean(axes[0][c], axis = 0), np.mean(axes[1][c], axis = 0), np.mean(axes[2][c], axis = 0), s = 25, color = col, alpha = 1, marker = 'o')
+                                        c += 1
+                                
+                                del channel
+                                del merged_channel
+                                del pca_channel
+                                del axes
                             
-                            axes = self.return_axes(pca_channel)
+                            except ValueError:
+                                pass
                             
-                            c = 0
-                            for u in range(len(nums[i])):
-                                if found[u] and nums[i][u] != 0:
-                                    col = vum.get_color(u, True, None)
-                                    self.plot(axes[0][c], axes[1][c], axes[2][c], s = 1, color = col, alpha = 0.05, marker = '.')
-                                    self.plot(np.mean(axes[0][c], axis = 0), np.mean(axes[1][c], axis = 0), np.mean(axes[2][c], axis = 0), s = 25, color = col, alpha = 1, marker = 'o')
-                                    c += 1
-                            
-                            del channel
-                            del merged_channel
-                            del pca_channel
-                            del axes
-                        
                         elif i == dom:
                             axes = self.return_axes(dom_ch_pca)
                             
@@ -194,7 +208,7 @@ class MplWidgetPCA(MatplotlibWidget):
             total_length += len(unit)
             length_vector.append(total_length)
         
-        waves = np.zeros((total_length, 38))
+        waves = np.zeros((total_length, self.wave_length))
         
         for u, unit in enumerate(channel):
             for wf, wave in enumerate(unit):

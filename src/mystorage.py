@@ -122,8 +122,8 @@ class MyStorage(Storage, QObject):
         self._loading = False
         #}
         
-        self.store("channel", 3)
-        self.store("lastchannel", 3)
+        self.store("channel", 1)
+        self.store("lastchannel", 1)
         
     
     def set_cache_dir(self, cache_dir):
@@ -171,6 +171,7 @@ class MyStorage(Storage, QObject):
         
         #return if there is nothing to load
         if not loadFiles and len(files) == 0:
+            print("No files to load!")
             return False
         
         #if something goes wrong, you can back to the old project
@@ -181,11 +182,14 @@ class MyStorage(Storage, QObject):
         if not loadFiles:
             #checking if standard name is already existing
             #if so, the name will be changed 
+            print("NOT LOADFILES")
             while (True):
                 try:
                     self._project.add_file(self.get_pro_name(proname))
+                    print("add_file - SUCCESS")
                     break
                 except:
+                    print("Executing exception")
                     istr = str(self._copy_i)
                     l = len(istr)
                     if proname.endswith(")"):
@@ -196,6 +200,7 @@ class MyStorage(Storage, QObject):
             
             self._project.add_file(self.get_vum_name(proname))
         else:
+            print("Load Files is true!")
             self._project.add_file(self.get_pro_name(proname), None, False)
             self._project.add_file(self.get_vum_name(proname), None, False)
         
