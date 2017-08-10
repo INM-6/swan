@@ -18,7 +18,7 @@ version = "1.0.0"
 
 author = "Swan authors and contributors"
 
-copyr = "2013-2015"
+copyr = "2013-2017"
 
 about = """
         {}

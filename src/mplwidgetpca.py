@@ -40,7 +40,7 @@ class MplWidgetPCA(MatplotlibWidget):
                         "set_ylabel":"Principal Component 2", 
                         "set_zlabel":"Principal Component 3"}
         #}
-        self.setup((1, 1), True, True)
+        self.setup((1, 1), False, True)
         
         self._axes = self.get_axes()[0]
         self.clear_and_reset_axes(**self._kwargs)
@@ -93,31 +93,21 @@ class MplWidgetPCA(MatplotlibWidget):
                     found[j] = True
         
         if np.any(found) and layers:
-            print("Mapping", vum.mapping)
             nums = deepcopy(vum.mapping)
-            print("Nums: ", nums)
             for num in nums:
                 try:
                     while not num[-1]:
                         num.pop()
                 except IndexError:
-                    print("Index Error found!")
                     num = [0]
-            print("Nums: ", nums)
             dom = np.argmax([np.count_nonzero(nu) for nu in nums])
-            print("Dominant Channel Number:", dom)
-            print("Mapping", vum.mapping)
             dom_channel = []
             
             for j in range(len(nums[dom])):
-                print("Unit " + str(j))
                 runit = vum.get_realunit(dom, j, data)
                 if vum.mapping[dom][j] != 0 and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
-                    print("Unit " + str(j))
                     dom_channel.append(data.get_data("all", runit))
-            
-            print("Dominant Channel:", np.shape(dom_channel))
-            
+                        
             m_dom_channel, lv_dom_channel = self.merge_channel(dom_channel)
             
             pca = PCA(n_components = 3)
@@ -145,13 +135,10 @@ class MplWidgetPCA(MatplotlibWidget):
                     for i in range(len(data.blocks)):
                         if i != dom:
                             channel = []
-                            print("Processing channel", str(i))
                             for j in range(len(nums[i])):
                                 runit = vum.get_realunit(i, j, data)
                                 if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
                                     channel.append(data.get_data("all", runit))
-                            
-                            print(len(channel))
                             
                             merged_channel, len_vec = self.merge_channel(channel)
                             try:    

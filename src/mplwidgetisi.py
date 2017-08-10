@@ -62,7 +62,7 @@ class MplWidgetIsi(MatplotlibWidget):
         
         #setting up the bin options GUI
         self.group = QtGui.QGroupBox("Bin options", self)
-        self.group.setFixedWidth(180)
+        self.group.setMinimumWidth(100)
         self.ggl = QtGui.QGridLayout(self.group)
         w = QtGui.QWidget()
         y = QtGui.QWidget()

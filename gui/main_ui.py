@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_Main(object):
     def setupUi(self, Main):
         Main.setObjectName(_fromUtf8("Main"))
-        Main.resize(1159, 788)
+        Main.resize(1366, 768)
         self.centralwidget = QtGui.QWidget(Main)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.gridLayout = QtGui.QGridLayout(self.centralwidget)

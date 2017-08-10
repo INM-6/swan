@@ -64,7 +64,7 @@ class VUnits(MatplotlibWidget):
         self.combo.currentIndexChanged.connect(self.settings_changed)
         self.canvas.mpl_connect("pick_event", self.on_pick)
 
-        clist = [(0,     0,      0  ),
+        clist = [(255,   255,    255),
                  (31,	119,	    180),
                  (174,	199,	    232),
                  (255,	127,	    14),

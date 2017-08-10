@@ -11,7 +11,7 @@ from os import curdir
 from PyQt5 import QtGui, QtWidgets
 
 try:
-    from PyQt4.QtCore import QString
+    from PyQt5.QtCore import QString
 except ImportError:
     # we are using Python3 so QString is not defined
     QString = str

@@ -8,7 +8,6 @@ from os.path import join, isdir, exists, abspath
 
 
 class ProjectError(ValueError):
-    print("Project Error raised")
     pass
 
 

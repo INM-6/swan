@@ -276,7 +276,7 @@ class Main(QtGui.QMainWindow):
         
         """
         self.dirty_project()
-        filename = str(QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir))
+        filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
         if filename:
             (prodir, proname) = split(filename)
             
@@ -307,8 +307,6 @@ class Main(QtGui.QMainWindow):
         """
         if self.check_project():
             self.save_project()
-        else:
-            print("Ooh Lala!")
                 
     @QtCore.pyqtSlot(bool)
     def on_action_Save_as_triggered(self):
@@ -325,7 +323,7 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.check_project():
-            filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
+            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles", self._prodir)
             if filename:
                 self._mystorage.save_project_as(filename)
                 self.update_project()
@@ -341,7 +339,7 @@ class Main(QtGui.QMainWindow):
         Delegates the loading to :func:`load_connector_map`.
         
         """
-        filename = str(QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir))
+        filename = QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir)
         try:
             self.load_connector_map(filename)
         except ValueError:
@@ -624,6 +622,7 @@ class Main(QtGui.QMainWindow):
             self.ui.view_2.reset()
 
             #plotting
+            self.plots.reset_selection()
             self.plots.make_plots(n, m)
             data = self._mystorage.get_data()
             if any(data.nums):
@@ -647,7 +646,7 @@ class Main(QtGui.QMainWindow):
             return True
         elif self._mystorage.is_loading() or self.ui.view_2.isLoading:
             self.selector.select_only(self._mystorage.get_channel())
-        return False
+            return False
     
     def plot_all(self, i=None, visible=None):
         """
@@ -729,7 +728,7 @@ class Main(QtGui.QMainWindow):
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l2)
         elif i == 4:
-            #view_4: PCA mpl plot
+            #view_5: PCA mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l2)
             
@@ -796,7 +795,7 @@ class Main(QtGui.QMainWindow):
                                                 buttons = QtGui.QMessageBox.Discard | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
-                self.on_action_Save_Project_triggered()
+                self.on_action_Save_as_triggered()
                 
     def update_project(self):
         """

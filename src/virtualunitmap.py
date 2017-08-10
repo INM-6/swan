@@ -73,7 +73,6 @@ class VirtualUnitMap(object):
                 The number of units per block.
         
         """
-        print(nums)
         n_ = sum(nums)
         self.n_ = n_
         for n in nums:
