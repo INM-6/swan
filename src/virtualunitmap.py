@@ -8,6 +8,7 @@ real units to virtual units. The virtual units can be swapped to have the
 same units in the same row.
 """
 import numpy as np
+from scipy.spatial.distance import cdist
 
 class VirtualUnitMap(object):
     """        
@@ -189,13 +190,13 @@ class VirtualUnitMap(object):
             col = (self.colors[i][0]/255., self.colors[i][1]/255., self.colors[i][2]/255.)
             if layer == "standard deviation":
                 col = (col[0]/2., col[1]/2., col[2]/2.)
-            elif layer == "session-ISI":
+            elif layer == "session":
                 col = (col[0]/2., col[1]/2., col[2]/2.)
         else:
             col = self.colors[i]
         return col
     
-    def calculate_mapping(self, data):
+    def calculate_mapping_1(self, data, storage):
         """
         Calculates a mapping for the units based on features like distance.
         
@@ -208,6 +209,63 @@ class VirtualUnitMap(object):
                 which will be used to compare the units.
             
         """
+        print("Map being calculated")
+        
+        for i in range(len(data.blocks) - 1):
+            sessions = np.zeros((sum(data.nums), 2, data.wave_length))
+            
+            for j, val in enumerate(storage.get_map().mapping[i]):
+                if val is not 0:
+                    runit = self.get_realunit(i, j, data)
+                    sessions[j][0] = data.get_data("average", runit)
+            
+            for j, val in enumerate(storage.get_map().mapping[i+1]):
+                if val is not 0:
+                    runit = self.get_realunit(i+1, j, data)
+                    sessions[j][1] = data.get_data("average", runit)
+            
+            distances = cdist(sessions[:, 0], sessions[:, 1], metric='euclidean')
+            threshold = np.mean(distances[distances > 0])
+            print(threshold)
+            extend = 0
+            exclude = []
+            for j, val in enumerate(storage.get_map().mapping[i+1]):
+                print(j, val)
+                if val is not 0:
+                    print(distances[j, j:])
+                    min_arg = np.argmin(distances[j, j:]) + j
+                    print("Min Arg: {}".format(min_arg))
+                    if min_arg == j:
+                        pass
+                    elif distances[j][min_arg] < threshold and (j, min_arg) not in exclude and storage.get_map().mapping[i+1][min_arg] != 0:
+                        print("Swapping {} and {}".format(j, min_arg))
+                        storage.swap(i+1, j, min_arg)
+                        exclude.append((j, min_arg))
+                        exclude.append((min_arg, j))
+                    elif distances[j][min_arg] >= threshold:
+                        print("Swapping {} and {}".format(j, data.nums[i+1] + extend))
+                        storage.swap(i+1, j, data.nums[i+1] + extend)
+                        extend+=1
+                        print(extend)
+                    else:
+                        print("Logic flawed, check again!")
+            print(exclude)
+        
+    
+    def calculate_mapping(self, data, storage):
+        """
+        Calculates a mapping for the units based on features like distance.
+        
+        The units will be compared pare-wise and sequential.
+        
+        **Arguments**
+        
+            *data* (:class:`src.neodata.NeoData`):
+                This object is needed to get the data 
+                which will be used to compare the units.
+            
+        """
+        print("Map being calculated")
         #dis = {}
         #for each block except the last one
         for i in range(len(data.blocks) - 1):
@@ -234,8 +292,8 @@ class VirtualUnitMap(object):
 
                                 #calculate cross correlation {
                                 #calculates the inter-spike-interval
-                                isi1 = data.get_data("units-ISI", unit1)[0]
-                                isi2 = data.get_data("units-ISI", unit2)[0]
+                                isi1 = data.get_data("units", unit1)[0]
+                                isi2 = data.get_data("units", unit2)[0]
                                 len1 = len(isi1)
                                 len2 = len(isi2)
                                 if len1 > len2:

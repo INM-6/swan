@@ -100,8 +100,7 @@ class MplWidget2d(MatplotlibWidget):
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
-                            for d in datas:
-                                self.plot(d, col)
+                            self.plot(datas, col)
                             self._axes.set_ylim(data.get_yscale(layer))
         self.draw()
     

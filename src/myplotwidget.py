@@ -144,7 +144,7 @@ class MyPlotWidget(PlotWidget):
         
         """
         self.setToolTip(tooltip)
-        QtGui.QToolTip.setFont(QtGui.QFont('Arial', 10))
+        QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
         
             
     #### mouse interaction ####

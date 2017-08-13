@@ -88,25 +88,49 @@ class MplWidget3d(MatplotlibWidget):
                 break
         if found:
             for layer in layers:
-                zs = []
-                l = 0
-                for i in range(len(data.blocks)):
-                    runit = vum.get_realunit(i, j, data)
-                    if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                        datas = data.get_data(layer, runit)
-                        col = vum.get_color(j, True, layer)
-                        z = datas
-                        l = len(z)
-                        zs.append(z)
-                zs = array(zs)
-                x = range(zs.shape[-1])
-                y = range(zs.shape[0])
-                xs, ys = meshgrid(x, y)        
-                if l > 0:
-                    for k in range(l):
-                        self.plot(xs, ys, zs[:, k, :], col)
+                if layer == "average":
+                    zs = []
+                    for i in range(len(data.blocks)):
+                        runit = vum.get_realunit(i, j, data)
+                        if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                            datas = data.get_data(layer, runit)
+                            col = vum.get_color(j, True, layer)
+                            z = datas
+                            zs.append(z)
+                    zs = array(zs)
+                    x = range(zs.shape[-1])
+                    y = range(zs.shape[0])
+                    xs, ys = meshgrid(x, y)
+                    if len(zs) > 0:
+                        #for k in range(len(zs)):
+                        self.plot(xs, ys, zs, col)
+                    else:
+                        continue
+                elif layer == "standard deviation":
+                    
+                    zs = []
+                    l = 0
+                    for i in range(len(data.blocks)):
+                        runit = vum.get_realunit(i, j, data)
+                        if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                            datas = data.get_data(layer, runit)
+                            col = vum.get_color(j, True, layer)
+                            z = datas
+                            l = len(z)
+                            zs.append(z)
+                    zs = array(zs)
+                    x = range(zs.shape[-1])
+                    y = range(zs.shape[0])
+                    xs, ys = meshgrid(x, y)
+                    if l > 0:
+                        for k in range(l):
+                            self.plot(xs, ys, zs[:, k, :], col)
+                    else:
+                        continue
+                    
                 else:
-                    continue
+                    print("invalid layer requested")
+                    raise ValueError
         self.draw()
         
 

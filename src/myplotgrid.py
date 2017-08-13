@@ -161,12 +161,16 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self.clear_plots()
         for i in range(len(data.blocks)):
+            print(vum.mapping[i])
             for j in range(vum.n_):
                 if vum.mapping[i][j] != 0:
                     p = self.find_plot(j, i)
                     runit = vum.get_realunit(i, j, data)
+                    print("Executing this at {}, {}".format(i, j))
+                    print(runit.description)
                     if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                        d = data.get_data("average", runit)[0]
+                        d = data.get_data("average", runit)
+                        print("Plotting wave {}{}\n".format(i, j), d)
                         col = vum.get_color(j)
                         p.plot(d.T, col)
     

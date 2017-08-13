@@ -463,7 +463,7 @@ class MyStorage(Storage, QObject):
         c = 0
         for i in range(len(data.blocks)):
             spike_nums.append([])
-            for j in range(len(vum.mapping[i])):
+            for j in range(vum.n_):
                 runit = vum.get_realunit(i, j, data)
                 if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
                     spike_nums[c].append(data.get_data("n_spikes", runit))
@@ -657,7 +657,7 @@ class MyStorage(Storage, QObject):
         for name, vus in zip(files, vum.mapping):
             for i in range(len(vus)):
                 d[i+1].append((basename(name), vus[i]))
-                
+        
         name = "vum" + str(channel)
         vum_all[name] = d
         vum_all["files"] = files

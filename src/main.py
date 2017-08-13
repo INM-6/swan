@@ -631,6 +631,10 @@ class Main(QtGui.QMainWindow):
                 min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
             self.ui.view_2.set_range(min0, max0)
+            
+            vum = self._mystorage.get_map()
+            vum.calculate_mapping(data, self._mystorage)
+            
             self.plot_all()
             
             #setting channel detail
@@ -792,10 +796,10 @@ class Main(QtGui.QMainWindow):
         if self._globaldirty:
             answer = QtGui.QMessageBox.question(self, "Confirmation", 
                                                 "There are unsaved changes.\nDo you want to save your project first?",
-                                                buttons = QtGui.QMessageBox.Discard | QtGui.QMessageBox.Yes,
+                                                buttons = QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
-                self.on_action_Save_as_triggered()
+                self.on_action_Save_Project_triggered()
                 
     def update_project(self):
         """
@@ -932,6 +936,7 @@ class Main(QtGui.QMainWindow):
             icon.addPixmap(QtGui.QPixmap(prefix + "preferences.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.ui.action_Preferences.setIcon(icon)
         except:
+            print("Icon Exception")
             pass
         
     def load_connector_map(self, filename):

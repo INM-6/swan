@@ -12,7 +12,9 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
 from os.path import join, split, exists
 import gc
-from numpy import min, max, mean, std, array
+from numpy import mean, std, array
+from numpy import min as nmin
+from numpy import max as nmax
 from numpy.linalg import norm
 from PyQt5.QtCore import QObject, pyqtSignal
 from neo.io.pickleio import PickleIO
@@ -60,6 +62,7 @@ class NeoData(QObject):
         self.blocks = []
         self.nums = []
         self.rgios = []
+        self.wave_length = 0
         #}
         
         
@@ -139,6 +142,7 @@ class NeoData(QObject):
                     for b in blocks]
         self.blocks = blocks
         self.nums = nums
+        self.wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
         
     def get_data(self, layer, unit):
         """
@@ -161,7 +165,7 @@ class NeoData(QObject):
         
         """
         if layer == "average":
-            return mean(unit.spiketrains[0].waveforms.magnitude, axis=0)
+            return mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
         elif layer == "standard deviation":
             means = mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
             stds = std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
@@ -215,14 +219,14 @@ class NeoData(QObject):
                 if "noise" not in unit.description.split() and "unclassified" not in unit.description.split():
                     datas.append(self.get_data(layer, unit))
         for data in datas:
-            tmp0 = min(data)
-            tmp1 = max(data)
+            tmp0 = nmin(data)
+            tmp1 = nmax(data)
             
             yranges0.append(tmp0)
             yranges1.append(tmp1)
         
-        maxi = max(yranges1) + 20.0
-        mini = min(yranges0) - 20.0
+        maxi = nmax(yranges1) + 20.0
+        mini = nmin(yranges0) - 20.0
         return (mini, maxi)
 
     def get_distance(self, unit1, unit2):
