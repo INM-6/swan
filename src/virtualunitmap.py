@@ -64,7 +64,7 @@ class VirtualUnitMap(object):
         
     #### general methods ####    
         
-    def set_initial_map(self, nums):
+    def set_initial_map(self, data):
         """
         Sets the default mapping.
         
@@ -74,11 +74,28 @@ class VirtualUnitMap(object):
                 The number of units per block.
         
         """
-        n_ = sum(nums)
+        
+        n_ = sum(data.nums)
         self.n_ = n_
-        for n in nums:
-            vu = range(1, n+1) + [0 for i in range(n_ - n)]
-            self.mapping.append(vu)
+        vmap = []
+        for i in range(len(data.blocks)):
+            vmap.append([])
+            count = 1
+            for j in range(self.n_):
+                try:
+                    unit_description = data.blocks[i].channel_indexes[0].units[j].description.split()
+                    
+                    if "unclassified" in unit_description:
+                        vmap[i].append(0)
+                    elif "noise" in unit_description:
+                        vmap[i].append(0)
+                    else:
+                        vmap[i].append(count)
+                        count += 1
+                except:
+                    vmap[i].append(0)
+        
+        self.mapping = vmap
         self.visible = [True for i in range(n_)]
         
     def set_map(self, nums, vum):
@@ -127,7 +144,11 @@ class VirtualUnitMap(object):
         
         """
         vunit = self.mapping[i][j]
-        runit = data.blocks[i].channel_indexes[0].units[vunit]
+        if "unclassified" not in data.blocks[i].channel_indexes[0].units[0].description.split():
+            runit = data.blocks[i].channel_indexes[0].units[vunit - 1]
+        else:
+            runit = data.blocks[i].channel_indexes[0].units[vunit]
+        #runit = data.blocks[i].channel_indexes[0].units[vunit]
         return runit
     
     def swap(self, m, n1, n2):
@@ -196,7 +217,7 @@ class VirtualUnitMap(object):
             col = self.colors[i]
         return col
     
-    def calculate_mapping_1(self, data, storage):
+    def calculate_mapping(self, data, storage):
         """
         Calculates a mapping for the units based on features like distance.
         
@@ -230,6 +251,7 @@ class VirtualUnitMap(object):
             extend = 0
             exclude = []
             for j, val in enumerate(storage.get_map().mapping[i+1]):
+                print("Executing this at {}, {}".format(i, j))
                 print(j, val)
                 if val is not 0:
                     print(distances[j, j:])
@@ -237,12 +259,12 @@ class VirtualUnitMap(object):
                     print("Min Arg: {}".format(min_arg))
                     if min_arg == j:
                         pass
-                    elif distances[j][min_arg] < threshold and (j, min_arg) not in exclude and storage.get_map().mapping[i+1][min_arg] != 0:
+                    elif distances[j, min_arg] < threshold and (j, min_arg) not in exclude:
                         print("Swapping {} and {}".format(j, min_arg))
                         storage.swap(i+1, j, min_arg)
                         exclude.append((j, min_arg))
                         exclude.append((min_arg, j))
-                    elif distances[j][min_arg] >= threshold:
+                    elif distances[j, min_arg] >= threshold:
                         print("Swapping {} and {}".format(j, data.nums[i+1] + extend))
                         storage.swap(i+1, j, data.nums[i+1] + extend)
                         extend+=1
@@ -252,7 +274,7 @@ class VirtualUnitMap(object):
             print(exclude)
         
     
-    def calculate_mapping(self, data, storage):
+    def calculate_mapping_bu(self, data, storage):
         """
         Calculates a mapping for the units based on features like distance.
         

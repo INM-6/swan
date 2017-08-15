@@ -461,11 +461,11 @@ class MyStorage(Storage, QObject):
         data = self.get_data()
         spike_nums = []
         c = 0
-        for i in range(len(data.blocks)):
+        for i in range(len(vum.mapping)):
             spike_nums.append([])
-            for j in range(vum.n_):
-                runit = vum.get_realunit(i, j, data)
-                if "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+            for j in range(len(vum.mapping[i])):
+                if vum.mapping[i][j] != 0:
+                    runit = vum.get_realunit(i, j, data)
                     spike_nums[c].append(data.get_data("n_spikes", runit))
                 else:
                     spike_nums[c].append(0)
@@ -489,7 +489,7 @@ class MyStorage(Storage, QObject):
 #        vum.reset()
         data = self.get_data()
 #        vum.set_initial_map(data.nums)
-        vum.calculate_mapping(data)
+        vum.calculate_mapping(data, self)
         self.change_map()
     
     def revert(self):
@@ -560,7 +560,7 @@ class MyStorage(Storage, QObject):
             vum = vum_all[name]
             vumap.set_map(data.nums, vum)
         except KeyError:
-            vumap.set_initial_map(data.nums)
+            vumap.set_initial_map(data)
             
         self.store("vum", vumap)
         
