@@ -486,9 +486,7 @@ class MyStorage(Storage, QObject):
         
         """
         vum = self.get_map()
-#        vum.reset()
         data = self.get_data()
-#        vum.set_initial_map(data.nums)
         vum.calculate_mapping(data, self)
         self.change_map()
     

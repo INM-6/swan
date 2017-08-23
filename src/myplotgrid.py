@@ -89,6 +89,7 @@ class MyPlotContent(QtWidgets.QWidget):
         self._rows = {}
         self._cols = {}
         self._yrange = (0, 0)
+        self._second_select = None
         #}
         
         self.ui.gridLayout.setColumnStretch(1000, 1000)
@@ -161,15 +162,15 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self.clear_plots()
         for i in range(len(vum.mapping)):
-            print(vum.mapping[i])
+            #print(vum.mapping[i])
             for j in range(len(vum.mapping[i])):
                 if vum.mapping[i][j] != 0:
                     p = self.find_plot(j, i)
                     runit = vum.get_realunit(i, j, data)
-                    print("Executing this at {}, {}".format(i, j))
+                    #print("Executing this at {}, {}".format(i, j))
                     d = data.get_data("average", runit)
                     col = vum.get_color(j)
-                    p.plot(d.T, col)
+                    p.plot(d, col)
     
     def find_plot(self, i, j):
         """
@@ -209,10 +210,24 @@ class MyPlotContent(QtWidgets.QWidget):
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
+                self._second_select = plot
+                
             elif not self._selected:
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
+                self._second_select = None
+                
+            elif self._second_select is not None and self._selected[0].pos[1] == plot.pos[1]:
+                self._selected.remove(self._second_select)
+                self._second_select.change_background(not select)
+                self._second_select.selected = not select
+                self._second_select = plot
+                
+                self._selected.append(plot)
+                plot.change_background(select)
+                plot.selected = select
+                
         elif plot in self._selected:
             self._selected.remove(plot)
             plot.change_background(select)

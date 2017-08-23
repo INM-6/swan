@@ -62,7 +62,7 @@ class MplWidgetIsi(MatplotlibWidget):
         
         #setting up the bin options GUI
         self.group = QtGui.QGroupBox("Bin options", self)
-        self.group.setMinimumWidth(100)
+        self.group.setFixedWidth(150)
         self.ggl = QtGui.QGridLayout(self.group)
         w = QtGui.QWidget()
         y = QtGui.QWidget()
@@ -74,11 +74,15 @@ class MplWidgetIsi(MatplotlibWidget):
         self.ghl2 = QtGui.QHBoxLayout(y)
         
         self.binMaxPlusBtn = QtGui.QPushButton("+")
+        self.binMaxPlusBtn.setFixedWidth(30)
         self.binMaxEdit = QtGui.QLineEdit()
         self.binMaxMinusBtn = QtGui.QPushButton("-")
+        self.binMaxMinusBtn.setFixedWidth(30)
         self.binStepPlusBtn = QtGui.QPushButton("+")
+        self.binStepPlusBtn.setFixedWidth(30)
         self.binStepEdit = QtGui.QLineEdit()
         self.binStepMinusBtn = QtGui.QPushButton("-")
+        self.binStepMinusBtn.setFixedWidth(30)
         
         self.ghl1.addWidget(self.binMaxMinusBtn)
         self.ghl1.addWidget(self.binMaxEdit)

@@ -9,6 +9,7 @@ same units in the same row.
 """
 import numpy as np
 from scipy.spatial.distance import cdist
+from copy import deepcopy
 
 class VirtualUnitMap(object):
     """        
@@ -232,18 +233,128 @@ class VirtualUnitMap(object):
         """
         print("Map being calculated")
         
+        """
+        mapping = np.array(deepcopy(storage.get_map().mapping)).T
+        
+        for s in range(mapping.shape[1]):
+            averages = np.zeros((mapping.shape[0]))
+        
+            for j in range(len(averages)):
+                if mapping[j][s] != 0:
+                    runit = self.get_realunit(s, j, data)
+                    wave = data.get_data("average", runit)
+                    averages[j] = np.amax(abs(wave))
+            
+            for i in range(len(averages))[::-1]:
+                for j in range(1, i+1):
+                    actor = np.amax(averages[j-1]) + abs(np.amin(averages[j-1]))
+                    support = np.amax(averages[j]) + abs(np.amin(averages[j]))
+                    if actor < support:
+                        print("Swapping {} with {} on Day 0".format(j-1, j))
+                        print("Actor: {} Support: {}\n".format(actor, support))
+                        storage.swap(0, j-1, j)
+                        tmp = averages[j-1]
+                        averages[j-1] = averages[j]
+                        averages[j] = tmp
+            
+            
+            for i in range(len(averages)):
+                max_index = np.argmax(averages[i:]) + i
+                if max_index != i:
+                    storage.swap(s, i, max_index)
+                    tmp = averages[max_index]
+                    averages[max_index] = averages[i]
+                    averages[i] = tmp
+        """
+        mapping = np.array(deepcopy(storage.get_map().mapping)).T
+        history = np.zeros_like(mapping, dtype=(float, 3))
+        history[history == 0] = None
+        
+        for i in range(mapping.shape[1] - 1):
+            for j in range(mapping.shape[0]):
+                if mapping[j][i] >= 0.5: # to avoid errors in float comparison
+                    runit_actor = self.get_realunit(i, j, data)
+                    actor = data.get_data("average", runit_actor)
+                    distances = np.zeros((mapping.shape[0], mapping.shape[1]))
+                    for k in range(mapping.shape[1]):
+                        for l in range(mapping.shape[0]):
+                            runit_support = self.get_realunit(k, l, data)
+                            support = data.get_data("average", runit_support)
+                            distances[l][k] = np.linalg.norm(np.subtract(actor, support))
+                    
+                    threshold = np.mean(distances[mapping >= 0.5])
+                    print("Threshold: {}\n".format(threshold))
+                    
+                    for k in range(i+1, mapping.shape[1]):
+                        min_arg = np.argmin(distances[:, k])
+                        print("i: {}, j: {}, k: {}, min_arg: {}\n".format(i, j, k, min_arg))
+                        if min_arg == j:
+                            pass
+                        elif distances[min_arg][k] <= threshold:
+                            if np.isnan(np.sum(history[min_arg][k])):
+                                history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(k-i))
+                                storage.swap(k, min_arg, j)
+                                mapping = np.array(deepcopy(storage.get_map().mapping)).T
+                                print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, distances[min_arg][k]))
+                            else:
+                                prev_dist = history[min_arg][k][-1]
+                                curr_dist = distances[min_arg][k]
+                                if curr_dist < prev_dist:
+                                    history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(k-i))
+                                    storage.swap(k, min_arg, j)
+                                    mapping = np.array(deepcopy(storage.get_map().mapping)).T
+                                    print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, distances[min_arg][k], prev_dist, curr_dist))
+                        elif distances[min_arg][k] > threshold:
+                            loc = 0
+                            first_zero = np.where(mapping[:, k] == 0)[0][loc]
+                            while np.sum(mapping[first_zero]) != 0:
+                                loc += 1
+                                first_zero = np.where(mapping[:, k] == 0)[0][loc]
+                            history[first_zero][k] = (first_zero, j, distances[first_zero][k] * np.exp(k-i))
+                            history[j][k] =  (np.nan, np.nan, np.nan)
+                            storage.swap(k, first_zero, min_arg)
+                            mapping = np.array(deepcopy(storage.get_map().mapping)).T
+                            print("Swapped {} with empty plot {} on day {}\nDistance: {}\n".format(min_arg, first_zero, k, distances[first_zero][k]))
+                            print("Mapping: {}".format(mapping))
+                        else:
+                            print("Exception reached")
+                            print(distances)
+        
+    def calculate_mapping_bu_2(self, data, storage):
+        """
+        Calculates a mapping for the units based on features like distance.
+        
+        The units will be compared pare-wise and sequential.
+        
+        **Arguments**
+        
+            *data* (:class:`src.neodata.NeoData`):
+                This object is needed to get the data 
+                which will be used to compare the units.
+            
+        """
+        print("Map being calculated")
+        
         for i in range(len(data.blocks) - 1):
             sessions = np.zeros((sum(data.nums), 2, data.wave_length))
             
             for j, val in enumerate(storage.get_map().mapping[i]):
                 if val is not 0:
                     runit = self.get_realunit(i, j, data)
-                    sessions[j][0] = data.get_data("average", runit)
+                    #sessions[j][0] = data.get_data("average", runit)
+                    avg = data.get_data("average", runit)
+                    sessions[j][0] = avg/np.max(avg)
+                else:
+                    sessions[j][0] = np.zeros(38)
             
             for j, val in enumerate(storage.get_map().mapping[i+1]):
                 if val is not 0:
                     runit = self.get_realunit(i+1, j, data)
-                    sessions[j][1] = data.get_data("average", runit)
+                    #sessions[j][1] = data.get_data("average", runit)
+                    avg = data.get_data("average", runit)
+                    sessions[j][1] = avg/np.max(avg)
+                else:
+                    sessions[j][1] = np.zeros(38)
             
             distances = cdist(sessions[:, 0], sessions[:, 1], metric='euclidean')
             threshold = np.mean(distances[distances > 0])
@@ -251,12 +362,15 @@ class VirtualUnitMap(object):
             extend = 0
             exclude = []
             for j, val in enumerate(storage.get_map().mapping[i+1]):
-                print("Executing this at {}, {}".format(i, j))
-                print(j, val)
+                print("Executing this in session {}".format(i))
+                print("J: {}, Val: {}".format(j, val))
+
                 if val is not 0:
-                    print(distances[j, j:])
-                    min_arg = np.argmin(distances[j, j:]) + j
+                    print(distances[j])
+                    
+                    min_arg = np.argmin(distances[j])
                     print("Min Arg: {}".format(min_arg))
+                    
                     if min_arg == j:
                         pass
                     elif distances[j, min_arg] < threshold and (j, min_arg) not in exclude:
