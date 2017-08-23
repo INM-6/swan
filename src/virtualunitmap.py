@@ -233,18 +233,18 @@ class VirtualUnitMap(object):
         """
         print("Map being calculated")
         
-        """
         mapping = np.array(deepcopy(storage.get_map().mapping)).T
         
         for s in range(mapping.shape[1]):
             averages = np.zeros((mapping.shape[0]))
-        
+            
             for j in range(len(averages)):
                 if mapping[j][s] != 0:
                     runit = self.get_realunit(s, j, data)
                     wave = data.get_data("average", runit)
                     averages[j] = np.amax(abs(wave))
-            
+        
+            """
             for i in range(len(averages))[::-1]:
                 for j in range(1, i+1):
                     actor = np.amax(averages[j-1]) + abs(np.amin(averages[j-1]))
@@ -256,7 +256,7 @@ class VirtualUnitMap(object):
                         tmp = averages[j-1]
                         averages[j-1] = averages[j]
                         averages[j] = tmp
-            
+                        """  
             
             for i in range(len(averages)):
                 max_index = np.argmax(averages[i:]) + i
@@ -265,7 +265,7 @@ class VirtualUnitMap(object):
                     tmp = averages[max_index]
                     averages[max_index] = averages[i]
                     averages[i] = tmp
-        """
+        
         mapping = np.array(deepcopy(storage.get_map().mapping)).T
         history = np.zeros_like(mapping, dtype=(float, 3))
         history[history == 0] = None
@@ -280,41 +280,52 @@ class VirtualUnitMap(object):
                         for l in range(mapping.shape[0]):
                             runit_support = self.get_realunit(k, l, data)
                             support = data.get_data("average", runit_support)
-                            distances[l][k] = np.linalg.norm(np.subtract(actor, support))
+                            distances[l][k] = np.linalg.norm(np.subtract(actor, support)) * np.exp(abs(k-i))
                     
-                    threshold = np.mean(distances[mapping >= 0.5])
-                    print("Threshold: {}\n".format(threshold))
+                    print("Distances:\n {}\n".format(distances))
+                    threshold_dataset = distances[mapping >= 0.5]
+                    dataset_mean = np.mean(threshold_dataset)
+                    #dataset_std = np.std(threshold_dataset)
+                    #threshold_range_L = threshold_mean + 0.5 * threshold_std
+                    #dataset_reject_threshold = dataset_mean + 0.5 * dataset_std
                     
-                    for k in range(i+1, mapping.shape[1]):
+                    print("Threshold: {}\n".format(dataset_mean))
+                    
+                    if mapping.shape[1] < 10:
+                        loop_range = range(mapping.shape[1])
+                    else:
+                        loop_range = [x for x in range(i+9) if (i+x) <= mapping.shape[1]]
+                    
+                    for k in loop_range:
                         min_arg = np.argmin(distances[:, k])
                         print("i: {}, j: {}, k: {}, min_arg: {}\n".format(i, j, k, min_arg))
                         if min_arg == j:
                             pass
-                        elif distances[min_arg][k] <= threshold:
+                        elif distances[min_arg][k] <= dataset_mean:
                             if np.isnan(np.sum(history[min_arg][k])):
-                                history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(k-i))
+                                history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(abs(k-i)))
                                 storage.swap(k, min_arg, j)
                                 mapping = np.array(deepcopy(storage.get_map().mapping)).T
-                                print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, distances[min_arg][k]))
+                                print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, history[min_arg][k]))
                             else:
                                 prev_dist = history[min_arg][k][-1]
-                                curr_dist = distances[min_arg][k]
+                                curr_dist = distances[min_arg][k] * np.exp(k - i)
                                 if curr_dist < prev_dist:
-                                    history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(k-i))
+                                    history[min_arg][k] = (min_arg, j, distances[min_arg][k] * np.exp(abs(k-i)))
                                     storage.swap(k, min_arg, j)
                                     mapping = np.array(deepcopy(storage.get_map().mapping)).T
-                                    print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, distances[min_arg][k], prev_dist, curr_dist))
-                        elif distances[min_arg][k] > threshold:
+                                    print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, history[min_arg][k], prev_dist, curr_dist))
+                        elif distances[min_arg][k] > dataset_mean:
                             loc = 0
                             first_zero = np.where(mapping[:, k] == 0)[0][loc]
                             while np.sum(mapping[first_zero]) != 0:
                                 loc += 1
                                 first_zero = np.where(mapping[:, k] == 0)[0][loc]
-                            history[first_zero][k] = (first_zero, j, distances[first_zero][k] * np.exp(k-i))
+                            history[first_zero][k] = (first_zero, j, distances[first_zero][k] * np.exp(abs(k-i)))
                             history[j][k] =  (np.nan, np.nan, np.nan)
                             storage.swap(k, first_zero, min_arg)
                             mapping = np.array(deepcopy(storage.get_map().mapping)).T
-                            print("Swapped {} with empty plot {} on day {}\nDistance: {}\n".format(min_arg, first_zero, k, distances[first_zero][k]))
+                            print("Swapped {} with empty plot {} on day {}\nDistance: {}\n".format(min_arg, first_zero, k, history[first_zero][k]))
                             print("Mapping: {}".format(mapping))
                         else:
                             print("Exception reached")

@@ -11,6 +11,7 @@ It is extended by a 2d plot and the plotting methods.
 import numpy as np
 from PyQt5 import QtGui, QtCore
 from src.matplotlibwidget import MatplotlibWidget
+from mpldatacursor import HighlightingDataCursor
 
 
 class MplWidgetIsi(MatplotlibWidget):
@@ -216,7 +217,7 @@ class MplWidgetIsi(MatplotlibWidget):
 
     #### general methods ####
     
-    def plot(self, y, color):
+    def plot(self, y, color, label):
         """
         Plots data to the plot.
         
@@ -228,7 +229,7 @@ class MplWidgetIsi(MatplotlibWidget):
                 The color of the line.
         
         """
-        self._axes.plot(y[0], y[1], linewidth = 1, color=color)
+        return self._axes.plot(y[0], y[1], linewidth = 1, color=color, label = label)
         
     def do_plot(self, vum, data, layers):
         """
@@ -245,6 +246,7 @@ class MplWidgetIsi(MatplotlibWidget):
         
         """
         self.clear_and_reset_axes(**self._kwargs)
+        plots = []
         for layer in layers:
             if layer == "sessions":
                 for j in range(vum.n_):
@@ -272,7 +274,16 @@ class MplWidgetIsi(MatplotlibWidget):
                                 y = np.histogram(d, bins=range(1, self._settings["binMax"] + 1, self._settings["binStep"]))
                                 tmp = y[1]
                                 tmp = tmp[:len(tmp)-1]
-                                self.plot((tmp, y[0]/(1.0*len(d))), col)
+                                plot, = self.plot((tmp, y[0]/(1.0*len(d))), col, label = "Session ID: {}".format(i))
+                                plots.append(plot)
+        
+        if plots:
+            h2 = HighlightingDataCursor(plots,
+                                   display = 'single',
+                                   draggable = True,
+                                   formatter = "{label}".format,
+                                   highlight_color = 'black'
+                                   )
         self.draw()
         
     def init_settings(self):
