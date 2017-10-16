@@ -89,6 +89,7 @@ class MyPlotWidget(PlotWidget):
         
         """
         self._plotitem.plot(y, pen=pg.mkPen(pg.mkColor(color)), antialias=True)
+        self._plotitem.enableAutoRange()
         
     def change_size(self, width, height):
         """

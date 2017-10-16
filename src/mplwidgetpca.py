@@ -84,7 +84,7 @@ class MplWidgetPCA(MatplotlibWidget):
         
         """
         #self.clear_and_reset_axes(**self._kwargs)
-        
+        self.wave_length = data.wave_length
         found = [False for n in range(vum.n_)]
         
         for i in range(np.shape(vum.mapping)[0]):
@@ -188,6 +188,7 @@ class MplWidgetPCA(MatplotlibWidget):
         self.canvas.fig.tight_layout()
     
     def merge_channel(self, channel):
+        
         total_length = 0
         length_vector = [0]
         

@@ -697,7 +697,7 @@ class Main(QtGui.QMainWindow):
             self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
             #view_4: ISI mpl plot
             self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #view_4: PCA mpl plot
+            #view_5: PCA mpl plot
             self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #vu: Virtual unit overview
             self.vu.do_plot(vum_all, data)

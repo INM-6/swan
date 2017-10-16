@@ -18,7 +18,7 @@ from PyQt5 import QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar2QTAgg
 import matplotlib
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
 from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -192,7 +192,7 @@ class MatplotlibWidget(QtWidgets.QWidget):
     
     **Arguments**
         
-        *parent* (:class:`PyQt4.QtGui.QWidget` or None):
+        *parent* (:class:`PyQt5.QtGui.QWidget` or None):
             The parent of this widget.
             Default: None
     
