@@ -9,6 +9,7 @@ from :class:`src.matplotlibwidget.MatplotlibWidget`.
 It is extended by a 2d plot and the plotting methods.
 """
 from src.matplotlibwidget import MatplotlibWidget
+from mpldatacursor import HighlightingDataCursor
 
 class MplWidget2d(MatplotlibWidget):
     """
@@ -41,7 +42,7 @@ class MplWidget2d(MatplotlibWidget):
     
     #### general methods ####    
 
-    def plot(self, y, color):
+    def plot(self, y, color, label):
         """
         Plots data to the plot.
         
@@ -53,7 +54,7 @@ class MplWidget2d(MatplotlibWidget):
                 The color of the line.
         
         """
-        self._axes.plot(y, color=color)
+        return self._axes.plot(y, color=color, label = label)
         
     def std_plot(self, ys, color):
         """
@@ -85,24 +86,35 @@ class MplWidget2d(MatplotlibWidget):
         
         """
         self.clear_and_reset_axes()
-        for i in xrange(len(data.blocks)):
-            for j in xrange(vum.n_):
+        plots = []
+        for i in range(len(data.blocks)):
+            for j in range(vum.n_):
                 for layer in layers:
                     if layer == "standard deviation":                        
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
                             self.std_plot(datas, col)
                             self._axes.set_ylim(data.get_yscale(layer))
                     else:
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
-                            for d in datas:
-                                self.plot(d, col)
+                            plot, = self.plot(datas, col, "Session ID: {}".format(i))
+                            plots.append(plot)
                             self._axes.set_ylim(data.get_yscale(layer))
+        if plots:
+            h1 = HighlightingDataCursor(plots,
+                                   display = 'single',
+                                   draggable = True,
+                                   formatter = "{label}".format,
+                                   highlight_color = 'black',
+                                   keybindings = {'hide': 'control+d',
+                                                  'toggle': 'control+t'
+                                                  }
+                                   )
         self.draw()
     
     def clear_and_reset_axes(self):

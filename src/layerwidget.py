@@ -50,11 +50,11 @@ class LayerWidget(MyListWidget):
         
         """
         #names = ["average", "all", "standard deviation"]
-        names = ["average", "standard deviation", "units-ISI", "session-ISI"]
+        names = ["average", "standard deviation", "units", "sessions"]
         items = self.add_items(names, True)
         for item in items:
             text = str(item.text())
-            self._layers[item] = text
+            self._layers[text] = item
             
     def get_checked_layers(self, layers=None):
         """
@@ -74,11 +74,11 @@ class LayerWidget(MyListWidget):
         checked = []
         if layers is not None:
             for l in layers:
-                item = [item for item in self._layers.keys() if str(item.text()) == l][0]
+                item = [item for item in self._layers.values() if str(item.text()) == l][0]
                 if item.checkState() == QtCore.Qt.Checked:
                     checked.append(str(item.text()))
         else:
-            for item in self._layers.keys():
+            for item in self._layers.values():
                 if item.checkState() == QtCore.Qt.Checked:
                     checked.append(str(item.text()))
         return checked
@@ -91,7 +91,7 @@ class LayerWidget(MyListWidget):
                 The layer names.
         
         """
-        return self._layers.values()
+        return self._layers.keys()
     
     def _get_layers(self):
         """
@@ -101,7 +101,7 @@ class LayerWidget(MyListWidget):
                 The items of this widget.
         
         """
-        return self._layers.keys()
+        return self._layers.values()
     
     def enable_layers(self, enable, layers):
         """
@@ -116,8 +116,9 @@ class LayerWidget(MyListWidget):
         
         """
         for l in layers:
-            item = [item for item in self._layers.keys() if str(item.text()) == l][0]
-            item.setHidden(not enable)
+            items = [item for key, item in self._layers.items() if key == l]
+            items = items[0]
+            items.setHidden(not enable)
 
     
     #### signal handler ####

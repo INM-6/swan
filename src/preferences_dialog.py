@@ -328,7 +328,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         
         """
         #getting a map for the options
-        for i in xrange(self.ui.optionsList.count()):
+        for i in range(self.ui.optionsList.count()):
             item = self.ui.optionsList.item(i)
             self._options[item] = i
         self._set_preferences(self._preferences)

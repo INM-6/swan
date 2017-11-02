@@ -89,22 +89,23 @@ class MyPlotWidget(PlotWidget):
         
         """
         self._plotitem.plot(y, pen=pg.mkPen(pg.mkColor(color)), antialias=True)
-        
+#        self._plotitem.enableAutoRange()
+            
     def change_size(self, width, height):
         """
         Resizes the plot by the given steps.
         
         **Arguments**
         
-            *width* (integer):
-                The change step for the width.
-            *height* (integer):
-                The change step for the height.
+            *width* (float):
+                The change step percentage for the width.
+            *height* (float):
+                The change step percentage for the height.
         
         """
-        size = self.size()
-        neww = size.width()+width
-        newh = size.height()+height
+        oldw = float(self.size().width())
+        neww = int(oldw + oldw*(width/100.0))
+        newh = int((3./4.)*neww)
         if neww > 0 and newh > 0:
             self.setFixedSize(neww, newh)
         
@@ -144,7 +145,7 @@ class MyPlotWidget(PlotWidget):
         
         """
         self.setToolTip(tooltip)
-        QtGui.QToolTip.setFont(QtGui.QFont('Arial', 10))
+        QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
         
             
     #### mouse interaction ####

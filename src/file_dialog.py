@@ -11,7 +11,7 @@ from os import curdir
 from PyQt5 import QtGui, QtWidgets
 
 try:
-    from PyQt4.QtCore import QString
+    from PyQt5.QtCore import QString
 except ImportError:
     # we are using Python3 so QString is not defined
     QString = str
@@ -221,7 +221,7 @@ class File_Dialog(QtWidgets.QDialog):
         
         """
         files = []
-        for i in xrange(listWidget.count()):
+        for i in range(listWidget.count()):
             files.append(listWidget.item(i).text())
         return files
     

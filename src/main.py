@@ -34,6 +34,7 @@ from export import Export
 try:
     import cPickle as pkl
 except ImportError:
+    print("Importing Pickle, not cPickle")
     import pickle as pkl
 
 class MemoryTask(QtCore.QThread):
@@ -151,9 +152,9 @@ class Main(QtGui.QMainWindow):
         self._globaldirty = False
         self._preferences = None
         self._PREFS =       {   "defaultProName":"swan.txt",
-                                "zinStep":24,
+                                "zinStep":20.0,
                                 "cacheDir":self._CACHEDIR,
-                                "zoutStep":24,
+                                "zoutStep":20.0,
                                 "expandStep":5,
                                 "collapseStep":5,
                                 }
@@ -190,7 +191,7 @@ class Main(QtGui.QMainWindow):
         self.vu.load.connect(self.load_channel)
         
         #setting the horizontal widgets with equal sizes
-        self.ui.splitter_2.setSizes([int(self.ui.splitter_2.width()/2) for i in xrange(2)])
+        self.ui.splitter_2.setSizes([int(self.ui.splitter_2.width()/2) for i in range(2)])
         
         #shortcut reference
         self.plots = self.ui.plotGrid.child
@@ -255,7 +256,7 @@ class Main(QtGui.QMainWindow):
             if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
                 filesStr = self._mystorage.get_files(True)
                 #setting filelist detail
-                self.set_detail(4, filesStr)
+                self.set_detail(1, filesStr)
                 
                 self.save_project()
                 self.update_project()
@@ -275,7 +276,7 @@ class Main(QtGui.QMainWindow):
         
         """
         self.dirty_project()
-        filename = str(QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir))
+        filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
         if filename:
             (prodir, proname) = split(filename)
             
@@ -322,7 +323,7 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.check_project():
-            filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
+            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles", self._prodir)
             if filename:
                 self._mystorage.save_project_as(filename)
                 self.update_project()
@@ -338,7 +339,7 @@ class Main(QtGui.QMainWindow):
         Delegates the loading to :func:`load_connector_map`.
         
         """
-        filename = str(QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir))
+        filename = QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir)
         try:
             self.load_connector_map(filename)
         except ValueError:
@@ -619,17 +620,27 @@ class Main(QtGui.QMainWindow):
             
             #reset the data of the movie
             self.ui.view_2.reset()
-
+            
+            self.ui.view_6.reset_plot()
+            
             #plotting
+            self.plots.reset_selection()
             self.plots.make_plots(n, m)
             data = self._mystorage.get_data()
-            min0, max0 = data.get_yscale()
+            if any(data.nums):
+                min0, max0 = data.get_yscale()
+            else:
+                min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
             self.ui.view_2.set_range(min0, max0)
+                        
+            vum = self._mystorage.get_map()
+            vum.calculate_mapping(data, self._mystorage)
+            
             self.plot_all()
             
             #setting channel detail
-            self.set_detail(3, str(channel))
+            self.set_detail(1, str(channel))
             
             #setting tooltips
             self.plots.set_tooltips(self._mystorage.get_tooltips())
@@ -641,7 +652,7 @@ class Main(QtGui.QMainWindow):
             return True
         elif self._mystorage.is_loading() or self.ui.view_2.isLoading:
             self.selector.select_only(self._mystorage.get_channel())
-        return False
+            return False
     
     def plot_all(self, i=None, visible=None):
         """
@@ -673,7 +684,7 @@ class Main(QtGui.QMainWindow):
                 vum.set_visible(i, visible)
             
             l1 = ["average", "standard deviation"]
-            l2 = ["units-ISI", "session-ISI"]
+            l2 = ["units", "sessions"]
             
             #plotting
             #plots: pyqtgraph plotwidget overview
@@ -688,6 +699,10 @@ class Main(QtGui.QMainWindow):
             self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
             #view_4: ISI mpl plot
             self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_5: PCA mpl plot
+            #self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_6: PCA pyqtgraph plot
+            self.ui.view_6.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #vu: Virtual unit overview
             self.vu.do_plot(vum_all, data)
 
@@ -704,7 +719,7 @@ class Main(QtGui.QMainWindow):
         
         """
         l1 = ["average", "standard deviation"]
-        l2 = ["units-ISI", "session-ISI"]
+        l2 = ["units", "sessions"]
         if i == 0:
             #view_1: 2D mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
@@ -719,7 +734,15 @@ class Main(QtGui.QMainWindow):
         elif i == 3:
             #view_4: ISI mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)            
+            self.ui.layers.enable_layers(True, l2)
+        elif i == 4:
+            #view_5: PCA mpl plot
+            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.layers.enable_layers(True, l2)
+        elif i == 5:
+            #view_6: PCA pyqtgraph plot
+            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.layers.enable_layers(True, l2)
             
     def setProgress(self, i):
         """
@@ -762,7 +785,7 @@ class Main(QtGui.QMainWindow):
 
         """
         item = self.selector.get_item(channel)
-        if item is not None:
+        if item != 0:
             if item.selectable:
                 self.selector.select_channel(item, channel)
                 self.selector.select_only(channel)
@@ -780,8 +803,8 @@ class Main(QtGui.QMainWindow):
         """
         if self._globaldirty:
             answer = QtGui.QMessageBox.question(self, "Confirmation", 
-                                                "There are changes to be lost.\nDo you want to save your project first?",
-                                                buttons = QtGui.QMessageBox.Discard | QtGui.QMessageBox.Yes,
+                                                "There are unsaved changes.\nDo you want to save your project first?",
+                                                buttons = QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
                 self.on_action_Save_Project_triggered()
@@ -921,6 +944,7 @@ class Main(QtGui.QMainWindow):
             icon.addPixmap(QtGui.QPixmap(prefix + "preferences.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.ui.action_Preferences.setIcon(icon)
         except:
+            print("Icon Exception")
             pass
         
     def load_connector_map(self, filename):

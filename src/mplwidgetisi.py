@@ -11,6 +11,7 @@ It is extended by a 2d plot and the plotting methods.
 import numpy as np
 from PyQt5 import QtGui, QtCore
 from src.matplotlibwidget import MatplotlibWidget
+from mpldatacursor import HighlightingDataCursor
 
 
 class MplWidgetIsi(MatplotlibWidget):
@@ -53,8 +54,8 @@ class MplWidgetIsi(MatplotlibWidget):
         
         #properties{
         self._axes = None
-        self._kwargs = {"xlabel":"time",
-                        "ylabel":"fraction of spikes"}
+        self._kwargs = {"set_xlabel":"time",
+                        "set_ylabel":"fraction of spikes"}
         self._settings = {"binMax":100,
                           "binStep":1}
         #}
@@ -74,11 +75,15 @@ class MplWidgetIsi(MatplotlibWidget):
         self.ghl2 = QtGui.QHBoxLayout(y)
         
         self.binMaxPlusBtn = QtGui.QPushButton("+")
+        self.binMaxPlusBtn.setFixedWidth(30)
         self.binMaxEdit = QtGui.QLineEdit()
         self.binMaxMinusBtn = QtGui.QPushButton("-")
+        self.binMaxMinusBtn.setFixedWidth(30)
         self.binStepPlusBtn = QtGui.QPushButton("+")
+        self.binStepPlusBtn.setFixedWidth(30)
         self.binStepEdit = QtGui.QLineEdit()
         self.binStepMinusBtn = QtGui.QPushButton("-")
+        self.binStepMinusBtn.setFixedWidth(30)
         
         self.ghl1.addWidget(self.binMaxMinusBtn)
         self.ghl1.addWidget(self.binMaxEdit)
@@ -212,7 +217,7 @@ class MplWidgetIsi(MatplotlibWidget):
 
     #### general methods ####
     
-    def plot(self, y, color):
+    def plot(self, y, color, label):
         """
         Plots data to the plot.
         
@@ -224,7 +229,7 @@ class MplWidgetIsi(MatplotlibWidget):
                 The color of the line.
         
         """
-        self._axes.plot(y[0], y[1], linewidth = 1, color=color)
+        return self._axes.plot(y[0], y[1], linewidth = 1, color=color, label = label)
         
     def do_plot(self, vum, data, layers):
         """
@@ -241,12 +246,13 @@ class MplWidgetIsi(MatplotlibWidget):
         
         """
         self.clear_and_reset_axes(**self._kwargs)
+        plots = []
         for layer in layers:
-            if layer == "session-ISI":
-                for j in xrange(vum.n_):
+            if layer == "sessions":
+                for j in range(vum.n_):
                     values = []
-                    for i in xrange(len(data.blocks)):
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                    for i in range(len(data.blocks)):
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
@@ -258,9 +264,9 @@ class MplWidgetIsi(MatplotlibWidget):
                         tmp = tmp[:len(tmp)-1]
                         self.plot((tmp, y[0]/(1.0*len(values))), col)
             else:
-                for i in xrange(len(data.blocks)):
-                    for j in xrange(vum.n_):
-                        if vum.mapping[i][j] != None and vum.visible[j]:
+                for i in range(len(data.blocks)):
+                    for j in range(vum.n_):
+                        if vum.mapping[i][j] != 0 and vum.visible[j]:
                             runit = vum.get_realunit(i, j, data)
                             datas = data.get_data(layer, runit)
                             col = vum.get_color(j, True, layer)
@@ -268,7 +274,16 @@ class MplWidgetIsi(MatplotlibWidget):
                                 y = np.histogram(d, bins=range(1, self._settings["binMax"] + 1, self._settings["binStep"]))
                                 tmp = y[1]
                                 tmp = tmp[:len(tmp)-1]
-                                self.plot((tmp, y[0]/(1.0*len(d))), col)
+                                plot, = self.plot((tmp, y[0]/(1.0*len(d))), col, label = "Session ID: {}".format(i))
+                                plots.append(plot)
+        
+        if plots:
+            h2 = HighlightingDataCursor(plots,
+                                   display = 'single',
+                                   draggable = True,
+                                   formatter = "{label}".format,
+                                   highlight_color = 'black'
+                                   )
         self.draw()
         
     def init_settings(self):

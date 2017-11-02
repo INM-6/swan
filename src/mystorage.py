@@ -122,8 +122,8 @@ class MyStorage(Storage, QObject):
         self._loading = False
         #}
         
-        self.store("channel", 3)
-        self.store("lastchannel", 3)
+        self.store("channel", 1)
+        self.store("lastchannel", 1)
         
     
     def set_cache_dir(self, cache_dir):
@@ -181,6 +181,7 @@ class MyStorage(Storage, QObject):
         if not loadFiles:
             #checking if standard name is already existing
             #if so, the name will be changed 
+            
             while (True):
                 try:
                     self._project.add_file(self.get_pro_name(proname))
@@ -457,13 +458,26 @@ class MyStorage(Storage, QObject):
         tips = []
         vum = self.get_map()
         files = self.get_files()
-        i = 0
-        for f, l in zip(files, vum.mapping):
+        data = self.get_data()
+        spike_nums = []
+        c = 0
+        for i in range(len(vum.mapping)):
+            spike_nums.append([])
+            for j in range(len(vum.mapping[i])):
+                if vum.mapping[i][j] != 0:
+                    runit = vum.get_realunit(i, j, data)
+                    spike_nums[c].append(data.get_data("n_spikes", runit))
+                else:
+                    spike_nums[c].append(0)
+            c += 1
+            
+        c = 0
+        for f, l, n in zip(files, vum.mapping, spike_nums):
             tips.append([])
-            for u in l:
-                tooltip = "File: {}\nUnit: {}".format(basename(f), u)
-                tips[i].append(tooltip)
-            i += 1
+            for u, v in zip(l, n):
+                tooltip = "File: {}\nUnit: {}\nWaveforms: {}".format(basename(f), u, v)
+                tips[c].append(tooltip)
+            c += 1
         return tips
         
     def recalculate(self):
@@ -472,10 +486,8 @@ class MyStorage(Storage, QObject):
         
         """
         vum = self.get_map()
-#        vum.reset()
         data = self.get_data()
-#        vum.set_initial_map(data.nums)
-        vum.calculate_mapping(data)
+        vum.calculate_mapping(data, self)
         self.change_map()
     
     def revert(self):
@@ -546,7 +558,7 @@ class MyStorage(Storage, QObject):
             vum = vum_all[name]
             vumap.set_map(data.nums, vum)
         except KeyError:
-            vumap.set_initial_map(data.nums)
+            vumap.set_initial_map(data)
             
         self.store("vum", vumap)
         
@@ -638,12 +650,12 @@ class MyStorage(Storage, QObject):
         d = {}
         d["channel"] = channel
         
-        for i in xrange(1, len(vum.mapping[0])+1):
+        for i in range(1, len(vum.mapping[0])+1):
             d[i] = []
         for name, vus in zip(files, vum.mapping):
-            for i in xrange(len(vus)):
+            for i in range(len(vus)):
                 d[i+1].append((basename(name), vus[i]))
-                
+        
         name = "vum" + str(channel)
         vum_all[name] = d
         vum_all["files"] = files

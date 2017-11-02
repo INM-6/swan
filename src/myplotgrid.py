@@ -89,6 +89,7 @@ class MyPlotContent(QtWidgets.QWidget):
         self._rows = {}
         self._cols = {}
         self._yrange = (0, 0)
+        self._second_select = None
         #}
         
         self.ui.gridLayout.setColumnStretch(1000, 1000)
@@ -117,9 +118,9 @@ class MyPlotContent(QtWidgets.QWidget):
         self._plots = []
         self._rows = {}
         self._cols = {}
-        for i in xrange(rows):
+        for i in range(rows):
             self._rows[i] = []
-            for j in xrange(cols):
+            for j in range(cols):
                 if j not in self._cols:
                     self._cols[j] = []
                 mpw = MyPlotWidget(self)
@@ -160,14 +161,16 @@ class MyPlotContent(QtWidgets.QWidget):
         
         """
         self.clear_plots()
-        for i in xrange(len(data.blocks)):
-            for j in xrange(vum.n_):
-                if vum.mapping[i][j] != None:
+        for i in range(len(vum.mapping)):
+            #print(vum.mapping[i])
+            for j in range(len(vum.mapping[i])):
+                if vum.mapping[i][j] != 0:
                     p = self.find_plot(j, i)
                     runit = vum.get_realunit(i, j, data)
-                    d = data.get_data("average", runit)[0]
+                    #print("Executing this at {}, {}".format(i, j))
+                    d = data.get_data("average", runit)
                     col = vum.get_color(j)
-                    p.plot(d.T, col)
+                    p.plot(d, col)
     
     def find_plot(self, i, j):
         """
@@ -207,10 +210,24 @@ class MyPlotContent(QtWidgets.QWidget):
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
+                self._second_select = plot
+                
             elif not self._selected:
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
+                self._second_select = None
+                
+            elif self._second_select is not None and self._selected[0].pos[1] == plot.pos[1]:
+                self._selected.remove(self._second_select)
+                self._second_select.change_background(not select)
+                self._second_select.selected = not select
+                self._second_select = plot
+                
+                self._selected.append(plot)
+                plot.change_background(select)
+                plot.selected = select
+                
         elif plot in self._selected:
             self._selected.remove(plot)
             plot.change_background(select)
@@ -234,19 +251,19 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         return self._selected
     
-    def zoom_in(self, step=24):
+    def zoom_in(self, step=25.0):
         """
         Zooms in the plots.
         
         **Arguments**
         
-            *step* (integer):
-                The zoom step.
-                Default: 24 pixels.
+            *step* (float):
+                The zoom step percentage.
+                Default: 25.0 percent.
         
         """
         for plot in self._plots:
-            plot.change_size(width=step, height=int(step*3/4))
+            plot.change_size(width=step, height=step)
             
     def zoom_out(self, step=24):
         """
@@ -254,13 +271,13 @@ class MyPlotContent(QtWidgets.QWidget):
 
         **Arguments**
         
-            *step* (integer):
-                The zoom step.
-                Default: 24 pixels.
+            *step* (float):
+                The zoom step percentage.
+                Default: 25.0 percent.
         
         """
         for plot in self._plots:
-            plot.change_size(width=-step, height=-int(step*3/4))
+            plot.change_size(width=-step, height=-step)
             
     def expand(self, step=150):
         """
@@ -302,7 +319,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._yrange = (min0, max0)
         for plot in self._plots:
-            plot.setRange(yRange=(min0, max0), padding=0, update=True)
+            plot.setYRange(min0, max0, padding = None, update=True)
             
     def set_tooltips(self, tooltips):
         """

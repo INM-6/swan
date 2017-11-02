@@ -12,10 +12,15 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
 from os.path import join, split, exists
 import gc
-import numpy as np
+from numpy import mean, std, array, histogram
+from numpy import min as nmin
+from numpy import max as nmax
+from numpy.linalg import norm
+from scipy.signal import butter, filtfilt
 from PyQt5.QtCore import QObject, pyqtSignal
 from neo.io.pickleio import PickleIO
 from neo.io import BlackrockIO
+from copy import deepcopy
 
 
 class NeoData(QObject):
@@ -58,6 +63,7 @@ class NeoData(QObject):
         self.blocks = []
         self.nums = []
         self.rgios = []
+        self.wave_length = 0
         #}
         
         
@@ -131,11 +137,15 @@ class NeoData(QObject):
                 #after loading a block
                 self.progress.emit(v+step*(i+1))
 
-        nums = [len([unit for unit in b.channel_indexes[0].units if "noise" not in unit.description.split()]) for b in blocks]
+        nums = [len([unit for unit in b.channel_indexes[0].units 
+                     if "noise" not in unit.description.split()
+                     and "unclassified" not in unit.description.split()]) 
+                    for b in blocks]
         self.blocks = blocks
         self.nums = nums
+        self.wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
         
-    def get_data(self, layer, unit):
+    def get_data(self, layer, unit, **kwargs):
         """
         Returns the data for a specific layer.
         
@@ -156,33 +166,49 @@ class NeoData(QObject):
         
         """
         if layer == "average":
-            return np.mean(unit.spiketrains[0].waveforms.magnitude, axis=0)
+            return mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
         elif layer == "standard deviation":
-            mean = np.mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
-            std = np.std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
-            return np.array([mean-2*std, mean+2*std])
+            means = mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            stds = std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            return array([means-2*stds, means+2*stds])
         elif layer == "all":
-            return np.array([w for w in unit.spiketrains[0].waveforms.magnitude])
+            wforms = unit.spiketrains[0].waveforms.magnitude
+            return wforms.reshape(wforms.shape[0], wforms.shape[-1])
         elif layer == "spiketrain":
-            return (unit.spiketrains[0].copy(), )
-        elif layer == "units-ISI":
-            vek = unit.spiketrains[0].copy()
+            return unit.spiketrains[0].magnitude
+        elif layer == "units":
+            vek = deepcopy(unit.spiketrains[0])
             vek.units = "ms"
             vek.sort()
-            d = vek[1:] - vek[:len(vek)-1]
+            d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
             return (d, )
-        elif layer == "session-ISI":
-            vek = unit.spiketrains[0].copy()
+        elif layer == "sessions":
+            vek = deepcopy(unit.spiketrains[0])
             vek.units = "ms"
             vek.sort()
-            d = vek[1:] - vek[:len(vek)-1]
+            d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
             return (d, )
+        elif layer == "n_spikes":
+            return len(unit.spiketrains[0].magnitude)
+        elif layer == "rate profile":
+            if kwargs is None:
+                b, a, bins = 4, 0.008, 4000
+            hist, bin_edges = histogram(unit.spiketrains[0].magnitude, bins = bins)
+            return filtfilt(b, a, hist)
         else:
             raise ValueError("Layer not supported")
+    
+    def get_channel_lengths(self):
+        """
+        Returns list containing the number of units in the channel
+        on each block.
         
-    def get_yscale(self, layer = "average"):
+        """
+        return self.nums
+        
+    def get_yscale(self, layer = "all"):
         """
         Calculates the maximum y-range of the (absolute) y-ranges
         of all average waveforms.
@@ -192,18 +218,22 @@ class NeoData(QObject):
         
         """
         datas = []
+        yranges0 = []
         yranges1 = []
         for block in self.blocks:
             for unit in block.channel_indexes[0].units:
-                if "noise" not in unit.description.split():
+                if "noise" not in unit.description.split() and "unclassified" not in unit.description.split():
                     datas.append(self.get_data(layer, unit))
         for data in datas:
-            tmp1 = np.max(np.abs(data))
-
+            tmp0 = nmin(data)
+            tmp1 = nmax(data)
+            
+            yranges0.append(tmp0)
             yranges1.append(tmp1)
         
-        max1 = max(yranges1) + 20.0
-        return (-max1, max1)
+        maxi = nmax(yranges1) + 20.0
+        mini = nmin(yranges0) - 20.0
+        return (mini, maxi)
 
     def get_distance(self, unit1, unit2):
         """
@@ -223,7 +253,7 @@ class NeoData(QObject):
         """
         y1 = self.get_data("average", unit1)
         y2 = self.get_data("average", unit2)
-        return np.linalg.norm((y1 - y2))
+        return norm((y1 - y2))
     
     def delete_blocks(self):
         """
