@@ -186,7 +186,7 @@ class VirtualUnitMap(object):
         """
         self.visible[i] = visible
         
-    def get_color(self, i, mpl=False, layer=None):
+    def get_color(self, i, mpl=False, layer=None, pqt = False):
         """
         Returns the color for the given unit row.
         
@@ -215,6 +215,8 @@ class VirtualUnitMap(object):
                 col = (col[0]/2., col[1]/2., col[2]/2.)
             elif layer == "session":
                 col = (col[0]/2., col[1]/2., col[2]/2.)
+        elif pqt:
+            col = [self.colors[i][0]/255., self.colors[i][1]/255., self.colors[i][2]/255., 0.9]
         else:
             col = self.colors[i]
         return col
@@ -324,8 +326,8 @@ class VirtualUnitMap(object):
                     #print("Threshold: {}\n".format(dataset_reject_threshold))
                     
                     # 
-                    # The loop is the main part of the mapping algorithm, which
-                    # uses the distances between units to rearrange (swap) them.
+                    # The following loop is the main part of the mapping algorithm,
+                    # which uses the distances between units to rearrange (swap) them.
                     #
                     
                     # Generate loop range for the loop

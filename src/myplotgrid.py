@@ -251,19 +251,19 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         return self._selected
     
-    def zoom_in(self, step=24):
+    def zoom_in(self, step=25.0):
         """
         Zooms in the plots.
         
         **Arguments**
         
-            *step* (integer):
-                The zoom step.
-                Default: 24 pixels.
+            *step* (float):
+                The zoom step percentage.
+                Default: 25.0 percent.
         
         """
         for plot in self._plots:
-            plot.change_size(width=step, height=int(step*3/4))
+            plot.change_size(width=step, height=step)
             
     def zoom_out(self, step=24):
         """
@@ -271,13 +271,13 @@ class MyPlotContent(QtWidgets.QWidget):
 
         **Arguments**
         
-            *step* (integer):
-                The zoom step.
-                Default: 24 pixels.
+            *step* (float):
+                The zoom step percentage.
+                Default: 25.0 percent.
         
         """
         for plot in self._plots:
-            plot.change_size(width=-step, height=-int(step*3/4))
+            plot.change_size(width=-step, height=-step)
             
     def expand(self, step=150):
         """
@@ -319,7 +319,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._yrange = (min0, max0)
         for plot in self._plots:
-            plot.setRange(yRange=(min0, max0), padding=0, update=True)
+            plot.setYRange(min0, max0, padding = None, update=True)
             
     def set_tooltips(self, tooltips):
         """

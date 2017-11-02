@@ -152,9 +152,9 @@ class Main(QtGui.QMainWindow):
         self._globaldirty = False
         self._preferences = None
         self._PREFS =       {   "defaultProName":"swan.txt",
-                                "zinStep":24,
+                                "zinStep":20.0,
                                 "cacheDir":self._CACHEDIR,
-                                "zoutStep":24,
+                                "zoutStep":20.0,
                                 "expandStep":5,
                                 "collapseStep":5,
                                 }
@@ -620,7 +620,9 @@ class Main(QtGui.QMainWindow):
             
             #reset the data of the movie
             self.ui.view_2.reset()
-
+            
+            self.ui.view_6.reset_plot()
+            
             #plotting
             self.plots.reset_selection()
             self.plots.make_plots(n, m)
@@ -631,7 +633,7 @@ class Main(QtGui.QMainWindow):
                 min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
             self.ui.view_2.set_range(min0, max0)
-            
+                        
             vum = self._mystorage.get_map()
             vum.calculate_mapping(data, self._mystorage)
             
@@ -698,7 +700,9 @@ class Main(QtGui.QMainWindow):
             #view_4: ISI mpl plot
             self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #view_5: PCA mpl plot
-            self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_6: PCA pyqtgraph plot
+            self.ui.view_6.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #vu: Virtual unit overview
             self.vu.do_plot(vum_all, data)
 
@@ -733,6 +737,10 @@ class Main(QtGui.QMainWindow):
             self.ui.layers.enable_layers(True, l2)
         elif i == 4:
             #view_5: PCA mpl plot
+            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.layers.enable_layers(True, l2)
+        elif i == 5:
+            #view_6: PCA pyqtgraph plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l2)
             

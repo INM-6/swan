@@ -12,10 +12,11 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
 from os.path import join, split, exists
 import gc
-from numpy import mean, std, array
+from numpy import mean, std, array, histogram
 from numpy import min as nmin
 from numpy import max as nmax
 from numpy.linalg import norm
+from scipy.signal import butter, filtfilt
 from PyQt5.QtCore import QObject, pyqtSignal
 from neo.io.pickleio import PickleIO
 from neo.io import BlackrockIO
@@ -144,7 +145,7 @@ class NeoData(QObject):
         self.nums = nums
         self.wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
         
-    def get_data(self, layer, unit):
+    def get_data(self, layer, unit, **kwargs):
         """
         Returns the data for a specific layer.
         
@@ -191,6 +192,11 @@ class NeoData(QObject):
             return (d, )
         elif layer == "n_spikes":
             return len(unit.spiketrains[0].magnitude)
+        elif layer == "rate profile":
+            if kwargs is None:
+                b, a, bins = 4, 0.008, 4000
+            hist, bin_edges = histogram(unit.spiketrains[0].magnitude, bins = bins)
+            return filtfilt(b, a, hist)
         else:
             raise ValueError("Layer not supported")
     
