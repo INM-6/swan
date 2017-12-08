@@ -9,7 +9,7 @@ from :class:`src.mylistwidget.MyListWidget`.
 It is shown in the units tab on the application and manages the
 unit selection.
 """
-from PyQt5 import QtCore
+from pyqtgraph.Qt import QtCore
 from src.mylistwidget import MyListWidget
 
 
@@ -58,7 +58,7 @@ class UnitsWidget(MyListWidget):
         labels = [str(i) for i in range(1, unitnum+1)]
         items = self.add_items(labels, True, QtCore.Qt.Checked) 
         for i, item in enumerate(items, 1):
-            self._units[item] = i
+            self._units[str(item)] = i
             
     def get_units(self):
         """

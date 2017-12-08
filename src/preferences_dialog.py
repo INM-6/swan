@@ -98,7 +98,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         
         """
         item = self.ui.optionsList.selectedItems()[0]
-        i = self._options[item]
+        i = self._options[str(item)]
         self.ui.optionsView.setCurrentIndex(i)
     
     def onRestoreDefault(self):
@@ -330,7 +330,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         #getting a map for the options
         for i in range(self.ui.optionsList.count()):
             item = self.ui.optionsList.item(i)
-            self._options[item] = i
+            self._options[str(item)] = i
         self._set_preferences(self._preferences)
         
     def _set_preferences(self, pref):

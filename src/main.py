@@ -22,7 +22,7 @@ if platform.system() == "Linux":
     import resource
 else:
     onLinux = False
-from PyQt5 import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui
 from src import title, about
 from gui.main_ui import Ui_Main
 from file_dialog import File_Dialog
@@ -115,10 +115,12 @@ class Main(QtGui.QMainWindow):
             The directory where the project files will be written to by default.
             If you didn't execute *run.py* with an additional argument this will be your home directory. 
             Otherwise it will be the one you gave as an argument.
+        *dark* (bool):
+            Whether the dark theme should be enabled or not.
     
     """
 
-    def __init__(self, program_dir, home_dir):
+    def __init__(self, program_dir, home_dir, dark_theme = False):
         """
         **Properties**:
        
@@ -142,8 +144,18 @@ class Main(QtGui.QMainWindow):
         
         """
         QtGui.QMainWindow.__init__(self)
+        
+        self.dark = dark_theme
+        
         self.ui = Ui_Main()
         self.ui.setupUi(self)
+        
+        if self.dark is True:
+            self.ui.plotGrid.setDark()
+            self.ui.view_1.setDark()
+            self.ui.view_2.setDark()
+            self.ui.view_3.setDark()
+            self.ui.view_4.setDark()
         
         #properties{
         self._program_dir = program_dir
@@ -178,29 +190,27 @@ class Main(QtGui.QMainWindow):
         #connect unit selection
         self.ui.units.doUnits.connect(self.plot_all)
         #connect view change
-        self.ui.views.currentChanged.connect(self.check_layers)
+#        self.ui.views.currentChanged.connect(self.check_layers)
         #connect loading progress
         self._mystorage.progress.connect(self.setProgress)
-        self.ui.view_2.progress.connect(self.setProgress)
-        #connect progress bar showing/hiding
-        self.ui.view_2.progressBar.connect(self.showProgressBar)
         #connect redraw signal of the views
-        self.ui.view_4.redraw.connect(self.plot_all)
+        #self.ui.view_3.redraw.connect(self.plot_all)
         self.vu.redraw.connect(self.plot_all)
         #connect channel loading
         self.vu.load.connect(self.load_channel)
         
-        #setting the horizontal widgets with equal sizes
-        self.ui.splitter_2.setSizes([int(self.ui.splitter_2.width()/2) for i in range(2)])
+        self.ui.view_1.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        self.ui.view_3.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
         
+        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_1.highlightCurveFromPlot)
+        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_3.highlightCurveFromPlot)
         #shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.selector
         
-        self.load_icons()
         self.check_dirs()
         
-        self.check_layers(self.ui.views.currentIndex())
+#        self.check_layers(self.ui.views.currentIndex())
         
         #setting up the progress bar
         self.p = QtGui.QProgressBar()
@@ -208,7 +218,9 @@ class Main(QtGui.QMainWindow):
         self.p.setValue(0)
         self.ui.statusbar.addPermanentWidget(self.p)
         self.p.hide()
-
+        
+        self._defaultGuiState = self.saveState()
+        
         if onLinux:
             #starting memory usage task
             timer = QtCore.QTimer(self)
@@ -216,7 +228,7 @@ class Main(QtGui.QMainWindow):
             self.memorytask = MemoryTask(timer, self.ui.statusbar)
             self.memorytask.start()
         
-        #self.showMaximized()
+        self.showMaximized()
         
         
     #### action handler ####
@@ -573,6 +585,15 @@ class Main(QtGui.QMainWindow):
         """
         QtGui.QMessageBox.information(self, "About", about)
     
+    @QtCore.pyqtSlot(bool)
+    def on_action_RestoreState_triggered(self):
+        """
+        This method is called if you click on *View->Restore GUI State*.
+        
+        Restores the GUI to it's default configuration.
+        """
+        
+        self.restoreState(self._defaultGuiState)
     
     #### signal handler ####
     
@@ -591,7 +612,7 @@ class Main(QtGui.QMainWindow):
                 Whether or not there was something to load for the electrode.
         
         """
-        if self._mystorage.has_project() and not self._mystorage.is_loading() and not self.ui.view_2.isLoading:
+        if self._mystorage.has_project() and not self._mystorage.is_loading():
             #initialize the progress bar
             self.p.setValue(0)
             self.p.show()
@@ -614,14 +635,6 @@ class Main(QtGui.QMainWindow):
             (n, m) = self._mystorage.load_channel(channel)
             
             self.ui.units.init_units(n)
-
-            #deactivate loading the movie data for performance reasons
-            self.ui.view_2.shouldLoad = False
-            
-            #reset the data of the movie
-            self.ui.view_2.reset()
-            
-            self.ui.view_6.reset_plot()
             
             #plotting
             self.plots.reset_selection()
@@ -632,8 +645,7 @@ class Main(QtGui.QMainWindow):
             else:
                 min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
-            self.ui.view_2.set_range(min0, max0)
-                        
+            
             vum = self._mystorage.get_map()
             vum.calculate_mapping(data, self._mystorage)
             
@@ -641,6 +653,7 @@ class Main(QtGui.QMainWindow):
             
             #setting channel detail
             self.set_detail(1, str(channel))
+            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(channel) + " | " + title)
             
             #setting tooltips
             self.plots.set_tooltips(self._mystorage.get_tooltips())
@@ -650,7 +663,7 @@ class Main(QtGui.QMainWindow):
             if onLinux:
                 self.memorytask.start_timer()
             return True
-        elif self._mystorage.is_loading() or self.ui.view_2.isLoading:
+        elif self._mystorage.is_loading():
             self.selector.select_only(self._mystorage.get_channel())
             return False
     
@@ -692,17 +705,15 @@ class Main(QtGui.QMainWindow):
             #view_1: 2D mpl plot
             self.ui.view_1.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
             #view_2: mpl movie plot
-            #setting the data instead of plotting something because the plotting
-            #will be managed at another place
-            self.ui.view_2.set_data(vum, data)
-            #view_3: 3D mpl plot
-            self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
-            #view_4: ISI mpl plot
+            self.ui.view_2.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
+            #view_2: 3D mpl plot
+            #self.ui.view_2.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
+            #view_3: ISI mpl plot
+            self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_4: PCA mpl plot
+            #self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
+            #view_5: PCA pyqtgraph plot
             self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #view_5: PCA mpl plot
-            #self.ui.view_5.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #view_6: PCA pyqtgraph plot
-            self.ui.view_6.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
             #vu: Virtual unit overview
             self.vu.do_plot(vum_all, data)
 
@@ -725,22 +736,19 @@ class Main(QtGui.QMainWindow):
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l1)
         elif i == 1:
-            #view_2: mpl movie plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())        
-        elif i == 2:
-            #view_3: 3D mpl plot
+            #view_2: 3D mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l1)
+        elif i == 2:
+            #view_3: ISI mpl plot
+            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.layers.enable_layers(True, l2)
         elif i == 3:
-            #view_4: ISI mpl plot
+            #view_4: PCA mpl plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l2)
         elif i == 4:
-            #view_5: PCA mpl plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)
-        elif i == 5:
-            #view_6: PCA pyqtgraph plot
+            #view_5: PCA pyqtgraph plot
             self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
             self.ui.layers.enable_layers(True, l2)
             
@@ -900,52 +908,6 @@ class Main(QtGui.QMainWindow):
         """
         if not isdir(self._preferences["cacheDir"]):
             mkdir(self._preferences["cacheDir"])
-            
-    def load_icons(self):
-        """
-        Loads the icons.
-        
-        """
-        try:
-            prefix = ":" + sep + "icons" + sep
-            #File
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "new.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_New_Project.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "open.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Load_Project.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "save.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Save_Project.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "save_as.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Save_as.setIcon(icon)
-            #Edit
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "revert.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Revert_mapping.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "swap.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Swap.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "zoom_in.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Zoom_in.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "zoom_out.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Zoom_out.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "expand.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Expand_overview.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "collapse.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Collapse_overview.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "preferences.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.action_Preferences.setIcon(icon)
-        except:
-            print("Icon Exception")
-            pass
         
     def load_connector_map(self, filename):
         """

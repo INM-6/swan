@@ -7,7 +7,7 @@ Created on Mon Oct 16 12:56:06 2017
 """
 
 from src.mypgwidget import PyQtWidget3d
-import numpy as np
+from numpy import shape, count_nonzero, argmax, amax, zeros, any as np_any
 from sklearn.decomposition import PCA
 from copy import deepcopy
 from itertools import chain
@@ -17,6 +17,7 @@ class pgWidgetPCA(PyQtWidget3d):
     def __init__(self, parent = None):
         
         PyQtWidget3d.__init__(self, parent = parent)
+        self.setup_axes()
         self.positions = []
         self.means = []
         
@@ -40,12 +41,12 @@ class pgWidgetPCA(PyQtWidget3d):
         self.wave_length = data.wave_length
         found = [False for n in range(vum.n_)]
         
-        for i in range(np.shape(vum.mapping)[0]):
-            for j in range(np.shape(vum.mapping)[1]):
+        for i in range(shape(vum.mapping)[0]):
+            for j in range(shape(vum.mapping)[1]):
                 if vum.visible[j] and vum.mapping[i][j] != 0:
                     found[j] = True
         
-        if np.any(found) and layers:
+        if np_any(found) and layers:
             nums = deepcopy(vum.mapping)
             for num in nums:
                 try:
@@ -53,7 +54,7 @@ class pgWidgetPCA(PyQtWidget3d):
                         num.pop()
                 except IndexError:
                     num = [0]
-            dom = np.argmax([np.count_nonzero(nu) for nu in nums])
+            dom = argmax([count_nonzero(nu) for nu in nums])
             dom_channel = []
             
             for j in range(len(nums[dom])):
@@ -132,7 +133,7 @@ class pgWidgetPCA(PyQtWidget3d):
                 del dom_pca
         if len(self.positions) == len(self.means):
             for item in self.positions:
-                self.addScatterPlot(item, setGLOptions='translucent')
+                self.addScatterPlot(item, setGLOptions = 'translucent')
             for mean in self.means:
                 self.addScatterPlot(mean, setGLOptions = 'opaque')
         else:
@@ -150,7 +151,7 @@ class pgWidgetPCA(PyQtWidget3d):
             total_length += len(unit)
             length_vector.append(total_length)
         
-        waves = np.zeros((total_length, self.wave_length))
+        waves = zeros((total_length, self.wave_length))
         
         for u, unit in enumerate(channel):
             for wf, wave in enumerate(unit):
@@ -172,4 +173,4 @@ class pgWidgetPCA(PyQtWidget3d):
         return channel
     
     def return_max(self, nested_list):
-        return np.amax(list(chain.from_iterable(nested_list)))
+        return amax(list(chain.from_iterable(nested_list)))

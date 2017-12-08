@@ -38,9 +38,45 @@ if __name__ == '__main__':
     sys.path.insert(1, join(p, "python-odml"))
     
     from src.main import Main
-    from PyQt5.QtGui import QApplication
+    import pyqtgraph as pg
     
-    app = QApplication(sys.argv)
-    m = Main(abspath(p), home)
+    app = pg.QtGui.QApplication(sys.argv)
+    app.setStyle("Fusion")
+    
+    if "--dark-theme" in sys.argv:
+        dark_palette = pg.QtGui.QPalette()
+        
+        dark_palette.setColor(pg.QtGui.QPalette.Window, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.WindowText, pg.QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(pg.QtGui.QPalette.Base, pg.QtGui.QColor(25, 25, 25))
+        dark_palette.setColor(pg.QtGui.QPalette.AlternateBase, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.ToolTipBase, pg.QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(pg.QtGui.QPalette.ToolTipText, pg.QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(pg.QtGui.QPalette.Text, pg.QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(pg.QtGui.QPalette.Button, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.ButtonText, pg.QtGui.QColor(255, 255, 255))
+        dark_palette.setColor(pg.QtGui.QPalette.BrightText, pg.QtGui.QColor(255, 0, 0))
+        dark_palette.setColor(pg.QtGui.QPalette.Link, pg.QtGui.QColor(42, 130, 218))
+        dark_palette.setColor(pg.QtGui.QPalette.Highlight, pg.QtGui.QColor(42, 130, 218))
+        dark_palette.setColor(pg.QtGui.QPalette.HighlightedText, pg.QtGui.QColor(0, 0, 0))
+        
+        app.setPalette(dark_palette)
+        
+        app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+        
+        pg.setConfigOption('background', 'k')
+        pg.setConfigOption('foreground', 'w')
+        pg.setConfigOption('useOpenGL', True)
+        
+        dark = True
+        
+    else:
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOption('foreground', 'k')
+        pg.setConfigOption('useOpenGL', True)
+        
+        dark = False
+        
+    m = Main(abspath(p), home, dark)
     m.show()
     sys.exit(app.exec_())

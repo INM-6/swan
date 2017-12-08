@@ -16,7 +16,7 @@ from numpy import mean, std, array, histogram
 from numpy import min as nmin
 from numpy import max as nmax
 from numpy.linalg import norm
-from scipy.signal import butter, filtfilt
+from scipy.signal import filtfilt
 from PyQt5.QtCore import QObject, pyqtSignal
 from neo.io.pickleio import PickleIO
 from neo.io import BlackrockIO
@@ -63,7 +63,7 @@ class NeoData(QObject):
         self.blocks = []
         self.nums = []
         self.rgios = []
-        self.wave_length = 0
+        self.wave_length = 0.
         #}
         
         

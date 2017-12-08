@@ -8,10 +8,10 @@ you choose files from one directory.
 """
 import os
 from os import curdir
-from PyQt5 import QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui, QtWidgets
 
 try:
-    from PyQt5.QtCore import QString
+    from pyqtgraph.Qt.QtCore import QString
 except ImportError:
     # we are using Python3 so QString is not defined
     QString = str

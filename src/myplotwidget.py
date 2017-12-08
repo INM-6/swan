@@ -9,12 +9,10 @@ from :class:`pyqtgraph.PlotWidget`.
 This widget is used by :class:`src.myplotgrid.MyPlotContent` to show
 many of these widgets in a nice overview.
 """
-from PyQt5 import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
-from pyqtgraph import PlotWidget, mkColor
-
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')
+from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath, TextItem
+import numpy as np
 
 
 class MyPlotWidget(PlotWidget):
@@ -54,7 +52,7 @@ class MyPlotWidget(PlotWidget):
         """
         PlotWidget.__init__(self, *args, **kwargs)
         self.setMenuEnabled(False)
-        self.setAntialiasing(True)
+        self.setAntialiasing(False)
         self.hideButtons()
         self.setMouseEnabled(False, False)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
@@ -64,18 +62,20 @@ class MyPlotWidget(PlotWidget):
         
         #properties{
         self._plotitem = self.getPlotItem()
+        self._plotitem.disableAutoRange()
         self.selected = False
         self.inFocus = False
         self._std = (200, 150)
         self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "inFocus":mkColor(0.9)}
         self._bg = self.bgs["normal"]
+        self.pos = (0, 0)
         #}
         self.setFixedSize(self._std[0], self._std[1])
         
         
     #### general methods ####
         
-    def plot(self, y, color='k'):
+    def plot(self, y, color='w'):
         """
         Plots data on the PlotItem.
         
@@ -85,11 +85,26 @@ class MyPlotWidget(PlotWidget):
                 The data to plot.
             *color* (Color argument for :func:`pyqtgraph.mkPen`):
                 The color the data should have.
-                Default: k for black.
+                Default: w for white.
         
         """
-        self._plotitem.plot(y, pen=pg.mkPen(pg.mkColor(color)), antialias=True)
-#        self._plotitem.enableAutoRange()
+        self._plotitem.plot(y, pen=mkPen(mkColor(color), width = 2), antialias=True)
+    
+    def plot_many(self, ys, color='w'):
+        """
+        Plots data on the PlotItem.
+        
+        **Arguments**
+        
+            *y* (iterable object):
+                The data to plot.
+            *color* (Color argument for :func:`pyqtgraph.mkPen`):
+                The color the data should have.
+                Default: w for white.
+        
+        """
+        lines = MultiLine(ys, color)
+        self._plotitem.addItem(lines)
             
     def change_size(self, width, height):
         """
@@ -108,6 +123,15 @@ class MyPlotWidget(PlotWidget):
         newh = int((3./4.)*neww)
         if neww > 0 and newh > 0:
             self.setFixedSize(neww, newh)
+    
+    def placeText(self, i, j, color, font, anchor = (0, 0)):
+        textItem = TextItem(text = "SESSION {}\nUNIT {}".format(i, j), color = color, anchor = anchor)
+        textItem.setFont(font)
+        
+#        textItem = pg.LabelItem()
+#        textItem.setText(text = "SESSION {}\nUNIT {}".format(i, j), color = 'bfbfbf', size = '15pt', bold = True)
+        self._plotitem.addItem(textItem)
+#        self.setCentralItem(textItem)
         
     def change_background(self, change):
         """
@@ -147,7 +171,10 @@ class MyPlotWidget(PlotWidget):
         self.setToolTip(tooltip)
         QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
         
-            
+    def darkTheme(self):
+        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "inFocus":mkColor(0.1)}
+        self._bg = self.bgs["normal"]
+        
     #### mouse interaction ####
         
     def mousePressEvent(self, event):
@@ -222,7 +249,20 @@ class MyPlotWidget(PlotWidget):
         self.inFocus = False
         self.setBackground(self._bg)
         event.accept()
-            
+
+class MultiLine(pg.QtGui.QGraphicsPathItem):
+    def __init__(self, data, color):
+        """x and y are 2D arrays of shape (Nplots, Nsamples)"""
+        connect = np.ones(data.shape, dtype=bool)
+        connect[:,-1] = 0 # don't draw the segment between each trace
+        x = np.tile([i for i in range(data.shape[1])], data.shape[0]).reshape(data.shape)
+        self.path = arrayToQPath(x.flatten(), data.flatten(), connect.flatten())
+        QtGui.QGraphicsPathItem.__init__(self, self.path)
+        self.setPen(mkPen(color))
+    def shape(self): # override because QGraphicsPathItem.shape is too expensive.
+        return QtGui.QGraphicsItem.shape(self)
+    def boundingRect(self):
+        return self.path.boundingRect()
         
         
         
