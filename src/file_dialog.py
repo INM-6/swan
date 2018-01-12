@@ -77,8 +77,7 @@ class File_Dialog(QtWidgets.QDialog):
         self.ui.removeBtn.clicked.connect(self.remove)
         self.ui.pathBtn.clicked.connect(self.browse)
         self.ui.pathEdit.textChanged.connect(self.pathChangeEvent)
-        
-        
+                
     #### button handler ####
         
     def accept(self):

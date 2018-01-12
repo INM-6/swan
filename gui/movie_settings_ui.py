@@ -17,7 +17,7 @@ except AttributeError:
 class Ui_movieSettings(object):
     def setupUi(self, movieSettings):
         movieSettings.setObjectName(_fromUtf8("movieSettings"))
-        movieSettings.resize(249, 343)
+        #movieSettings.resize(249, 343)
         self.gridLayout = QtGui.QGridLayout(movieSettings)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         self.buttonBox = QtGui.QDialogButtonBox(movieSettings)
@@ -41,7 +41,7 @@ class Ui_movieSettings(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.skipEdit.sizePolicy().hasHeightForWidth())
         self.skipEdit.setSizePolicy(sizePolicy)
-        self.skipEdit.setMaximumSize(QtCore.QSize(80, 16777215))
+        #self.skipEdit.setMaximumSize(QtCore.QSize(80, 16777215))
         self.skipEdit.setObjectName(_fromUtf8("skipEdit"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.skipEdit)
         self.spsCombo = QtGui.QComboBox(self.groupBox)
@@ -66,8 +66,8 @@ class Ui_movieSettings(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.rangeEdit.sizePolicy().hasHeightForWidth())
         self.rangeEdit.setSizePolicy(sizePolicy)
-        self.rangeEdit.setMinimumSize(QtCore.QSize(0, 0))
-        self.rangeEdit.setMaximumSize(QtCore.QSize(80, 16777215))
+        #self.rangeEdit.setMinimumSize(QtCore.QSize(0, 0))
+        #self.rangeEdit.setMaximumSize(QtCore.QSize(80, 16777215))
         self.rangeEdit.setObjectName(_fromUtf8("rangeEdit"))
         self.formLayout_2.setWidget(0, QtGui.QFormLayout.FieldRole, self.rangeEdit)
         self.gridLayout.addWidget(self.groupBox_2, 0, 0, 1, 1)

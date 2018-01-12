@@ -42,6 +42,10 @@ class pgWidget3d(PyQtWidget3d):
         """
         PyQtWidget3d.__init__(self, parent = parent)
         
+        layers = ["average", "standard deviation"]
+        self.toolbar.setupCheckboxes(layers)
+        self.toolbar.doLayer.connect(self.triggerRefresh)
+        
         self._axesSize = 1000.
         self._axesSpacing = 100.
         self._xScaleFactor = 100.
@@ -78,7 +82,7 @@ class pgWidget3d(PyQtWidget3d):
         surfaceItem.scale(self._xScaleFactor, self._yScaleFactor, self._zScaleFactor)
         self.addSurfacePlotItem(surfaceItem)
 
-    def do_plot(self, vum, data, layers):
+    def do_plot(self, vum, data):
         """
         Plots data for every layer and every visible unit.
         
@@ -94,59 +98,62 @@ class pgWidget3d(PyQtWidget3d):
         """
         self.reset_plot()
         
-        plots = []
-        
-        found = False
-        for j in range(vum.n_):
-            if vum.visible[j]:
-                found = True
-                break
-        if found:
-            for layer in layers:
-                if layer == "average":
-                    zs = []
-                    for i in range(len(data.blocks)):
-                        runit = vum.get_realunit(i, j, data)
-                        if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, True)
-                            z = datas
-                            zs.append(z)
-                    zs = array(zs)
-                    x = array(range(zs.shape[0]))
-                    y = array(range(zs.shape[-1]))
-                    if len(zs) > 1:
-                        plot = self.createSurfacePlot(x = x, y = y, z = zs, color = col)
-                        plots.append(plot)
-                    else:
-                        continue
-                elif layer == "standard deviation":
-                    
-                    zs = []
-                    l = 0
-                    for i in range(len(data.blocks)):
-                        runit = vum.get_realunit(i, j, data)
-                        if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, True)
-                            z = datas
-                            l = len(z)
-                            zs.append(z)
-                    zs = array(zs)
-                    x = array(range(zs.shape[0]))
-                    y = array(range(zs.shape[-1]))
-                    if l > 1:
-                        for k in range(l):
-                            plot = self.createSurfacePlot(x = x, y = y, z = zs[:, k, :], color = col)
+        if self.toolbar.layers.isChecked():
+            
+            layers = self.toolbar.getCheckedLayers()
+            
+            plots = []
+            
+            found = False
+            for j in range(vum.n_):
+                if vum.visible[j]:
+                    found = True
+                    break
+            if found:
+                for layer in layers:
+                    if layer == "average":
+                        zs = []
+                        for i in range(len(data.blocks)):
+                            runit = vum.get_realunit(i, j, data)
+                            if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, True)
+                                z = datas
+                                zs.append(z)
+                        zs = array(zs)
+                        x = array(range(zs.shape[0]))
+                        y = array(range(zs.shape[-1]))
+                        if len(zs) > 1:
+                            plot = self.createSurfacePlot(x = x, y = y, z = zs, color = col)
                             plots.append(plot)
+                        else:
+                            continue
+                    elif layer == "standard deviation":
+                        
+                        zs = []
+                        l = 0
+                        for i in range(len(data.blocks)):
+                            runit = vum.get_realunit(i, j, data)
+                            if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, True)
+                                z = datas
+                                l = len(z)
+                                zs.append(z)
+                        zs = array(zs)
+                        x = array(range(zs.shape[0]))
+                        y = array(range(zs.shape[-1]))
+                        if l > 1:
+                            for k in range(l):
+                                plot = self.createSurfacePlot(x = x, y = y, z = zs[:, k, :], color = col)
+                                plots.append(plot)
+                        else:
+                            continue
+                        
                     else:
-                        continue
+                        print("invalid layer requested")
                     
-                else:
-                    print("invalid layer requested")
-                    raise ValueError
-                
-        
-        if plots:
-            for plot in plots:
-                self.addSurfacePlot(plot)
+            
+            if plots:
+                for plot in plots:
+                    self.addSurfacePlot(plot)

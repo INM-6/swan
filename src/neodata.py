@@ -234,6 +234,10 @@ class NeoData(QObject):
         maxi = nmax(yranges1) + 20.0
         mini = nmin(yranges0) - 20.0
         return (mini, maxi)
+    
+    def get_dates(self):
+        
+        return [block.rec_datetime.date() for block in self.blocks]
 
     def get_distance(self, unit1, unit2):
         """

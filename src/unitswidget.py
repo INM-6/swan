@@ -58,7 +58,7 @@ class UnitsWidget(MyListWidget):
         labels = [str(i) for i in range(1, unitnum+1)]
         items = self.add_items(labels, True, QtCore.Qt.Checked) 
         for i, item in enumerate(items, 1):
-            self._units[str(item)] = i
+            self._units[str(item.text())] = i
             
     def get_units(self):
         """
@@ -86,7 +86,7 @@ class UnitsWidget(MyListWidget):
                 The item that was changed.
                     
         """
-        i = self._units[item]-1
+        i = self._units[str(item.text())]-1
         visible = (item.checkState() == QtCore.Qt.Checked) 
         self.doUnits.emit(i, visible)
     

@@ -1,51 +1,78 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
-Created on Mon Oct 16 12:56:06 2017
+Created on Nov 16, 2017
 
-@author: sridhar
+@author: Shashwat Sridhar
+
+In this module you can find the :class:`pgWidget2d` which inherits
+from :class:`src.mypgwidget.PyQtWidget2d`.
+
+It is extended by a 2d plot and the plotting methods.
 """
-
-from src.mypgwidget import PyQtWidget3d
-from numpy import shape, count_nonzero, argmax, amax, zeros, any as np_any
+from src.mypgwidget import PyQtWidget2d
+from numpy import shape, count_nonzero, argmax, zeros, any as np_any, mean as mn, array
 from sklearn.decomposition import PCA
 from copy import deepcopy
-from itertools import chain
 
-class pgWidgetPCA(PyQtWidget3d):
+class pgWidgetPCA2d(PyQtWidget2d):
+    """
+    A class with only one plot that shows 2d PCA scatter plots.
     
-    def __init__(self, parent = None):
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        **Properties**
         
-        PyQtWidget3d.__init__(self, parent = parent)
+            *_axes* (:class:`matplotlib.axes.Axes`):
+                The 2d plot for this widget.
+        
+        """
+        PyQtWidget2d.__init__(self)
         
         layers = ["units", "sessions"]
         self.toolbar.setupRadioButtons(layers)
         self.toolbar.doLayer.connect(self.triggerRefresh)
         
-        self.setup_axes()
-        self.positions = []
-        self.means = []
+        self._plotItem = self.pgCanvas.getPlotItem()
+        self._plotItem.enableAutoRange()
         
-        self.max_distance = 0
-        self._first = True
-        self.wave_length = 0 # Initial dummy value, later updated from data
+        self._means = []
+        self._positions = []
+        
+        self.showGrid()
     
-    def addScatterPlot(self, plotItem = None, setGLOptions = 'opaque'):
-        self.addScatterPlotItem(plotItem = plotItem, setGLOptions = setGLOptions)
-        
-    def clear_plot(self):
-        self.reset_plot()
-        self.positions = []
-        self.means = []
+    #### general methods ####
+    
+    def plotMean(self, x, y, size, color, name, pxMode = True):
+        x = [x]
+        y = [y]
+        self._means.append(self.createScatterPlotItem(x = x, y = y, size = size, color = color, name = name, pxMode = pxMode))
+    
+    def plotPoints(self, pos, size, color, name, pxMode = True):
+        pos = array(pos)
+        x = pos[:, 0]
+        y = pos[:, 1]
+        self._positions.append(self.createScatterPlotItem(x = x, y = y, size = size, color = color, name = name, pxMode = pxMode, autoDownsample = True, antialias = False))
     
     def do_plot(self, vum, data):
-        self.clear_plot()
+        """
+        Plots data for every layer and every visible unit.
+        
+        **Arguments**
+        
+            *vum* (:class:`src.virtualunitmap.VirtualUnitMap`):
+                Is needed to get the unit indexes.
+            *data* (:class:`src.neodata.NeoData`):
+                Is needed to get the units.
+            *layers* (list of string):
+                The layers that are visible.
+        
+        """
+        self.clear_plots()
         
         if self.toolbar.layers.isChecked():
             
             layers = self.toolbar.getCheckedLayers()
-            
-            max_distance = 0
             
             self.wave_length = data.wave_length
             found = [False for n in range(vum.n_)]
@@ -73,7 +100,7 @@ class pgWidgetPCA(PyQtWidget3d):
                             
                 m_dom_channel, lv_dom_channel = self.merge_channel(dom_channel)
                 
-                pca = PCA(n_components = 3)
+                pca = PCA(n_components = 2)
                 
                 dom_pca = pca.fit_transform(m_dom_channel)
                 dom_ch_pca = self.split_waves(dom_pca, lv_dom_channel, 'all')
@@ -92,16 +119,12 @@ class pgWidgetPCA(PyQtWidget3d):
                                 try:    
                                     pca_channel = self.split_waves(pca.transform(merged_channel), len_vec, 'all')
                                     
-                                    max_distance = self.return_max(pca_channel)
-                                    if max_distance > self.max_distance:
-                                        self.max_distance = max_distance
-                                    
                                     c = 0
                                     for u in range(len(nums[i])):
                                         if found[u] and nums[i][u] != 0:
-                                            col = vum.get_color(u, False, None, True)
-                                            self.positions.append(self.createScatterPlotItem(pos = pca_channel[c], size = 1, color = col, pxMode=True))
-                                            self.means.append(self.createScatterPlotItem(pos = pca_channel[c].mean(axis = 0), size = 15, color = col, pxMode=True))
+                                            col = vum.get_color(u, False, layer, False)
+                                            self.plotPoints(pos = pca_channel[c], size = 1, color = col, name = "".format(i, u))
+                                            self.plotMean(x = mn(pca_channel[c][:, 0], axis = 0), y = mn(pca_channel[c][:, 1], axis = 0), size = 15, color = col, name = "".format(i, u))
                                             c += 1
                                     
                                     del channel
@@ -112,17 +135,12 @@ class pgWidgetPCA(PyQtWidget3d):
                                     pass
                                 
                             elif i == dom:
-                                
-                                max_distance = self.return_max(dom_ch_pca)
-                                if max_distance > self.max_distance:
-                                    self.max_distance = max_distance
-                                
                                 c = 0
                                 for u in range(len(nums[dom])):
                                     if found[u] and nums[dom][u] != 0:
-                                        col = vum.get_color(u, False, None, True)
-                                        self.positions.append(self.createScatterPlotItem(pos = dom_ch_pca[c], size = 1, color = col, pxMode=True))
-                                        self.means.append(self.createScatterPlotItem(pos = dom_ch_pca[c].mean(axis = 0), size = 15, color = col, pxMode=True))
+                                        col = vum.get_color(u, False, layer, False)
+                                        self.plotPoints(pos = dom_ch_pca[c], size = 1, color = col, name = "".format(i, u))
+                                        self.plotMean(x = mn(dom_ch_pca[c][:, 0], axis = 0), y = mn(dom_ch_pca[c][:, 1], axis = 0), size = 15, color = col, name = "".format(i, u))
                                         c += 1
                     
     #                if layer == "sessions":
@@ -140,16 +158,11 @@ class pgWidgetPCA(PyQtWidget3d):
                     del dom_channel
                     del dom_ch_pca
                     del dom_pca
-            if len(self.positions) == len(self.means):
-                for item in self.positions:
-                    self.addScatterPlot(item, setGLOptions = 'translucent')
-                for mean in self.means:
-                    self.addScatterPlot(mean, setGLOptions = 'opaque')
             else:
                 print("Something is wrong!")
-                print("Length of positions list: {}".format(len(self.positions)))
-                print("Length of means list: {}".format(len(self.means)))
-        
+                print("Length of positions list: {}".format(len(self._positions)))
+                print("Length of means list: {}".format(len(self._means)))
+    
     def merge_channel(self, channel):
         total_length = 0
         length_vector = [0]
@@ -179,5 +192,14 @@ class pgWidgetPCA(PyQtWidget3d):
         
         return channel
     
-    def return_max(self, nested_list):
-        return amax(list(chain.from_iterable(nested_list)))
+    def connectPlots(self):
+        for item in self._means:
+            item.curve.setClickable(True, width = 5)
+            item.sigClicked.connect(self.getItem)
+        
+    def clear_plots(self):
+        self._means = []
+        for item in self._positions:
+            self.pgCanvas.removeItem(item)
+        self._positions = []
+        self.clearAll()

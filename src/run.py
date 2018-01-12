@@ -43,7 +43,7 @@ if __name__ == '__main__':
     app = pg.QtGui.QApplication(sys.argv)
     app.setStyle("Fusion")
     
-    if "--dark-theme" in sys.argv:
+    if "--light-theme" not in sys.argv:
         dark_palette = pg.QtGui.QPalette()
         
         dark_palette.setColor(pg.QtGui.QPalette.Window, pg.QtGui.QColor(53, 53, 53))

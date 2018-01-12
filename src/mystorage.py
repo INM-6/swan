@@ -13,15 +13,14 @@ The data loading is called in the :class:`Task` which is a thread.
 """
 from os import remove
 from os.path import splitext, basename, exists, split, join
-from PyQt5.QtCore import QThread, QMutex, QObject, pyqtSignal
-from PyQt5.QtGui import QApplication
+from pyqtgraph.Qt import QtGui, QtCore
 from stg.storage import Storage
 from stg.project import Project
 from src.neodata import NeoData
 from src.virtualunitmap import VirtualUnitMap
 
 
-class Task(QThread):
+class Task(QtCore.QThread):
     """
     A thread that loads the data.
     
@@ -36,7 +35,7 @@ class Task(QThread):
                 
     """
     
-    #mutex = QMutex()
+    #mutex = QtCore.QMutex()
     
     def __init__(self, data, files, channel):
         """
@@ -50,7 +49,7 @@ class Task(QThread):
                 The channel that has to be loaded.
         
         """
-        super(QThread, self).__init__()
+        super(QtCore.QThread, self).__init__()
         self.data = data
         self.files = files
         self.channel = channel
@@ -68,7 +67,7 @@ class Task(QThread):
             #Task.mutex.unlock()
         
 
-class MyStorage(Storage, QObject):
+class MyStorage(Storage, QtCore.QObject):
     """
     The storage class.
         
@@ -83,7 +82,7 @@ class MyStorage(Storage, QObject):
         
     """
 
-    progress = pyqtSignal(int)
+    progress = QtCore.pyqtSignal(int)
     """
     Progress signal to let the main program know
     how far the loading progress is.
@@ -111,7 +110,7 @@ class MyStorage(Storage, QObject):
         
         """
         super(MyStorage, self).__init__()
-        super(QObject, self).__init__()
+        super(QtCore.QObject, self).__init__()
         
         #properties{
         self._project = None
@@ -480,14 +479,14 @@ class MyStorage(Storage, QObject):
             c += 1
         return tips
         
-    def recalculate(self):
+    def recalculate(self, mapping = 0):
         """
         Recalculates the mapping and sets it.
         
         """
         vum = self.get_map()
         data = self.get_data()
-        vum.calculate_mapping(data, self)
+        vum.calculate_mapping(data, self, automaticMapping = mapping)
         self.change_map()
     
     def revert(self):
@@ -545,7 +544,7 @@ class MyStorage(Storage, QObject):
         t.start()
         while t.isRunning():
             self._loading = t.isRunning()
-            QApplication.processEvents()
+            QtGui.QApplication.processEvents()
         self._loading = False
         
         vum_all = self.get("vum_all")

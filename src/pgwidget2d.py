@@ -26,6 +26,10 @@ class pgWidget2d(PyQtWidget2d):
         """
         PyQtWidget2d.__init__(self)
         
+        layers = ["average", "standard deviation"]
+        self.toolbar.setupCheckboxes(layers)
+        self.toolbar.doLayer.connect(self.triggerRefresh)
+        
         self._plotItem = self.pgCanvas.getPlotItem()
         self._plotItem.enableAutoRange()
         self._means = []
@@ -79,8 +83,8 @@ class pgWidget2d(PyQtWidget2d):
         curve1 = self.createCurve(y = ys[0], color = color, name = None, clickable = False)
         curve2 = self.createCurve(y = ys[1], color = color, name = None, clickable = False)
         self._stds.append(self.createFilledCurve(y1 = curve1, y2 = curve2, color = color))
-
-    def do_plot(self, vum, data, layers):
+    
+    def do_plot(self, vum, data):
         """
         Plots data for every layer and every visible unit.
         
@@ -95,34 +99,38 @@ class pgWidget2d(PyQtWidget2d):
         
         """
         self.clear_plots()
-        for i in range(len(data.blocks)):
-            for j in range(vum.n_):
-                for layer in layers:
-                    if layer == "standard deviation":                        
-                        if vum.mapping[i][j] != 0 and vum.visible[j]:
-                            runit = vum.get_realunit(i, j, data)
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, False)
-                            self.plotStd(ys = datas, color = col)
-                            
-                    elif layer == "average":
-                        if vum.mapping[i][j] != 0 and vum.visible[j]:
-                            runit = vum.get_realunit(i, j, data)
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, False)
-                            self.plotMean(y = datas, color = col, name = "{}{}".format(i, j))
-                    
-                    else:
-                        raise Exception("Invalid layer requested!")
+        if self.toolbar.layers.isChecked():
+            
+            layers = self.toolbar.getCheckedLayers()
+            
+            for i in range(len(data.blocks)):
+                for j in range(vum.n_):
+                    for layer in layers:
+                        if layer == "standard deviation":                        
+                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+                                runit = vum.get_realunit(i, j, data)
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, False)
+                                self.plotStd(ys = datas, color = col)
+                                
+                        elif layer == "average":
+                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+                                runit = vum.get_realunit(i, j, data)
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, False)
+                                self.plotMean(y = datas, color = col, name = "{}{}".format(i, j))
                         
-        if self._stds:
-            for std in self._stds:
-                self._plotItem.addItem(std)
-        self.connectPlots()
+                        else:
+                            raise Exception("Invalid layer requested!")
+                            
+            if self._stds:
+                for std in self._stds:
+                    self._plotItem.addItem(std)
+            self.connectPlots()
     
     def connectPlots(self):
         for item in self._means:
-            item.curve.setClickable(True, width = 10)
+            item.curve.setClickable(True, width = 5)
             item.sigClicked.connect(self.getItem)
         
     def clear_plots(self):

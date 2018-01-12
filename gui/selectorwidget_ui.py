@@ -22,6 +22,10 @@ class Ui_Form(object):
         Form.setStyleSheet(_fromUtf8("background: rgb(255, 255, 255)"))
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        
+        self.sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        self.sizePolicy.setHeightForWidth(True)
+        Form.setSizePolicy(self.sizePolicy)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)

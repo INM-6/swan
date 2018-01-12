@@ -11,7 +11,7 @@ many of these widgets in a nice overview.
 """
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
-from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath, TextItem
+from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath
 import numpy as np
 
 
@@ -26,6 +26,7 @@ class MyPlotWidget(PlotWidget):
     """
     
     selectPlot = QtCore.pyqtSignal("PyQt_PyObject", bool)
+    colourStripToggle = QtCore.pyqtSignal(object, int)
     """
     Signal to emit if this plot is selected by clicking on it.
     
@@ -65,10 +66,16 @@ class MyPlotWidget(PlotWidget):
         self._plotitem.disableAutoRange()
         self.selected = False
         self.inFocus = False
+        self.disabled = False
+        self.rowInhibited = False
+        self.colInhibited = False
         self._std = (200, 150)
-        self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "inFocus":mkColor(0.9)}
+        self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "disabled":mkColor(0.7), "inFocus":mkColor(0.9)}
         self._bg = self.bgs["normal"]
         self.pos = (0, 0)
+        self.defPens = []
+        self.disPen = mkColor('w')
+        self._dataItems = []
         #}
         self.setFixedSize(self._std[0], self._std[1])
         
@@ -88,7 +95,9 @@ class MyPlotWidget(PlotWidget):
                 Default: w for white.
         
         """
-        self._plotitem.plot(y, pen=mkPen(mkColor(color), width = 2), antialias=True)
+        plot = self._plotitem.plot(y, pen=mkPen(mkColor(color), width = 2), antialias=False)
+        self.defPens.append(mkColor(color))
+        self._dataItems.append(plot)
     
     def plot_many(self, ys, color='w'):
         """
@@ -123,15 +132,6 @@ class MyPlotWidget(PlotWidget):
         newh = int((3./4.)*neww)
         if neww > 0 and newh > 0:
             self.setFixedSize(neww, newh)
-    
-    def placeText(self, i, j, color, font, anchor = (0, 0)):
-        textItem = TextItem(text = "SESSION {}\nUNIT {}".format(i, j), color = color, anchor = anchor)
-        textItem.setFont(font)
-        
-#        textItem = pg.LabelItem()
-#        textItem.setText(text = "SESSION {}\nUNIT {}".format(i, j), color = 'bfbfbf', size = '15pt', bold = True)
-        self._plotitem.addItem(textItem)
-#        self.setCentralItem(textItem)
         
     def change_background(self, change):
         """
@@ -170,10 +170,35 @@ class MyPlotWidget(PlotWidget):
         """
         self.setToolTip(tooltip)
         QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
+    
+    def toggleColourStrip(self, col):
+        colour = mkColor(col)
+        self.colourStripToggle.emit(colour, self.pos[0])
+    
+    def disable(self):
+        if self.selected:
+            self.selectPlot.emit(self, not self.selected)
+        self.disabled = True
+        self.setBackground(self.bgs["disabled"])
+        for dataItem in self._dataItems:
+            dataItem.setPen(self.disPen)
+        
+    def enable(self, which):
+        if which == "row":
+            self.rowInhibited = False
+        elif which == "col":
+            self.colInhibited = False
+        
+        if not self.rowInhibited and not self.colInhibited:
+            self.disabled = False
+            self.setBackground(self.bgs["normal"])
+            for dataItem, pen in zip(self._dataItems, self.defPens):
+                dataItem.setPen(pen)
         
     def darkTheme(self):
-        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "inFocus":mkColor(0.1)}
+        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "disabled":mkColor(0.3), "inFocus":mkColor(0.1)}
         self._bg = self.bgs["normal"]
+        self.disPen = mkColor('k')
         
     #### mouse interaction ####
         
@@ -189,7 +214,7 @@ class MyPlotWidget(PlotWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton and not self.disabled:
             self.selectPlot.emit(self, not self.selected)
             super(PlotWidget, self).mousePressEvent(event)
             event.accept()
@@ -231,9 +256,12 @@ class MyPlotWidget(PlotWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        self.inFocus = True
-        self.setBackground(self.bgs["inFocus"])
-        event.accept()
+        if not self.disabled:
+            self.inFocus = True
+            self.setBackground(self.bgs["inFocus"])
+            event.accept()
+        else:
+            event.ignore()
     
     def leaveEvent(self, event):
         """
@@ -246,9 +274,12 @@ class MyPlotWidget(PlotWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        self.inFocus = False
-        self.setBackground(self._bg)
-        event.accept()
+        if not self.disabled:
+            self.inFocus = False
+            self.setBackground(self._bg)
+            event.accept()
+        else:
+            event.ignore()
 
 class MultiLine(pg.QtGui.QGraphicsPathItem):
     def __init__(self, data, color):

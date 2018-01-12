@@ -1,12 +1,13 @@
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Nov  2 23:26:08 2017
 
-# Form implementation generated from reading ui file 'main_ui.ui'
-#
-# Created: Tue Jul 28 14:16:32 2015
-#      by: PyQt4 UI code generator 4.10.4
-#
+@author: sridhar
+"""
 
-from PyQt5 import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui
+from os import sep
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -21,134 +22,97 @@ try:
 except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+    
 
 class Ui_Main(object):
     def setupUi(self, Main):
         Main.setObjectName(_fromUtf8("Main"))
-        Main.resize(1366, 768)
-        self.centralwidget = QtGui.QWidget(Main)
-        self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
-        self.gridLayout = QtGui.QGridLayout(self.centralwidget)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.splitter_2 = QtGui.QSplitter(self.centralwidget)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.splitter_2.sizePolicy().hasHeightForWidth())
-        self.splitter_2.setSizePolicy(sizePolicy)
-        self.splitter_2.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter_2.setChildrenCollapsible(False)
-        self.splitter_2.setObjectName(_fromUtf8("splitter_2"))
-        self.groupBox = QtGui.QGroupBox(self.splitter_2)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
-        self.groupBox.setSizePolicy(sizePolicy)
-        self.groupBox.setBaseSize(QtCore.QSize(0, 0))
-        self.groupBox.setObjectName(_fromUtf8("groupBox"))
-        self.gridLayout_5 = QtGui.QGridLayout(self.groupBox)
-        self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
-        self.label = QtGui.QLabel(self.groupBox)
-        self.label.setAlignment(QtCore.Qt.AlignCenter)
-        self.label.setObjectName(_fromUtf8("label"))
-        self.gridLayout_5.addWidget(self.label, 0, 1, 1, 1)
-        self.label_2 = QtGui.QLabel(self.groupBox)
-        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_2.setObjectName(_fromUtf8("label_2"))
-        self.gridLayout_5.addWidget(self.label_2, 1, 0, 1, 1)
-        self.plotGrid = MyPlotGrid(self.groupBox)
-        self.plotGrid.setObjectName(_fromUtf8("plotGrid"))
-        self.gridLayout_5.addWidget(self.plotGrid, 1, 1, 1, 1)
-        self.splitter = QtGui.QSplitter(self.splitter_2)
-        self.splitter.setOrientation(QtCore.Qt.Vertical)
-        self.splitter.setChildrenCollapsible(False)
-        self.splitter.setObjectName(_fromUtf8("splitter"))
-        self.views = QtGui.QTabWidget(self.splitter)
-        self.views.setObjectName(_fromUtf8("views"))
-        self.view_1 = MplWidget2d()
-        self.view_1.setObjectName(_fromUtf8("view_1"))
-        self.views.addTab(self.view_1, _fromUtf8(""))
-        self.view_2 = MplWidgetMovie()
-        self.view_2.setObjectName(_fromUtf8("view_2"))
-        self.views.addTab(self.view_2, _fromUtf8(""))
-        self.view_3 = MplWidget3d()
-        self.view_3.setObjectName(_fromUtf8("view_3"))
-        self.views.addTab(self.view_3, _fromUtf8(""))
-        self.view_4 = MplWidgetIsi()
-        self.view_4.setObjectName(_fromUtf8("view_4"))
-        self.views.addTab(self.view_4, _fromUtf8(""))
-        self.view_5 = MplWidgetPCA()
-        self.view_5.setObjectName(_fromUtf8("view_5"))
-        self.views.addTab(self.view_5, _fromUtf8(""))
-        self.tools = QtGui.QTabWidget(self.splitter)
-        self.tools.setObjectName(_fromUtf8("tools"))
-        self.tab = QtGui.QWidget()
-        self.tab.setObjectName(_fromUtf8("tab"))
-        self.gridLayout_3 = QtGui.QGridLayout(self.tab)
-        self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
-        self.selector = SelectorWidget(self.tab)
-        self.selector.setAutoFillBackground(False)
-        self.selector.setStyleSheet(_fromUtf8("background: white"))
-        self.selector.setObjectName(_fromUtf8("selector"))
-        self.gridLayout_3.addWidget(self.selector, 0, 0, 1, 1)
-        self.tools.addTab(self.tab, _fromUtf8(""))
-        self.tab2 = QtGui.QWidget()
-        self.tab2.setObjectName(_fromUtf8("tab2"))
-        self.gridLayout_2 = QtGui.QGridLayout(self.tab2)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        self.layers = LayerWidget(self.tab2)
-        self.layers.setObjectName(_fromUtf8("layers"))
-        self.gridLayout_2.addWidget(self.layers, 0, 0, 1, 1)
-        self.tools.addTab(self.tab2, _fromUtf8(""))
-        self.tab3 = QtGui.QWidget()
-        self.tab3.setObjectName(_fromUtf8("tab3"))
-        self.gridLayout_4 = QtGui.QGridLayout(self.tab3)
-        self.gridLayout_4.setObjectName(_fromUtf8("gridLayout_4"))
-        self.units = UnitsWidget(self.tab3)
-        self.units.setObjectName(_fromUtf8("units"))
-        self.gridLayout_4.addWidget(self.units, 0, 0, 1, 1)
-        self.tools.addTab(self.tab3, _fromUtf8(""))
-        self.tab4 = QtGui.QWidget()
-        self.tab4.setObjectName(_fromUtf8("tab4"))
-        self.gridLayout_6 = QtGui.QGridLayout(self.tab4)
-        self.gridLayout_6.setObjectName(_fromUtf8("gridLayout_6"))
-        self.details = QtGui.QTableWidget(self.tab4)
-        self.details.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-        self.details.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
-        self.details.setWordWrap(True)
-        self.details.setCornerButtonEnabled(False)
-        self.details.setObjectName(_fromUtf8("details"))
-        self.details.setColumnCount(1)
-        self.details.setRowCount(5)
-        item = QtGui.QTableWidgetItem()
-        self.details.setVerticalHeaderItem(0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setVerticalHeaderItem(1, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setVerticalHeaderItem(2, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setVerticalHeaderItem(3, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setVerticalHeaderItem(4, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setHorizontalHeaderItem(0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setItem(0, 0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setItem(1, 0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setItem(2, 0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setItem(3, 0, item)
-        item = QtGui.QTableWidgetItem()
-        self.details.setItem(4, 0, item)
-        self.details.horizontalHeader().setStretchLastSection(True)
-        self.details.verticalHeader().setStretchLastSection(True)
-        self.gridLayout_6.addWidget(self.details, 0, 0, 1, 1)
-        self.tools.addTab(self.tab4, _fromUtf8(""))
-        self.gridLayout.addWidget(self.splitter_2, 0, 0, 1, 1)
-        Main.setCentralWidget(self.centralwidget)
+        
+        Main.setDockOptions(QtGui.QMainWindow.AllowTabbedDocks|
+                            QtGui.QMainWindow.AllowNestedDocks |
+                            QtGui.QMainWindow.GroupedDragging)
+        
+        self.plotGridDock = QtGui.QDockWidget("PlotGrid")
+        self.plotGridDock.setObjectName(_fromUtf8("PlotGridDock"))
+        self.plotGrid = MyPlotGrid(Main)
+        self.plotGridDock.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.plotGridDock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        self.plotGridDock.setWidget(self.plotGrid)
+        Main.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
+        
+        self.dock_view_1 = QtGui.QDockWidget("2D Waveforms")
+        self.dock_view_1.setObjectName(_fromUtf8("2dWaveformView"))
+        self.dock_view_1.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_1.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_1, QtCore.Qt.Vertical)
+        
+        self.view_1 = pgWidget2d()
+        self.view_1.setObjectName(_fromUtf8("WaveformsView"))
+        
+        self.dock_view_1.setWidget(self.view_1)
+        
+        self.dock_view_2 = QtGui.QDockWidget("3D Waveforms")
+        self.dock_view_2.setObjectName(_fromUtf8("3dWaveformView"))
+        self.dock_view_2.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_2.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_2, QtCore.Qt.Vertical)
+        
+        self.view_2 = pgWidget3d()
+        self.view_2.setObjectName(_fromUtf8("3dWaveformsView"))
+        
+        self.dock_view_2.setWidget(self.view_2)
+        
+        self.dock_view_3 = QtGui.QDockWidget("ISI")
+        self.dock_view_3.setObjectName(_fromUtf8("ISIView"))
+        self.dock_view_3.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_3.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_3, QtCore.Qt.Vertical)
+        
+        self.view_3 = pgWidgetISI()
+        self.view_3.setObjectName(_fromUtf8("IsiView"))
+        
+        self.dock_view_3.setWidget(self.view_3)
+        
+        self.dock_view_4 = QtGui.QDockWidget("PCA")
+        self.dock_view_4.setObjectName(_fromUtf8("PCAView"))
+        self.dock_view_4.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_4.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_4, QtCore.Qt.Vertical)
+        
+        self.view_4 = pgWidgetPCA()
+        self.view_4.setObjectName(_fromUtf8("PcaView"))
+        
+        self.dock_view_4.setWidget(self.view_4)
+        
+        self.dock_view_5 = QtGui.QDockWidget("2D PCA")
+        self.dock_view_5.setObjectName(_fromUtf8("2DPCAView"))
+        self.dock_view_5.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_5.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_5, QtCore.Qt.Vertical)
+        
+        self.view_5 = pgWidgetPCA2d()
+        self.view_5.setObjectName(_fromUtf8("2DPcaView"))
+        
+        self.dock_view_5.setWidget(self.view_5)
+        
+        self.tools = plotGridTools()
+        
+        self.plotGridOptionsLayout = QtGui.QGridLayout()
+        self.plotGridOptionsLayout.setObjectName(_fromUtf8("PlotGridOptionsLayout"))
+        
+        self.plotGridOptionsLayout.addWidget(self.tools)
+        self.plotGridOptions = collapsibleWidget(parent = self.plotGrid, title = "Options", animationDuration = 400)
+        self.plotGridOptions.setContentLayout(self.plotGridOptionsLayout)
+        
+        self.plotGrid.mainGridLayout.addWidget(self.plotGridOptions, 1, 0)
+        self.plotGrid.mainGridLayout.setRowStretch(0, 10)
+        
         self.menubar = QtGui.QMenuBar(Main)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1159, 25))
         self.menubar.setObjectName(_fromUtf8("menubar"))
@@ -166,6 +130,7 @@ class Ui_Main(object):
         Main.setStatusBar(self.statusbar)
         self.toolBar = QtGui.QToolBar(Main)
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
+        #self.toolBar.setStyleSheet('QToolBar{spacing:10px;}')
         Main.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         self.action_New_Project = QtGui.QAction(Main)
         self.action_New_Project.setObjectName(_fromUtf8("action_New_Project"))
@@ -211,6 +176,9 @@ class Ui_Main(object):
         self.action_Import_from_csv.setObjectName(_fromUtf8("action_Import_from_csv"))
         self.action_Import_from_odML = QtGui.QAction(Main)
         self.action_Import_from_odML.setObjectName(_fromUtf8("action_Import_from_odML"))
+        self.action_RestoreState = QtGui.QAction(Main)
+        self.action_RestoreState.setObjectName(_fromUtf8("action_RestoreState"))
+        
         self.menu_File.addAction(self.action_New_Project)
         self.menu_File.addAction(self.action_Load_Project)
         self.menu_File.addAction(self.action_Save_Project)
@@ -234,6 +202,7 @@ class Ui_Main(object):
         self.menu_Help.addAction(self.action_Tutorials)
         self.menu_Help.addAction(self.action_About)
         self.menu_View.addAction(self.action_Virtual_Units)
+        self.menu_View.addAction(self.action_RestoreState)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_Edit.menuAction())
         self.menubar.addAction(self.menu_View.menuAction())
@@ -253,56 +222,24 @@ class Ui_Main(object):
         self.toolBar.addAction(self.action_Collapse_overview)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.action_Virtual_Units)
-
+        
+        self.addIcons(Main)
+        self.load_icons()
         self.retranslateUi(Main)
-        self.views.setCurrentIndex(0)
-        self.tools.setCurrentIndex(0)
+        
+        Main.tabifyDockWidget(self.dock_view_5, self.dock_view_4)
+        Main.tabifyDockWidget(self.dock_view_4, self.dock_view_3)
+        Main.tabifyDockWidget(self.dock_view_3, self.dock_view_2)
+        Main.tabifyDockWidget(self.dock_view_2, self.dock_view_1)
+        
         self.action_Quit.triggered.connect(Main.close)
         QtCore.QMetaObject.connectSlotsByName(Main)
-
+    
+    def setProgramTitle(self, Main, text):
+        Main.setWindowTitle(_translate("Main", text, None))
+        
     def retranslateUi(self, Main):
         Main.setWindowTitle(_translate("Main", "SWAN - Sequential waveform analyser", None))
-        self.groupBox.setTitle(_translate("Main", "Overview (average of the waveforms)", None))
-        self.label.setText(_translate("Main", "SESSIONS", None))
-        self.label_2.setText(_translate("Main", "U\n"
-"N\n"
-"I\n"
-"T\n"
-"S", None))
-        self.views.setTabText(self.views.indexOf(self.view_1), _translate("Main", "2D", None))
-        self.views.setTabText(self.views.indexOf(self.view_2), _translate("Main", "Movie", None))
-        self.views.setTabText(self.views.indexOf(self.view_3), _translate("Main", "3D", None))
-        self.views.setTabText(self.views.indexOf(self.view_4), _translate("Main", "ISI", None))
-        self.views.setTabText(self.views.indexOf(self.view_5), _translate("Main", "PCA", None))
-        self.tools.setTabText(self.tools.indexOf(self.tab), _translate("Main", "Electrodes", None))
-        self.tools.setTabText(self.tools.indexOf(self.tab2), _translate("Main", "Layers", None))
-        self.tools.setTabText(self.tools.indexOf(self.tab3), _translate("Main", "Units", None))
-        item = self.details.verticalHeaderItem(0)
-        item.setText(_translate("Main", "Project", None))
-        item = self.details.verticalHeaderItem(1)
-        item.setText(_translate("Main", "Dir", None))
-        item = self.details.verticalHeaderItem(2)
-        item.setText(_translate("Main", "VUMap", None))
-        item = self.details.verticalHeaderItem(3)
-        item.setText(_translate("Main", "Channel", None))
-        item = self.details.verticalHeaderItem(4)
-        item.setText(_translate("Main", "Files", None))
-        item = self.details.horizontalHeaderItem(0)
-        item.setText(_translate("Main", "Value", None))
-        __sortingEnabled = self.details.isSortingEnabled()
-        self.details.setSortingEnabled(False)
-        item = self.details.item(0, 0)
-        item.setText(_translate("Main", "-", None))
-        item = self.details.item(1, 0)
-        item.setText(_translate("Main", "-", None))
-        item = self.details.item(2, 0)
-        item.setText(_translate("Main", "-", None))
-        item = self.details.item(3, 0)
-        item.setText(_translate("Main", "0", None))
-        item = self.details.item(4, 0)
-        item.setText(_translate("Main", "[]", None))
-        self.details.setSortingEnabled(__sortingEnabled)
-        self.tools.setTabText(self.tools.indexOf(self.tab4), _translate("Main", "Details", None))
         self.menu_File.setTitle(_translate("Main", "&File", None))
         self.menu_Edit.setTitle(_translate("Main", "&Edit", None))
         self.menu_Help.setTitle(_translate("Main", "&Help", None))
@@ -355,14 +292,68 @@ class Ui_Main(object):
         self.action_Export_to_odML.setText(_translate("Main", "Export to odML", None))
         self.action_Import_from_csv.setText(_translate("Main", "Import from csv", None))
         self.action_Import_from_odML.setText(_translate("Main", "Import from odML", None))
+        self.action_RestoreState.setText(_translate("Main", "Restore GUI state", None))
+    
+    def addIcons(self, Main):
+        if Main.dark == True:
+            import icons_dark
+        else:
+            import icons
+    
+    def load_icons(self):
+        """
+        Loads the icons.
+        
+        """
+        try:
+            prefix = ":" + sep + "icons" + sep
+            #File
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "new.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_New_Project.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "open.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Load_Project.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "save.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Save_Project.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "save_as.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Save_as.setIcon(icon)
+            #Edit
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "revert.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Revert_mapping.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "swap.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Swap.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "zoom_in.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Zoom_in.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "zoom_out.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Zoom_out.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "expand.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Expand_overview.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "collapse.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Collapse_overview.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "preferences.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Preferences.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(QtGui.QPixmap(prefix + "vunits.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.action_Virtual_Units.setIcon(icon)
+        except:
+            print("Icon Exception")
+            pass
 
-from mplwidget2d import MplWidget2d
-from mplwidget3d import MplWidget3d
-from selectorwidget import SelectorWidget
-from layerwidget import LayerWidget
-from mplwidgetmovie import MplWidgetMovie
+from pgwidget2d import pgWidget2d
+from plotgridtools import plotGridTools
+from viewtoolbar import collapsibleWidget
 from myplotgrid import MyPlotGrid
-from mplwidgetisi import MplWidgetIsi
-from mplwidgetpca import MplWidgetPCA
-from unitswidget import UnitsWidget
-import icons_rc
+from pgwidgetisi import pgWidgetISI
+from pgwidgetpca import pgWidgetPCA
+from pgwidget3d import pgWidget3d
+from pgwidgetpca2d import pgWidgetPCA2d

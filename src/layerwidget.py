@@ -9,7 +9,7 @@ from :class:`src.mylistwidget.MyListWidget`.
 It is shown in the layer tab on the application and manages the
 layer selection.
 """
-from PyQt5 import QtCore
+from pyqtgraph.Qt import QtCore
 from src.mylistwidget import MyListWidget
 
 

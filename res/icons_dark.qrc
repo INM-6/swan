@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="icons">
+    <file alias="revert.png">dark/revert.png</file>
+    <file alias="swap.png">dark/swap.png</file>
+    <file alias="new.png">dark/new.png</file>
+    <file alias="open.png">dark/open.png</file>
+    <file alias="save_as.png">dark/save_as.png</file>
+    <file alias="save.png">dark/save.png</file>
+    <file alias="zoom_in.png">dark/zoom_in.png</file>
+    <file alias="zoom_out.png">dark/zoom_out.png</file>
+    <file alias="expand.png">dark/expand.png</file>
+    <file alias="collapse.png">dark/collapse.png</file>
+    <file alias="preferences.png">dark/preferences.png</file>
+    <file alias="vunits.png">dark/vunits.png</file>
+  </qresource>
+</RCC>

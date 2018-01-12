@@ -6,12 +6,17 @@ Created on Sat Sep 16 23:08:03 2017
 @author: sridhar
 """
 
-from PyQt5 import QtGui, QtWidgets, QtCore
+from pyqtgraph.Qt import QtGui, QtWidgets, QtCore
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from numpy import array
+from viewtoolbar import ViewToolbar
+
+pg.setConfigOptions(useOpenGL = True)
 
 class PyQtWidget3d(QtWidgets.QWidget):
+    
+    refreshPlots = QtCore.pyqtSignal()
     
     def __init__(self, parent = None):
         
@@ -24,6 +29,13 @@ class PyQtWidget3d(QtWidgets.QWidget):
         self.pgCanvas.setBackgroundColor(0.75)
         
         self.layout.addWidget(self.pgCanvas, 0, 0)
+        
+        self.toolbar = ViewToolbar(self)
+        self.layout.addWidget(self.toolbar, 1, 0)
+        
+        self.layout.setRowStretch(0, 10)
+        #self.layout.setRowStretch(1, 1)
+        
         self.setLayout(self.layout)
         
         self._axesGLOptions = 'translucent'
@@ -84,13 +96,17 @@ class PyQtWidget3d(QtWidgets.QWidget):
         
     def show_plot(self):
         self.pgCanvas.show()
+    
+    def triggerRefresh(self):
+        self.refreshPlots.emit()
         
     def setDark(self):
         self.pgCanvas.setBackgroundColor('k')
 
 class PyQtWidget2d(QtWidgets.QWidget):
     
-    sigClicked = QtCore.Signal(object)
+    sigClicked = QtCore.pyqtSignal(object)
+    refreshPlots = QtCore.pyqtSignal()
     
     def __init__(self, parent = None):
         
@@ -99,9 +115,14 @@ class PyQtWidget2d(QtWidgets.QWidget):
         self.layout = QtGui.QGridLayout()
         
         self.pgCanvas = pg.PlotWidget(background='w')
-        
         self.layout.addWidget(self.pgCanvas, 0, 0)
+        
+        self.toolbar = ViewToolbar(self)
+        self.layout.addWidget(self.toolbar, 1, 0)
+        
         self.setLayout(self.layout)
+        
+        self.layout.setRowStretch(0, 10)
         
         self.selectedCurves = []
         
@@ -146,6 +167,39 @@ class PyQtWidget2d(QtWidgets.QWidget):
     def createCurveItem(self, y, color, name, clickable):
         return pg.PlotCurveItem(y = y, pen = pg.mkPen(color = color), name = name, clickable = clickable)
     
+    def createFilledCurveItem(self, y1, y2, color):
+        return pg.FillBetweenItem(curve1 = y1, curve2 = y2, brush = pg.mkBrush(color))
+    
+    def createScatterPlotItem(self, *args, **kwargs):
+        
+        color = kwargs.get('color', 'w')
+        size = kwargs.get('size', 2)
+        name = kwargs.get('name', None)
+        
+        symbol = 'o'
+        symbolSize = size
+        symbolBrush = pg.mkBrush(color = color)
+        symbolPen = pg.mkPen(color = color)
+        
+        scatterPlotItem = pg.PlotDataItem(pen = None,
+                                          symbol = symbol,
+                                          symbolPen = symbolPen,
+                                          symbolBrush = symbolBrush,
+                                          symbolSize = symbolSize,
+                                          *args, **kwargs)
+        
+        scatterPlotItem.opts['name'] = name
+        
+        self.pgCanvas.plotItem.addItem(scatterPlotItem)
+        
+        self.saveHome()
+        
+        return scatterPlotItem
+
+    def connectLayersToFunction(self, function):
+        for item in self.toolbar.layerItems:
+            item.toggled.connect(function)
+    
     @QtCore.pyqtSlot(object)   
     def getItem(self, item):
         self.sigClicked.emit(item)
@@ -166,16 +220,14 @@ class PyQtWidget2d(QtWidgets.QWidget):
                 curve.setShadowPen('k', width = 1)
                 if curve in self.selectedCurves:
                     self.selectedCurves.remove(curve)
-        else:
-            print("Curve not found! Something's wrong!")
-    
-    def createFilledCurveItem(self, y1, y2, color):
-        return pg.FillBetweenItem(curve1 = y1, curve2 = y2, brush = pg.mkBrush(color))
     
     def clearAll(self):
         self.pgCanvas.plotItem.clear()
         self.selectedCurves = []
         self.showGrid()
+    
+    def triggerRefresh(self):
+        self.refreshPlots.emit()
     
     def setDark(self):
         self.pgCanvas.setBackground('k')

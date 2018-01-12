@@ -11,121 +11,33 @@ It shows an overview of many :class:`src.myplotwidget.MyPlotWidget`
 and manages them.
 """
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from pyqtgraph import mkColor
 from gui.myplotgrid_ui import Ui_Form
 from src.myplotwidget import MyPlotWidget
+from src.indicatorwidget import IndicatorWidget
 from numpy.random import choice
 
-class IndicatorWidget(QtGui.QWidget):
-    """
-    A class based on QWidget used to indicate the row/column.
-    """
+class MyPlotGrid(QtWidgets.QWidget):
     
-    def __init__(self, text, row = 0, col = 0, *args, **kwargs):
-        QtGui.QWidget.__init__(self, *args, **kwargs)
-        
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        
-        self._defSize = (200, 150)
-        self._constH = 50
-        self._constW = int(self._constH * 0.75)
-        self._row = row
-        self._col = col
-        
-        gridLayout = QtGui.QGridLayout(self)
-        gridLayout.setObjectName("indicatorGridLayout")
-        self.setLayout(gridLayout)
-        
-        self.leftFlank = QtGui.QHBoxLayout()
-        self.rightFlank = QtGui.QHBoxLayout()
-        self.dispText = QtWidgets.QLabel()
-        self.dispText.setObjectName("dispText")
-        self.dispText.setText(text)
-        
-        self.dispFont = self.dispText.font()
-        self.dispFont.setPixelSize(0.1 * min(self._defSize))
-        self.dispText.setFont(self.dispFont)
-        
-        gridLayout.addLayout(self.leftFlank, 0, 0)
-        gridLayout.addWidget(self.dispText, 1, 0)
-        gridLayout.addLayout(self.rightFlank, 2, 0)
-        
-        self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "inFocus":mkColor(0.9)}
-        self._bg = self.bgs["normal"]
-        
-        self.setSize()
-    
-    def change_size(self, width, height):
-        """
-        Resizes the plot by the given steps.
-        
-        **Arguments**
-        
-            *width* (float):
-                The change step percentage for the width.
-            *height* (float):
-                The change step percentage for the height.
-        
-        """
-        oldw = float(self.size().width())
-        oldh = float(self.size().height())
-        
-        if self._row == 0 and self._col > 0:
-            neww = int(oldw + oldw*(width/100.0))
-            if neww > 0:
-                self.setFixedSize(neww, oldh)
-        elif self._col == 0 and self._row > 0:
-            newh = int(oldh + oldh*(height/100.0))
-            if newh > 0:
-                self.setFixedSize(oldw, newh)
-    
-    def darkTheme(self):
-        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "inFocus":mkColor(0.1)}
-        self._bg = self.bgs["normal"]
-    
-    def setSize(self):
-        if self._row == 0 and self._col == 0:
-            self.setFixedSize(self._constW, self._constH)
-        elif self._row == 0:
-            self.setFixedSize(self._defSize[0], self._constH)
-        elif self._col == 0:
-            self.setFixedSize(self._constW, self._defSize[1])
-            
-
-class MyPlotGrid(QtGui.QScrollArea):
-    """
-    A :class:`pyqtgraph.Qt.QtGui.QScrollArea` which is extended to be better 
-    usable with the :class:`MyPlotContent`.
-
-    The *args* and *kwargs* are passed to :class:`PyQt5.QtGui.QScrollArea`.
-    
-    """
-
     def __init__(self, *args, **kwargs):
-        """
-        **Properties**
         
-            *child* (:class:`MyPlotContent`):
-                Used for an easier access to it's child widget.
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)
         
-        """
-        QtGui.QScrollArea.__init__(self, *args, **kwargs)
+        self.mainGridLayout = QtGui.QGridLayout()
         
-        self.setWidgetResizable(True)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea = QtGui.QScrollArea(self)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         
-        m = MyPlotContent(self)
-        self.setWidget(m)
+        self.child = MyPlotContent(self)
+        self.scrollArea.setWidget(self.child)
+        self.mainGridLayout.addWidget(self.scrollArea, 0, 0)
         
-        #properties{
-        self.child = m
-        #}
+        self.setLayout(self.mainGridLayout)
     
     def setDark(self):
         self.child.setDark()
-
-        
+    
 class MyPlotContent(QtWidgets.QWidget):
     """
     A class that manages :class:`src.myplotwidget.MyPlotWidget` 
@@ -179,11 +91,6 @@ class MyPlotContent(QtWidgets.QWidget):
         self._plotGray = QtGui.QColor(180, 180, 180, 170)
         self._plotGrayDark = QtGui.QColor(180, 180, 180, 85)
         
-        self._plotInfoColor = QtGui.QColor(180, 180, 180, 200)
-        self._plotInfoColorDark = QtGui.QColor(180, 180, 180, 85)
-        
-        self._plotInfoFont = QtGui.QFont("Arial", 12, QtGui.QFont.Bold)
-        self._textAnchor = (0, 1.0)
         self._sampleWaveformNumber = 100
         #}
         
@@ -196,7 +103,7 @@ class MyPlotContent(QtWidgets.QWidget):
 
     #### general methods ####
         
-    def make_plots(self, rows, cols):
+    def make_plots(self, rows, cols, dates = None):
         """
         Creates a plot grid of the given shape.
         
@@ -211,6 +118,7 @@ class MyPlotContent(QtWidgets.QWidget):
         self.delete_plots()
         self._shape = (rows, cols)
         self._plots = []
+        self._indicators = []
         self._rows = {}
         self._cols = {}
         
@@ -218,28 +126,28 @@ class MyPlotContent(QtWidgets.QWidget):
             if i == 0:
                 for j in range(cols + 1):
                     if j == 0:
-                        print("first cell".format(j))
-                        iw = IndicatorWidget(str(j))
+                        iw = IndicatorWidget("Sessions (dd/mm/yy)\n\u2192\n\n\u2193 Units", i, j)
                         if self._dark is True:
                             iw.darkTheme()
                         self._indicators.append(iw)
                         self.ui.gridLayout.addWidget(iw, i, j, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
                     else:
-                        print("first row, column {}".format(j))
-                        iw = IndicatorWidget(str(j))
+                        if dates is not None:    
+                            iw = IndicatorWidget(str(j) + " (" + str(dates[j-1].strftime("%d/%m/%y")) + ")", i, j)
+                        else:
+                            iw = IndicatorWidget(str(j), i, j)
                         if self._dark is True:
                             iw.darkTheme()
                         self._indicators.append(iw)
+                        iw.selectIndicator.connect(self.indicatorToggled)
                         self.ui.gridLayout.addWidget(iw, i, j, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
             else:
-                print("row {}".format(i))
-                iw = IndicatorWidget(str(i))
+                iw = IndicatorWidget(str(i), i, 0)
                 if self._dark is True:
                     iw.darkTheme()
-                #iw.pos = (i, j)
                 self._indicators.append(iw)
-                self.ui.gridLayout.addWidget(iw, i, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-                
+                iw.selectIndicator.connect(self.indicatorToggled)
+                self.ui.gridLayout.addWidget(iw, i, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)                
         
         for i in range(rows):
             self._rows[i] = []
@@ -252,10 +160,38 @@ class MyPlotContent(QtWidgets.QWidget):
                 self._plots.append(mpw)
                 mpw.pos = (i, j)
                 mpw.selectPlot.connect(self.select_plot)
+                mpw.colourStripToggle.connect(self.toggleIndicatorColour)
                 self._rows[i].append(mpw)
                 self._cols[j].append(mpw)
                 self.ui.gridLayout.addWidget(mpw, i+1, j+1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         return self._plots
+    
+    @QtCore.pyqtSlot(object, int)
+    def toggleIndicatorColour(self, colour, i):
+        iw = next((x for x in self._indicators if x._pos[0] == i+1))
+        iw.toggleColourStrip(colour)
+    
+    @QtCore.pyqtSlot(object)
+    def indicatorToggled(self, indicator):
+        row = indicator._row
+        col = indicator._col
+        if col == 0:
+            mpwList = [pw for pw in self._plots if pw.pos[0] == row - 1]
+        elif row == 0:
+            mpwList = [pw for pw in self._plots if pw.pos[1] == col - 1]
+        
+        for pw in mpwList:
+            if not indicator.selected:
+                if row == 0:
+                    pw.enable("col")
+                elif col == 0:
+                    pw.enable("row")
+            else:
+                pw.disable()
+                if row == 0:
+                    pw.colInhibited = True
+                elif col == 0:
+                    pw.rowInhibited = True
     
     def delete_plots(self):
         """
@@ -264,6 +200,8 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         for p in self._plots:
             p.close()
+        for i in self._indicators:
+            i.close()
             
     def clear_plots(self):
         """
@@ -272,6 +210,8 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         for p in self._plots:
             p.clear_()
+        for i in self._indicators:
+            i.colourStrip.hide()
             
     def do_plot(self, vum, data):
         """
@@ -294,11 +234,11 @@ class MyPlotContent(QtWidgets.QWidget):
                     d = data.get_data("average", runit)
                     d_all = data.get_data('all', runit)
                     col = vum.get_color(j, False, "average", False)
-                    p.placeText(i, j, color = self._plotInfoColor, font = self._plotInfoFont, anchor = self._textAnchor)
                     p.plot_many(d_all[choice(d_all.shape[0], size = self._sampleWaveformNumber, replace = False)], self._plotGray)
                     p.plot(d, col)
+                    p.toggleColourStrip(col)
                     p.setXRange(0., data.wave_length, padding = None, update = True)
-    
+                
     def find_plot(self, i, j):
         """
         Finds a plot at a given position.
@@ -493,7 +433,6 @@ class MyPlotContent(QtWidgets.QWidget):
     def setDark(self):
         self._dark = True
         self._plotGray = self._plotGrayDark
-        self._plotInfoColor = self._plotInfoColorDark
     
     @QtCore.pyqtSlot(object)
     def highlightPlot(self, item):

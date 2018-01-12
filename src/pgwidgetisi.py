@@ -27,6 +27,10 @@ class pgWidgetISI(PyQtWidget2d):
         """
         PyQtWidget2d.__init__(self)
         
+        layers = ["units", "sessions"]
+        self.toolbar.setupRadioButtons(layers)
+        self.toolbar.doLayer.connect(self.triggerRefresh)
+        
         self._plotItem = self.pgCanvas.getPlotItem()
         self._plotItem.enableAutoRange()
         self._hists = []
@@ -55,7 +59,7 @@ class pgWidgetISI(PyQtWidget2d):
         """
         self._hists.append(self.makePlot(y = y, color = color, name = name, clickable = clickable))
 
-    def do_plot(self, vum, data, layers):
+    def do_plot(self, vum, data):
         """
         Plots data for every layer and every visible unit.
         
@@ -71,40 +75,44 @@ class pgWidgetISI(PyQtWidget2d):
         """
         self.clear_plots()
         
-        for layer in layers:
-            if layer == "sessions":
-                for j in range(vum.n_):
-                    values = []
-                    for i in range(len(data.blocks)):
-                        if vum.mapping[i][j] != 0 and vum.visible[j]:
-                            runit = vum.get_realunit(i, j, data)
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, False)
-                            for d in datas:
-                                values.extend(d)
-                    if values:
-                        y = histogram(values, bins = 25)
-                        tmp = y[1]
-                        tmp = tmp[:len(tmp)-1]
-                        self.plot((tmp, y[0]/(1.0*len(values))), col)
-            else:
-                for i in range(len(data.blocks)):
-                    for j in range(vum.n_):
-                        if vum.mapping[i][j] != 0 and vum.visible[j]:
-                            runit = vum.get_realunit(i, j, data)
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, False)
-                            for d in datas:
-                                y = histogram(d, bins=25)
-                                tmp = y[1]
-                                tmp = tmp[:len(tmp)-1]
-                                self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = "{}{}".format(i, j))
+        if self.toolbar.layers.isChecked():
             
+            layers = self.toolbar.getCheckedLayers()
+            
+            for layer in layers:
+                if layer == "sessions":
+                    for j in range(vum.n_):
+                        values = []
+                        for i in range(len(data.blocks)):
+                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+                                runit = vum.get_realunit(i, j, data)
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, False)
+                                for d in datas:
+                                    values.extend(d)
+                        if values:
+                            y = histogram(values, bins = 25)
+                            tmp = y[1]
+                            tmp = tmp[:len(tmp)-1]
+                            self.plot((tmp, y[0]/(1.0*len(values))), col)
+                elif layer == "units":
+                    for i in range(len(data.blocks)):
+                        for j in range(vum.n_):
+                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+                                runit = vum.get_realunit(i, j, data)
+                                datas = data.get_data(layer, runit)
+                                col = vum.get_color(j, False, layer, False)
+                                for d in datas:
+                                    y = histogram(d, bins=25)
+                                    tmp = y[1]
+                                    tmp = tmp[:len(tmp)-1]
+                                    self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = "{}{}".format(i, j))
+                
             self.connectPlots()
             
     def connectPlots(self):
         for item in self._hists:
-            item.curve.setClickable(True, width = 10)
+            item.curve.setClickable(True, width = 5)
             item.sigClicked.connect(self.getItem)
     
     def clear_plots(self):

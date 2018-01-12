@@ -227,6 +227,12 @@ class SelectorWidget(QtWidgets.QWidget):
             item.dirty = False
             item.repaint()
         self._dirty_items = []
+        
+    def sizeHint(self):
+        return QtCore.QSize(300, 300)
+    
+    def heightForWidth(self, width):
+        return width
 
 
 class SelectorItem(QtWidgets.QWidget):

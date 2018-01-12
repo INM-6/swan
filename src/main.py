@@ -119,6 +119,8 @@ class Main(QtGui.QMainWindow):
             Whether the dark theme should be enabled or not.
     
     """
+    
+    doPlot = QtCore.pyqtSignal(object, object)
 
     def __init__(self, program_dir, home_dir, dark_theme = False):
         """
@@ -156,6 +158,7 @@ class Main(QtGui.QMainWindow):
             self.ui.view_2.setDark()
             self.ui.view_3.setDark()
             self.ui.view_4.setDark()
+            self.ui.view_5.setDark()
         
         #properties{
         self._program_dir = program_dir
@@ -184,11 +187,11 @@ class Main(QtGui.QMainWindow):
         self.vu.setWindowTitle("Virtual Units")
 
         #connect channel selection
-        self.ui.selector.doChannel.connect(self.do_channel)
+        self.ui.tools.selector.doChannel.connect(self.do_channel)
         #connect layer selection
-        self.ui.layers.doLayer.connect(self.plot_all)
+        self.ui.tools.layers.doLayer.connect(self.plot_all)
         #connect unit selection
-        self.ui.units.doUnits.connect(self.plot_all)
+        self.ui.tools.units.doUnits.connect(self.plot_all)
         #connect view change
 #        self.ui.views.currentChanged.connect(self.check_layers)
         #connect loading progress
@@ -204,13 +207,27 @@ class Main(QtGui.QMainWindow):
         
         self.ui.plotGrid.child.plotSelected.connect(self.ui.view_1.highlightCurveFromPlot)
         self.ui.plotGrid.child.plotSelected.connect(self.ui.view_3.highlightCurveFromPlot)
+        
         #shortcut reference
         self.plots = self.ui.plotGrid.child
-        self.selector = self.ui.selector
+        self.selector = self.ui.tools.selector
         
         self.check_dirs()
         
 #        self.check_layers(self.ui.views.currentIndex())
+        
+        self.doPlot.connect(self.plots.do_plot)
+        self.doPlot.connect(self.ui.view_1.do_plot)
+        self.doPlot.connect(self.ui.view_2.do_plot)
+        self.doPlot.connect(self.ui.view_3.do_plot)
+        self.doPlot.connect(self.ui.view_4.do_plot)
+        self.doPlot.connect(self.ui.view_5.do_plot)
+        
+        self.ui.view_1.refreshPlots.connect(self.refresh_views)
+        self.ui.view_2.refreshPlots.connect(self.refresh_views)
+        self.ui.view_3.refreshPlots.connect(self.refresh_views)
+        self.ui.view_4.refreshPlots.connect(self.refresh_views)
+        self.ui.view_5.refreshPlots.connect(self.refresh_views)
         
         #setting up the progress bar
         self.p = QtGui.QProgressBar()
@@ -257,6 +274,7 @@ class Main(QtGui.QMainWindow):
         self.dirty_project()
         
         dia = File_Dialog()
+        
         if dia.exec_():
             files = dia.get_files()
             files.sort()
@@ -351,11 +369,11 @@ class Main(QtGui.QMainWindow):
         Delegates the loading to :func:`load_connector_map`.
         
         """
-        filename = QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir)
+        filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose a file", self._prodir)
         try:
             self.load_connector_map(filename)
         except ValueError:
-            QtGui.QMessageBox.critical(self, "Loading error", "The connector map could not be loaded")
+            QtGui.QMessageBox.critical(self, "Loading error", "The connector map could not be loaded!")
 
     @QtCore.pyqtSlot(bool)
     def on_action_Export_to_csv_triggered(self):
@@ -365,7 +383,7 @@ class Main(QtGui.QMainWindow):
         Exports the virtual unit mappings to a csv file.
 
         """
-        filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
+        filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir)
         if filename:
             try:
                 if filename.endswith(".csv"):
@@ -382,7 +400,7 @@ class Main(QtGui.QMainWindow):
         Exports the virtual unit mappings to an odML file.
 
         """
-        filename = str(QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir))
+        filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a savename", self._prodir)
         if filename:
             try:
                 if filename.endswith(".odml"):
@@ -420,15 +438,29 @@ class Main(QtGui.QMainWindow):
         
         """
         if self._mystorage.has_project():
-            answer = QtGui.QMessageBox.question(self, "Recalculate mapping", "Are you sure you want to do this?", 
-                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, 
-                                                defaultButton=QtGui.QMessageBox.No)
+            answer = QtGui.QMessageBox(self)
+            answer.setWindowTitle( "Recalculate mapping")
+            answer.setText("WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
             
-            if answer == QtGui.QMessageBox.Yes:
-                self._mystorage.recalculate()
+            btn1 = QtGui.QPushButton("SWAN Implementation")
+            btn2 = QtGui.QPushButton("Fraser-Schwarz Implementation")
+            btn3 = QtGui.QPushButton("Cancel")
+            
+            answer.addButton(btn1, QtGui.QMessageBox.AcceptRole)
+            answer.addButton(btn2, QtGui.QMessageBox.AcceptRole)
+            answer.addButton(btn3, QtGui.QMessageBox.NoRole)
+            
+            answer.exec_()
+            if answer.clickedButton() in [btn1, btn2]:
+                if answer.clickedButton() == btn1:
+                    mapping = 1
+                elif answer.clickedButton() == btn2:
+                    mapping = 2
+                self._mystorage.recalculate(mapping)
                 self._currentdirty = True
                 self._globaldirty = True
                 self.plot_all()
+                self.plots.set_tooltips(self._mystorage.get_tooltips())
                 
     @QtCore.pyqtSlot(bool)
     def on_action_Revert_mapping_triggered(self):
@@ -449,6 +481,7 @@ class Main(QtGui.QMainWindow):
                 self._mystorage.revert()
                 self.reset_current_dirty()
                 self.plot_all()
+                self.plots.set_tooltips(self._mystorage.get_tooltips())
     
     @QtCore.pyqtSlot(bool)
     def on_action_Swap_triggered(self):
@@ -597,7 +630,7 @@ class Main(QtGui.QMainWindow):
     
     #### signal handler ####
     
-    def do_channel(self, channel, lastchannel):
+    def do_channel(self, channel, lastchannel, automaticMapping = 0):
         """
         Loads the data from the given electrode and plots it.
         
@@ -634,12 +667,13 @@ class Main(QtGui.QMainWindow):
             #loading            
             (n, m) = self._mystorage.load_channel(channel)
             
-            self.ui.units.init_units(n)
+            self.ui.tools.units.init_units(n)
             
             #plotting
             self.plots.reset_selection()
-            self.plots.make_plots(n, m)
             data = self._mystorage.get_data()
+            self.plots.make_plots(n, m, data.get_dates())
+            
             if any(data.nums):
                 min0, max0 = data.get_yscale()
             else:
@@ -647,7 +681,7 @@ class Main(QtGui.QMainWindow):
             self.plots.set_yranges(min0, max0)
             
             vum = self._mystorage.get_map()
-            vum.calculate_mapping(data, self._mystorage)
+            vum.calculate_mapping(data, self._mystorage, automaticMapping)
             
             self.plot_all()
             
@@ -696,28 +730,35 @@ class Main(QtGui.QMainWindow):
             if i is not None and visible is not None :
                 vum.set_visible(i, visible)
             
-            l1 = ["average", "standard deviation"]
-            l2 = ["units", "sessions"]
+            self.doPlot.emit(vum, data)
+            self.vu.do_plot(vum_all, data)
+
+            QtGui.QApplication.restoreOverrideCursor()
+    
+    def refresh_views(self):
+        
+        if self._mystorage.has_project():
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
             
+            vum = self._mystorage.get_map()
+            data = self._mystorage.get_data()
+                        
             #plotting
             #plots: pyqtgraph plotwidget overview
             self.plots.do_plot(vum, data)
             #view_1: 2D mpl plot
-            self.ui.view_1.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
+            self.ui.view_1.do_plot(vum, data)
             #view_2: mpl movie plot
-            self.ui.view_2.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
-            #view_2: 3D mpl plot
-            #self.ui.view_2.do_plot(vum, data, self.ui.layers.get_checked_layers(l1))
+            self.ui.view_2.do_plot(vum, data)
             #view_3: ISI mpl plot
-            self.ui.view_3.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #view_4: PCA mpl plot
-            #self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #view_5: PCA pyqtgraph plot
-            self.ui.view_4.do_plot(vum, data, self.ui.layers.get_checked_layers(l2))
-            #vu: Virtual unit overview
-            self.vu.do_plot(vum_all, data)
+            self.ui.view_3.do_plot(vum, data)
+            #view_4: PCA pyqtgraph plot
+            self.ui.view_4.do_plot(vum, data)
+            #view_4: 2D PCA pyqtgraph plot
+            self.ui.view_5.do_plot(vum, data)
 
             QtGui.QApplication.restoreOverrideCursor()
+        
             
     def check_layers(self, i):
         """
@@ -733,24 +774,24 @@ class Main(QtGui.QMainWindow):
         l2 = ["units", "sessions"]
         if i == 0:
             #view_1: 2D mpl plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l1)
+            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.tools.layers.enable_layers(True, l1)
         elif i == 1:
             #view_2: 3D mpl plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l1)
+            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.tools.layers.enable_layers(True, l1)
         elif i == 2:
             #view_3: ISI mpl plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)
+            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.tools.layers.enable_layers(True, l2)
         elif i == 3:
             #view_4: PCA mpl plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)
+            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.tools.layers.enable_layers(True, l2)
         elif i == 4:
             #view_5: PCA pyqtgraph plot
-            self.ui.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.layers.enable_layers(True, l2)
+            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
+            self.ui.tools.layers.enable_layers(True, l2)
             
     def setProgress(self, i):
         """
@@ -887,7 +928,7 @@ class Main(QtGui.QMainWindow):
                 The value that should be shown.
         
         """
-        self.ui.details.item(i, 0).setText(value)
+        self.ui.tools.details.item(i, 0).setText(value)
         
     def check_dirs(self):
         """
@@ -929,13 +970,12 @@ class Main(QtGui.QMainWindow):
         if filename:
             delimiter = ','
             try:
-                with open(filename, "rb") as fn:
+                with open(filename, "r") as fn:
                     channel_list = []
                     reader = csv.reader(fn, delimiter=delimiter)
                     for row in reader:
                         #just read the second column
                         channel_list.append(int(row[1]))
-                
                 channels = self.selector.get_dirty_channels()
                
                 #overwrite existing mapping
