@@ -105,7 +105,7 @@ class Storage(object):
             raise StorageError("No value for {}".format(name))
         
     
-    @staticmethod   
+    @staticmethod 
     def write(filename, data, method="text"):
         """
         Writes data to a file.

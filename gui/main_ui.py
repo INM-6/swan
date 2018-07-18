@@ -32,7 +32,7 @@ class Ui_Main(object):
                             QtGui.QMainWindow.AllowNestedDocks |
                             QtGui.QMainWindow.GroupedDragging)
         
-        self.plotGridDock = QtGui.QDockWidget("PlotGrid")
+        self.plotGridDock = QtGui.QDockWidget("Plot Grid")
         self.plotGridDock.setObjectName(_fromUtf8("PlotGridDock"))
         self.plotGrid = MyPlotGrid(Main)
         self.plotGridDock.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
@@ -41,15 +41,15 @@ class Ui_Main(object):
         self.plotGridDock.setWidget(self.plotGrid)
         Main.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
         
-        self.dock_view_1 = QtGui.QDockWidget("2D Waveforms")
-        self.dock_view_1.setObjectName(_fromUtf8("2dWaveformView"))
+        self.dock_view_1 = QtGui.QDockWidget("Mean Waveforms")
+        self.dock_view_1.setObjectName(_fromUtf8("meanWaveformView"))
         self.dock_view_1.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
                                     QtGui.QDockWidget.DockWidgetFloatable)
         self.dock_view_1.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_1, QtCore.Qt.Vertical)
         
         self.view_1 = pgWidget2d()
-        self.view_1.setObjectName(_fromUtf8("WaveformsView"))
+        self.view_1.setObjectName(_fromUtf8("meanWaveformsView"))
         
         self.dock_view_1.setWidget(self.view_1)
         
@@ -65,19 +65,19 @@ class Ui_Main(object):
         
         self.dock_view_2.setWidget(self.view_2)
         
-        self.dock_view_3 = QtGui.QDockWidget("ISI")
-        self.dock_view_3.setObjectName(_fromUtf8("ISIView"))
+        self.dock_view_3 = QtGui.QDockWidget("ISI histograms")
+        self.dock_view_3.setObjectName(_fromUtf8("ISIHView"))
         self.dock_view_3.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
                                     QtGui.QDockWidget.DockWidgetFloatable)
         self.dock_view_3.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_3, QtCore.Qt.Vertical)
         
         self.view_3 = pgWidgetISI()
-        self.view_3.setObjectName(_fromUtf8("IsiView"))
+        self.view_3.setObjectName(_fromUtf8("IsihView"))
         
         self.dock_view_3.setWidget(self.view_3)
         
-        self.dock_view_4 = QtGui.QDockWidget("PCA")
+        self.dock_view_4 = QtGui.QDockWidget("Principal Component Analysis")
         self.dock_view_4.setObjectName(_fromUtf8("PCAView"))
         self.dock_view_4.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
                                     QtGui.QDockWidget.DockWidgetFloatable)
@@ -100,6 +100,18 @@ class Ui_Main(object):
         self.view_5.setObjectName(_fromUtf8("2DPcaView"))
         
         self.dock_view_5.setWidget(self.view_5)
+        
+        self.dock_view_6 = QtGui.QDockWidget("Rate Profiles")
+        self.dock_view_6.setObjectName(_fromUtf8("RateProfiles"))
+        self.dock_view_6.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+                                    QtGui.QDockWidget.DockWidgetFloatable)
+        self.dock_view_6.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_6, QtCore.Qt.Vertical)
+        
+        self.view_6 = pgWidgetRateProfile()
+        self.view_6.setObjectName(_fromUtf8("RateProfileView"))
+        
+        self.dock_view_6.setWidget(self.view_6)
         
         self.tools = plotGridTools()
         
@@ -227,6 +239,7 @@ class Ui_Main(object):
         self.load_icons()
         self.retranslateUi(Main)
         
+        Main.tabifyDockWidget(self.dock_view_6, self.dock_view_5)
         Main.tabifyDockWidget(self.dock_view_5, self.dock_view_4)
         Main.tabifyDockWidget(self.dock_view_4, self.dock_view_3)
         Main.tabifyDockWidget(self.dock_view_3, self.dock_view_2)
@@ -357,3 +370,4 @@ from pgwidgetisi import pgWidgetISI
 from pgwidgetpca import pgWidgetPCA
 from pgwidget3d import pgWidget3d
 from pgwidgetpca2d import pgWidgetPCA2d
+from pgwidgetrateprofile import pgWidgetRateProfile

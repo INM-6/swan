@@ -17,14 +17,14 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(391, 319)
+        Form.setMinimumWidth(300)
+        Form.setMaximumWidth(400)
         Form.setAutoFillBackground(True)
         Form.setStyleSheet(_fromUtf8("background: rgb(255, 255, 255)"))
         self.gridLayout = QtGui.QGridLayout(Form)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
         
-        self.sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-        self.sizePolicy.setHeightForWidth(True)
+        self.sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         Form.setSizePolicy(self.sizePolicy)
 
         self.retranslateUi(Form)
