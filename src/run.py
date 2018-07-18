@@ -46,14 +46,14 @@ if __name__ == '__main__':
     if "--light-theme" not in sys.argv:
         dark_palette = pg.QtGui.QPalette()
         
-        dark_palette.setColor(pg.QtGui.QPalette.Window, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.Window, pg.QtGui.QColor(53, 50, 47))
         dark_palette.setColor(pg.QtGui.QPalette.WindowText, pg.QtGui.QColor(255, 255, 255))
-        dark_palette.setColor(pg.QtGui.QPalette.Base, pg.QtGui.QColor(25, 25, 25))
-        dark_palette.setColor(pg.QtGui.QPalette.AlternateBase, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.Base, pg.QtGui.QColor(30, 27, 24))
+        dark_palette.setColor(pg.QtGui.QPalette.AlternateBase, pg.QtGui.QColor(53, 50, 47))
         dark_palette.setColor(pg.QtGui.QPalette.ToolTipBase, pg.QtGui.QColor(255, 255, 255))
         dark_palette.setColor(pg.QtGui.QPalette.ToolTipText, pg.QtGui.QColor(255, 255, 255))
         dark_palette.setColor(pg.QtGui.QPalette.Text, pg.QtGui.QColor(255, 255, 255))
-        dark_palette.setColor(pg.QtGui.QPalette.Button, pg.QtGui.QColor(53, 53, 53))
+        dark_palette.setColor(pg.QtGui.QPalette.Button, pg.QtGui.QColor(53, 50, 47))
         dark_palette.setColor(pg.QtGui.QPalette.ButtonText, pg.QtGui.QColor(255, 255, 255))
         dark_palette.setColor(pg.QtGui.QPalette.BrightText, pg.QtGui.QColor(255, 0, 0))
         dark_palette.setColor(pg.QtGui.QPalette.Link, pg.QtGui.QColor(42, 130, 218))
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         
         app.setPalette(dark_palette)
         
-        app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a82da; border: 1px solid white; }")
+        app.setStyleSheet("QToolTip { color: #aeadac; background-color: #35322f; border: 1px solid #aeadac; }")
         
         pg.setConfigOption('background', 'k')
         pg.setConfigOption('foreground', 'w')

@@ -9,13 +9,13 @@ from :class:`pyqtgraph.PlotWidget`.
 This widget is used by :class:`src.myplotgrid.MyPlotContent` to show
 many of these widgets in a nice overview.
 """
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath
 import numpy as np
+from copy import deepcopy
 
-
-class MyPlotWidget(PlotWidget):
+class MyPlotWidget(QtWidgets.QWidget):
     """
     Pyqtgraph's PlotWidget extended to have a fast and simple one 
     for using with this application.
@@ -27,12 +27,13 @@ class MyPlotWidget(PlotWidget):
     
     selectPlot = QtCore.pyqtSignal("PyQt_PyObject", bool)
     colourStripToggle = QtCore.pyqtSignal(object, int)
+    visibilityToggle = QtCore.pyqtSignal(int, int, bool)
     """
     Signal to emit if this plot is selected by clicking on it.
     
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, width = 200, height = 150, *args, **kwargs):
         """
         **Properties**
         
@@ -51,25 +52,37 @@ class MyPlotWidget(PlotWidget):
                 The current background color of this widget.
         
         """
-        PlotWidget.__init__(self, *args, **kwargs)
-        self.setMenuEnabled(False)
-        self.setAntialiasing(False)
-        self.hideButtons()
-        self.setMouseEnabled(False, False)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.setMouseTracking(True)
-        self.hideAxis("bottom")
-        self.hideAxis("left")
+        QtWidgets.QWidget.__init__(self)
+        self.centralLayout = QtGui.QGridLayout()
+        self.centralLayout.setSpacing(0)
+        self.centralLayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.centralLayout)
+        
+        self.plotWidget = PlotWidget(*args, **kwargs)
+        
+        self.plotWidget.setMenuEnabled(False)
+        self.plotWidget.setAntialiasing(False)
+        self.plotWidget.hideButtons()
+        self.plotWidget.setMouseEnabled(False, False)
+        self.plotWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.plotWidget.setMouseTracking(True)
+        self.plotWidget.hideAxis("bottom")
+        self.plotWidget.hideAxis("left")
+        
+        self.centralLayout.addWidget(self.plotWidget)
         
         #properties{
-        self._plotitem = self.getPlotItem()
+        self._plotitem = self.plotWidget.getPlotItem()
         self._plotitem.disableAutoRange()
         self.selected = False
         self.inFocus = False
         self.disabled = False
         self.rowInhibited = False
         self.colInhibited = False
-        self._std = (200, 150)
+        self.toBeUpdated = True
+        self.hasPlot = False
+        self._std = (width, height)
+        self._defPenColour = None
         self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "disabled":mkColor(0.7), "inFocus":mkColor(0.9)}
         self._bg = self.bgs["normal"]
         self.pos = (0, 0)
@@ -146,10 +159,10 @@ class MyPlotWidget(PlotWidget):
         """
         if change:
             self._bg = self.bgs["selected"]
-            self.setBackground(self.bgs["selected"])   
+            self.plotWidget.setBackground(self.bgs["selected"])   
         else:
             self._bg = self.bgs["normal"]
-            self.setBackground(self.bgs["normal"])
+            self.plotWidget.setBackground(self.bgs["normal"])
     
     def clear_(self):
         """
@@ -157,6 +170,9 @@ class MyPlotWidget(PlotWidget):
         
         """
         self._plotitem.clear()
+        self._dataItems.clear()
+        self.defPens.clear()
+        self.hasPlot = False
 
     def set_tooltip(self, tooltip):
         """
@@ -179,7 +195,8 @@ class MyPlotWidget(PlotWidget):
         if self.selected:
             self.selectPlot.emit(self, not self.selected)
         self.disabled = True
-        self.setBackground(self.bgs["disabled"])
+        self.visibilityToggle.emit(self.pos[0], self.pos[1], False)
+        self.plotWidget.setBackground(self.bgs["disabled"])
         for dataItem in self._dataItems:
             dataItem.setPen(self.disPen)
         
@@ -188,15 +205,23 @@ class MyPlotWidget(PlotWidget):
             self.rowInhibited = False
         elif which == "col":
             self.colInhibited = False
+        elif which == "all":
+            self.rowInhibited = False
+            self.colInhibited = False
         
         if not self.rowInhibited and not self.colInhibited:
             self.disabled = False
-            self.setBackground(self.bgs["normal"])
-            for dataItem, pen in zip(self._dataItems, self.defPens):
-                dataItem.setPen(pen)
+            self.visibilityToggle.emit(self.pos[0], self.pos[1], True)
+            self.plotWidget.setBackground(self.bgs["normal"])
+            for dataItem in self._dataItems:
+                dataItem.setPen(mkColor(self._defPenColour), width = 2)
+        
+    def close(self):
+        self.plotWidget.close()
+        self.setParent(None)
         
     def darkTheme(self):
-        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "disabled":mkColor(0.3), "inFocus":mkColor(0.1)}
+        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "disabled":mkColor(0.25), "inFocus":mkColor(0.1)}
         self._bg = self.bgs["normal"]
         self.disPen = mkColor('k')
         
@@ -216,7 +241,7 @@ class MyPlotWidget(PlotWidget):
         """
         if event.button() == QtCore.Qt.LeftButton and not self.disabled:
             self.selectPlot.emit(self, not self.selected)
-            super(PlotWidget, self).mousePressEvent(event)
+            super(PlotWidget, self.plotWidget).mousePressEvent(event)
             event.accept()
         else:
             event.ignore()
@@ -258,7 +283,7 @@ class MyPlotWidget(PlotWidget):
         """
         if not self.disabled:
             self.inFocus = True
-            self.setBackground(self.bgs["inFocus"])
+            self.plotWidget.setBackground(self.bgs["inFocus"])
             event.accept()
         else:
             event.ignore()
@@ -276,7 +301,7 @@ class MyPlotWidget(PlotWidget):
         """
         if not self.disabled:
             self.inFocus = False
-            self.setBackground(self._bg)
+            self.plotWidget.setBackground(self._bg)
             event.accept()
         else:
             event.ignore()

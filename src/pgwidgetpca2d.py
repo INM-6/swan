@@ -9,7 +9,7 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 It is extended by a 2d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget2d
-from numpy import shape, count_nonzero, argmax, zeros, any as np_any, mean as mn, array
+from numpy import shape, count_nonzero, argmax, zeros, trim_zeros, any as np_any, mean as mn, array
 from sklearn.decomposition import PCA
 from copy import deepcopy
 
@@ -32,6 +32,8 @@ class pgWidgetPCA2d(PyQtWidget2d):
         layers = ["units", "sessions"]
         self.toolbar.setupRadioButtons(layers)
         self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
+        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
         
         self._plotItem = self.pgCanvas.getPlotItem()
         self._plotItem.enableAutoRange()
@@ -52,7 +54,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
         pos = array(pos)
         x = pos[:, 0]
         y = pos[:, 1]
-        self._positions.append(self.createScatterPlotItem(x = x, y = y, size = size, color = color, name = name, pxMode = pxMode, autoDownsample = True, antialias = False))
+        self._positions.append(self.createScatterPlotItem(x = x, y = y, size = size, color = color, name = name, pxMode = pxMode, autoDownsample = True, antialias = True))
     
     def do_plot(self, vum, data):
         """
@@ -75,27 +77,20 @@ class pgWidgetPCA2d(PyQtWidget2d):
             layers = self.toolbar.getCheckedLayers()
             
             self.wave_length = data.wave_length
-            found = [False for n in range(vum.n_)]
             
-            for i in range(shape(vum.mapping)[0]):
-                for j in range(shape(vum.mapping)[1]):
-                    if vum.visible[j] and vum.mapping[i][j] != 0:
-                        found[j] = True
+            active = vum.get_active()
             
-            if np_any(found) and layers:
-                nums = deepcopy(vum.mapping)
-                for num in nums:
-                    try:
-                        while not num[-1]:
-                            num.pop()
-                    except IndexError:
-                        num = [0]
-                dom = argmax([count_nonzero(nu) for nu in nums])
+            if np_any(active) and layers:
+                for n, num in enumerate(active):
+                    active[n] = trim_zeros(num, 'b')
+                    if not active[n]:
+                        active[n] = [0]
+                dom = argmax([count_nonzero(nu) for nu in active])
                 dom_channel = []
                 
-                for j in range(len(nums[dom])):
+                for j in range(len(active[dom])):
                     runit = vum.get_realunit(dom, j, data)
-                    if vum.mapping[dom][j] != 0 and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+                    if active[dom][j]:
                         dom_channel.append(data.get_data("all", runit))
                             
                 m_dom_channel, lv_dom_channel = self.merge_channel(dom_channel)
@@ -107,12 +102,12 @@ class pgWidgetPCA2d(PyQtWidget2d):
                 
                 for layer in layers:
                     if layer == "units":
-                        for i in range(len(data.blocks)):
+                        for i in range(len(active)):
                             if i != dom:
                                 channel = []
-                                for j in range(len(nums[i])):
+                                for j in range(len(active[i])):
                                     runit = vum.get_realunit(i, j, data)
-                                    if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+                                    if active[i][j]:
                                         channel.append(data.get_data("all", runit))
                                 
                                 merged_channel, len_vec = self.merge_channel(channel)
@@ -120,8 +115,8 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                     pca_channel = self.split_waves(pca.transform(merged_channel), len_vec, 'all')
                                     
                                     c = 0
-                                    for u in range(len(nums[i])):
-                                        if found[u] and nums[i][u] != 0:
+                                    for u in range(len(active[i])):
+                                        if active[i][u]:
                                             col = vum.get_color(u, False, layer, False)
                                             self.plotPoints(pos = pca_channel[c], size = 1, color = col, name = "".format(i, u))
                                             self.plotMean(x = mn(pca_channel[c][:, 0], axis = 0), y = mn(pca_channel[c][:, 1], axis = 0), size = 15, color = col, name = "".format(i, u))
@@ -136,8 +131,8 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                 
                             elif i == dom:
                                 c = 0
-                                for u in range(len(nums[dom])):
-                                    if found[u] and nums[dom][u] != 0:
+                                for u in range(len(active[dom])):
+                                    if active[dom][u]:
                                         col = vum.get_color(u, False, layer, False)
                                         self.plotPoints(pos = dom_ch_pca[c], size = 1, color = col, name = "".format(i, u))
                                         self.plotMean(x = mn(dom_ch_pca[c][:, 0], axis = 0), y = mn(dom_ch_pca[c][:, 1], axis = 0), size = 15, color = col, name = "".format(i, u))
@@ -147,9 +142,9 @@ class pgWidgetPCA2d(PyQtWidget2d):
     #                    for i in range(len(data.blocks)):
     #                        if i != dom:
     #                            channel = []
-    #                            for j in range(len(nums[i])):
+    #                            for j in range(len(active[i])):
     #                                runit = vum.get_realunit(i, j, data)
-    #                                if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+    #                                if active[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
     #                                    channel.append(data.get_data("all", runit))
     #                                
     #                            merged_channel, len_vec = self.merge_channel(channel)

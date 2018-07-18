@@ -24,7 +24,9 @@ class ViewToolbar(QtWidgets.QWidget):
         self.gridLayout.setObjectName("viewToolbarGridLayout")
         
         self.layers = QtGui.QGroupBox("Layers")
-        self.layersLayout = QtGui.QHBoxLayout()
+        self.layersLayout = QtGui.QGridLayout()
+        self.layersLayout.setContentsMargins(0, 0, 0, 0)
+        self.layersLayout.setSpacing(0)
         self.layers.setLayout(self.layersLayout)
         self.layers.setCheckable(True)
         self.layers.setChecked(False)
@@ -32,12 +34,14 @@ class ViewToolbar(QtWidgets.QWidget):
         self.gridLayout.addWidget(self.layers, 0, 0)
         
         self.options = QtGui.QGroupBox("Options")
-        self.optionsLayout = QtGui.QHBoxLayout()
+        self.optionsLayout = QtGui.QGridLayout()
+        self.optionsLayout.setContentsMargins(0, 0, 0, 0)
+        self.optionsLayout.setSpacing(0)
         self.options.setLayout(self.optionsLayout)
         self.gridLayout.addWidget(self.options, 0, 1)
         
-        self.colWidg.setContentLayout(self.gridLayout)
         self.mainGridLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainGridLayout.setSpacing(0)
         
         self.layerItems = []
     

@@ -9,7 +9,8 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 It is extended by a 2d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget2d
-from numpy import histogram
+from numpy import histogram, sort
+from gui.isiOptions_ui import Ui_isiOptions
 
 class pgWidgetISI(PyQtWidget2d):
     """
@@ -34,10 +35,138 @@ class pgWidgetISI(PyQtWidget2d):
         self._plotItem = self.pgCanvas.getPlotItem()
         self._plotItem.enableAutoRange()
         self._hists = []
+        self.datas = {}
+        
+        self.binMax = 50
+        self.binStep = 1
+        
+        self.isiOptions = Ui_isiOptions(self)
         
         self.showGrid()
     
     #### general methods ####
+    
+    def onEnter(self):
+        """
+        This method is called if you press ENTER on one of the line
+        edit widgets.
+        
+        Redraws everything.
+        
+        """
+        binMax = self.isiOptions.binMaxEdit.text()
+        binStep = self.isiOptions.binStepEdit.text()
+        
+        try:
+            binMax = int(binMax)
+            binStep = int(binStep)
+            
+            if binMax in range(1, 501) and binStep in range(1, 11):
+                self.binMax = binMax
+                self.binStep = binStep
+                
+                self.update()
+                self.isiOptions.errorLabel.setText("")
+            else:
+                self.isiOptions.errorLabel.setText("Values outside acceptable limits")
+        except:
+            self.isiOptions.errorLabel.setText("Invalid inputs!")
+        
+
+    def onMaxPlus(self):
+        """
+        This method is called if you click on the plus button
+        for the bin max optio8n.
+        
+        Increments the bin max option.
+        
+        """
+        binMax = self.binMax
+        
+        if (binMax + 1) <= 500:
+            self.binMax += 1
+            self.isiOptions.binMaxEdit.setText(str(self.binMax))
+            self.update()
+        
+    def onMaxMinus(self):
+        """
+        This method is called if you click on the minus button
+        for the bin max option.
+        
+        Decrements the bin max option.
+        
+        """
+        binMax = self.binMax
+        if (binMax - 1) > 0 and (binMax - 1) > self.binStep:
+            self.binMax -= 1
+            self.isiOptions.binMaxEdit.setText(str(self.binMax))
+            self.update()
+            
+    def onStepPlus(self):
+        """
+        This method is called if you click on the plus button
+        for the bin step option.
+        
+        Increments the bin step option.
+        
+        """
+        binStep = self.binStep
+        if (binStep + 1) <= 10:
+            self.binStep += 1
+            self.isiOptions.binStepEdit.setText(str(self.binStep))
+            self.update()
+            
+    def onStepMinus(self):
+        """
+        This method is called if you click on the minus button
+        for the bin step option.
+        
+        Decrements the bin step option.
+        
+        """
+        binStep = self.binStep
+        if (binStep - 1) > 0:
+            self.binStep -= 1
+            self.isiOptions.binStepEdit.setText(str(self.binStep))
+            self.update()
+                
+    def binMaxChanged(self, value):
+        """
+        This method is called if you edit the bin max option.
+        
+        Checks if the bin max is correct.
+        
+        """        
+        binMax = value
+        try:
+            binMax = int(binMax)
+            if binMax in range(1, 501):
+                self.binMax = binMax
+                self.isiOptions.errorLabel.setText("")
+            else:
+                self.isiOptions.errorLabel.setText("Value outside acceptable limits!")
+        
+        except:
+            self.isiOptions.errorLabel.setText("Invalid input!")
+    
+    def binStepChanged(self, value):
+        """
+        This method is called if you edit the bin step option.
+        
+        Checks if the bin step is correct.
+        
+        """
+        binStep = value
+        try:
+            binStep = int(binStep)
+            if binStep in range(1, 11):
+                self.binStep = binStep
+                self.isiOptions.errorLabel.setText("")
+            else:
+                self.isiOptions.errorLabel.setText("Value outside acceptable limits!")
+        
+        except:
+            self.isiOptions.errorLabel.setText("Invalid input!")
         
     def plotHist(self, x, y, color, name, clickable = False):
         """
@@ -57,7 +186,7 @@ class pgWidgetISI(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._hists.append(self.makePlot(y = y, color = color, name = name, clickable = clickable))
+        self._hists.append(self.makePlot(x = x, y = y, color = color, name = name, clickable = clickable))
 
     def do_plot(self, vum, data):
         """
@@ -73,48 +202,83 @@ class pgWidgetISI(PyQtWidget2d):
                 The layers that are visible.
         
         """
-        self.clear_plots()
-        
+        self.clear_()
+        self.datas = {}
         if self.toolbar.layers.isChecked():
             
-            layers = self.toolbar.getCheckedLayers()
+            layer = self.toolbar.getCheckedLayers()[0]
             
-            for layer in layers:
-                if layer == "sessions":
-                    for j in range(vum.n_):
-                        values = []
-                        for i in range(len(data.blocks)):
-                            if vum.mapping[i][j] != 0 and vum.visible[j]:
-                                runit = vum.get_realunit(i, j, data)
-                                datas = data.get_data(layer, runit)
-                                col = vum.get_color(j, False, layer, False)
-                                for d in datas:
-                                    values.extend(d)
-                        if values:
-                            y = histogram(values, bins = 25)
-                            tmp = y[1]
-                            tmp = tmp[:len(tmp)-1]
-                            self.plot((tmp, y[0]/(1.0*len(values))), col)
-                elif layer == "units":
-                    for i in range(len(data.blocks)):
-                        for j in range(vum.n_):
-                            if vum.mapping[i][j] != 0 and vum.visible[j]:
-                                runit = vum.get_realunit(i, j, data)
-                                datas = data.get_data(layer, runit)
-                                col = vum.get_color(j, False, layer, False)
-                                for d in datas:
-                                    y = histogram(d, bins=25)
-                                    tmp = y[1]
-                                    tmp = tmp[:len(tmp)-1]
-                                    self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = "{}{}".format(i, j))
-                
+            active = vum.get_active()
+            
+            if layer == "sessions":
+                values = []
+                for i in range(len(active)):
+                    values.append([])
+                    for j in range(len(active[i])):
+                        if active[i][j]:
+                            runit = vum.get_realunit(i, j, data)
+                            d = data.get_data(layer, runit)
+                            values[i].extend(d)
+                            col = vum.get_color(j, False, layer, False)
+                            clickable = False
+                            self.datas["{}".format(j)] = [sort(values[i]), col, clickable]
+            
+                if values:
+                    for key in self.datas.keys():
+                        y = histogram(self.datas[key][0], bins = range(1, self.binMax + 1, self.binStep))
+                        tmp = y[1]
+                        tmp = tmp[:-1]
+                        self.plotHist(x = tmp, y = y[0]/(1.0*len(values)), color = self.datas[key][1], name = key, clickable = clickable)
+                        self.setXLabel("Inter-spike Interval", "s")
+                        self.setPlotTitle("Inter-spike Interval Histograms")
+            
+            elif layer == "units":
+                for i in range(len(active)):
+                    for j in range(len(active[i])):
+                        if active[i][j]:
+                            runit = vum.get_realunit(i, j, data)
+                            datas = data.get_data(layer, runit)
+                            col = vum.get_color(j, False, layer, False)
+                            clickable = True
+                            self.datas["{}{}".format(i,j)] = [datas, col, clickable]
+                            for d in datas:
+                                y = histogram(d, bins = range(1, self.binMax + 1, self.binStep))
+                                tmp = y[1]
+                                tmp = tmp[:-1]
+                                self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = "{}{}".format(i, j), clickable = clickable)
+                                self.setXLabel("Inter-spike Interval", "s")
+                                self.setPlotTitle("Inter-spike Interval Histograms")
             self.connectPlots()
+    
+    def update(self):
+        self.clear_()
+        for key in self.datas:
+            datas = self.datas[key]
+            data = datas[0]
+            col = datas[1]
+            clickable = datas[2]
+            for d in data:
+                y = histogram(d, bins = range(1, self.binMax + 1, self.binStep))
+                tmp = y[1]
+                tmp = tmp[:-1]
+                self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = key, clickable = clickable)
+                self.setXLabel("Inter-spike Interval", "s")
+                self.setPlotTitle("Inter-spike Interval Histograms")
+        self.connectPlots()
             
     def connectPlots(self):
         for item in self._hists:
             item.curve.setClickable(True, width = 5)
             item.sigClicked.connect(self.getItem)
     
-    def clear_plots(self):
+    def clear_(self):
         self._hists = []
-        self._plotItem.clearPlots()
+        self.clearAll()
+    
+    def incrementBins(self, step = 1):
+        self.bins+=step
+        self.update()
+    
+    def decrementBins(self, step = 1):
+        self.bins-=step
+        self.update()

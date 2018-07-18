@@ -8,8 +8,6 @@ Created on Thu Jan 11 11:38:37 2018
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from selectorwidget import SelectorWidget
-from layerwidget import LayerWidget
-from unitswidget import UnitsWidget
 
 class plotGridTools(QtWidgets.QWidget):
     
@@ -18,8 +16,6 @@ class plotGridTools(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
         
         self.selector = SelectorWidget(self)
-        self.layers = LayerWidget(self)
-        self.units = UnitsWidget(self)
         
         self.details = QtGui.QTableWidget(self)
         self.details.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -53,15 +49,17 @@ class plotGridTools(QtWidgets.QWidget):
         self.details.setItem(4, 0, item)
         self.details.horizontalHeader().setStretchLastSection(True)
         self.details.verticalHeader().setStretchLastSection(True)
+        self.details.setMaximumWidth(500)
+        self.details.setMinimumWidth(0)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.MinimumExpanding)
+        self.details.setSizePolicy(sizePolicy)
         
         self.setup()
         
     def setup(self):
         
         self.layout = QtGui.QGridLayout()
-        self.layout.addWidget(self.selector, 0, 0, 2, 1)
-        self.layout.addWidget(self.layers, 0, 1, 2, 1)
-        self.layout.addWidget(self.units, 0, 2, 1, 1)
-        self.layout.addWidget(self.details, 1, 2, 1, 1)
+        self.layout.addWidget(self.selector, 0, 0, 1, 1)
+        self.layout.addWidget(self.details, 0, 1, 1, 1)
         
         self.setLayout(self.layout)

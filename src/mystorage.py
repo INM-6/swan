@@ -501,8 +501,7 @@ class MyStorage(Storage, QtCore.QObject):
         if vum is not None:
             vumap.set_map(data.nums, vum)
         else:
-            vumap.set_initial_map(data.nums)
-        self.save_map()
+            vumap.set_initial_map(data)
         
     def swap(self, m, n1, n2):
         """
@@ -521,6 +520,10 @@ class MyStorage(Storage, QtCore.QObject):
         """
         self.get_map().swap(m, n1, n2)
         self.change_map()
+    
+    def changeVisibility(self, i, j, visible):
+        vmap = self.get_map()
+        vmap.set_visible(i, j, visible)
     
     def load_channel(self, channel):
         """
@@ -553,6 +556,7 @@ class MyStorage(Storage, QtCore.QObject):
         vumap = VirtualUnitMap()
         
         #load a mapping or set the default one
+        print(vum_all.keys())
         try:
             vum = vum_all[name]
             vumap.set_map(data.nums, vum)
@@ -560,7 +564,7 @@ class MyStorage(Storage, QtCore.QObject):
             vumap.set_initial_map(data)
             
         self.store("vum", vumap)
-        
+                
         return sum(data.nums), len(vumap.mapping)
             
     def read_file(self):
@@ -651,9 +655,9 @@ class MyStorage(Storage, QtCore.QObject):
         
         for i in range(1, len(vum.mapping[0])+1):
             d[i] = []
-        for name, vus in zip(files, vum.mapping):
+        for filename, vus in zip(files, vum.mapping):
             for i in range(len(vus)):
-                d[i+1].append((basename(name), vus[i]))
+                d[i+1].append((basename(filename), vus[i]))
         
         name = "vum" + str(channel)
         vum_all[name] = d

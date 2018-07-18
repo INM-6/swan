@@ -15,6 +15,7 @@ from gui.myplotgrid_ui import Ui_Form
 from src.myplotwidget import MyPlotWidget
 from src.indicatorwidget import IndicatorWidget
 from numpy.random import choice
+from quantities import uV, mV, V, s, ms
 
 class MyPlotGrid(QtWidgets.QWidget):
     
@@ -50,6 +51,8 @@ class MyPlotContent(QtWidgets.QWidget):
     #doPlot = QtCore.pyqtSignal("PyQt_PyObject")
     
     plotSelected = QtCore.pyqtSignal(object, bool)
+    indicatorToggle = QtCore.pyqtSignal()
+    visibilityToggle = QtCore.pyqtSignal(int, int, bool)
 
     def __init__(self, *args, **kwargs):
         """
@@ -83,15 +86,18 @@ class MyPlotContent(QtWidgets.QWidget):
         self._selected = []
         self._rows = {}
         self._cols = {}
-        self._yrange = (0, 0)
+        self._yrange = (-0.001, 0.0006)
         self._xrange = (0, 0)
         self._second_select = None
         self._dark = False
+        self._width = 120
+        self._height = 90
+        self._constDim = 60
         
         self._plotGray = QtGui.QColor(180, 180, 180, 170)
         self._plotGrayDark = QtGui.QColor(180, 180, 180, 85)
         
-        self._sampleWaveformNumber = 100
+        self._sampleWaveformNumber = 500
         #}
         
         self.ui.gridLayout.setColumnStretch(1000, 1000)
@@ -126,23 +132,24 @@ class MyPlotContent(QtWidgets.QWidget):
             if i == 0:
                 for j in range(cols + 1):
                     if j == 0:
-                        iw = IndicatorWidget("Sessions (dd/mm/yy)\n\u2192\n\n\u2193 Units", i, j)
+                        iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", i, j, width = self._width, height = self._height, const_dim = self._constDim)
+                        iw.responsive = False
                         if self._dark is True:
                             iw.darkTheme()
                         self._indicators.append(iw)
                         self.ui.gridLayout.addWidget(iw, i, j, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
                     else:
                         if dates is not None:    
-                            iw = IndicatorWidget(str(j) + " (" + str(dates[j-1].strftime("%d/%m/%y")) + ")", i, j)
+                            iw = IndicatorWidget(str(j) + " (" + str(dates[j-1].strftime("%d.%m.%y")) + ")", i, j, width = self._width, height = self._height, const_dim = self._constDim)
                         else:
-                            iw = IndicatorWidget(str(j), i, j)
+                            iw = IndicatorWidget(str(j), i, j, width = self._width, height = self._height, const_dim = self._constDim)
                         if self._dark is True:
                             iw.darkTheme()
                         self._indicators.append(iw)
                         iw.selectIndicator.connect(self.indicatorToggled)
                         self.ui.gridLayout.addWidget(iw, i, j, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
             else:
-                iw = IndicatorWidget(str(i), i, 0)
+                iw = IndicatorWidget(str(i), i, 0, width = self._width, height = self._height, const_dim = self._constDim)
                 if self._dark is True:
                     iw.darkTheme()
                 self._indicators.append(iw)
@@ -154,13 +161,14 @@ class MyPlotContent(QtWidgets.QWidget):
             for j in range(cols):
                 if j not in self._cols:
                     self._cols[j] = []
-                mpw = MyPlotWidget(self)
+                mpw = MyPlotWidget(width = self._width, height = self._height, parent = self)
                 if self._dark is True:
                     mpw.darkTheme()
                 self._plots.append(mpw)
                 mpw.pos = (i, j)
                 mpw.selectPlot.connect(self.select_plot)
                 mpw.colourStripToggle.connect(self.toggleIndicatorColour)
+                mpw.visibilityToggle.connect(self.togglePlotVisibility)
                 self._rows[i].append(mpw)
                 self._cols[j].append(mpw)
                 self.ui.gridLayout.addWidget(mpw, i+1, j+1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
@@ -169,7 +177,10 @@ class MyPlotContent(QtWidgets.QWidget):
     @QtCore.pyqtSlot(object, int)
     def toggleIndicatorColour(self, colour, i):
         iw = next((x for x in self._indicators if x._pos[0] == i+1))
-        iw.toggleColourStrip(colour)
+        if any(plot.hasPlot == True for plot in self._rows[i]):
+            iw.toggleColourStrip(colour)
+        else:
+            iw.toggleColourStrip(None)
     
     @QtCore.pyqtSlot(object)
     def indicatorToggled(self, indicator):
@@ -184,6 +195,7 @@ class MyPlotContent(QtWidgets.QWidget):
             if not indicator.selected:
                 if row == 0:
                     pw.enable("col")
+                    #self.indicatorToggle.emit(None, None)
                 elif col == 0:
                     pw.enable("row")
             else:
@@ -192,6 +204,10 @@ class MyPlotContent(QtWidgets.QWidget):
                     pw.colInhibited = True
                 elif col == 0:
                     pw.rowInhibited = True
+        self.indicatorToggle.emit()
+                    
+    def togglePlotVisibility(self, i, j, visible):
+        self.visibilityToggle.emit(i, j, visible)
     
     def delete_plots(self):
         """
@@ -210,8 +226,13 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         for p in self._plots:
             p.clear_()
+            p.enable("all")
         for i in self._indicators:
             i.colourStrip.hide()
+            if not i.selected:
+                i._bg = i.bgs["selected"]
+                i.setBackground(i._bg)
+                i.selected = True
             
     def do_plot(self, vum, data):
         """
@@ -225,19 +246,30 @@ class MyPlotContent(QtWidgets.QWidget):
                 Is needed to get the data.
         
         """
-        self.clear_plots()
         for i in range(len(vum.mapping)):
             for j in range(len(vum.mapping[i])):
-                if vum.mapping[i][j] != 0:
-                    p = self.find_plot(j, i)
-                    runit = vum.get_realunit(i, j, data)
-                    d = data.get_data("average", runit)
-                    d_all = data.get_data('all', runit)
+                p = self.find_plot(j, i)
+                if p.toBeUpdated:
+                    p.clear_()
                     col = vum.get_color(j, False, "average", False)
-                    p.plot_many(d_all[choice(d_all.shape[0], size = self._sampleWaveformNumber, replace = False)], self._plotGray)
-                    p.plot(d, col)
-                    p.toggleColourStrip(col)
-                    p.setXRange(0., data.wave_length, padding = None, update = True)
+                    p._defPenColour = col
+                    p.plotWidget.setXRange(0., data.wave_length, padding = None, update = True)
+                    if vum.mapping[i][j] != 0:
+                        runit = vum.get_realunit(i, j, data)
+                        d = (data.get_data("average", runit) * V).rescale(mV)
+                        d_all = (data.get_data('all', runit) * uV).rescale(mV)
+                        p.plot_many(d_all[choice(d_all.shape[0], size = self._sampleWaveformNumber, replace = False)], self._plotGray)
+                        p.plot(d, col)
+                        p.hasPlot = True
+                        p.toggleColourStrip(col)
+                    else:
+                        p.clear_()
+                        p.toggleColourStrip(col)
+                    p.toBeUpdated = False
+    
+    def setAllForUpdate(self):
+        for plot in self._plots:
+            plot.toBeUpdated = True
                 
     def find_plot(self, i, j):
         """
@@ -254,7 +286,18 @@ class MyPlotContent(QtWidgets.QWidget):
                 The plot at position (i, j).
         
         """
-        return self._rows[i][j]    
+        return self._rows[i][j]
+    
+    @QtCore.pyqtSlot(object)
+    def highlightPlot(self, item):
+        if item.opts['clickable']:
+            name = item.opts['name']
+            nameList = list(name)
+            unit = int(nameList[0])
+            session = int(nameList[1])
+            
+            p = self.find_plot(session, unit)
+            self.select_plot(p, not p.selected)
             
     def select_plot(self, plot, select):
         """
@@ -395,7 +438,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._yrange = (min0, max0)
         for plot in self._plots:
-            plot.setYRange(min0, max0, padding = None, update=True)
+            plot.plotWidget.setYRange(min0, max0, padding = None, update=True)
             
     def set_xranges(self, min0, max0):
         """
@@ -411,7 +454,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._xrange = (min0, max0)
         for plot in self._plots:
-            plot.setXRange(min0, max0, padding = None, update=True)
+            plot.plotWidget.setXRange(min0, max0, padding = None, update=True)
             
     def set_tooltips(self, tooltips):
         """
@@ -429,17 +472,17 @@ class MyPlotContent(QtWidgets.QWidget):
             plots = self._cols[col]
             for t, plot in zip(tips, plots):
                 plot.set_tooltip(t)
-
+    
+    def swap_tooltips(self, p1, p2):
+        """
+        Swaps the tooltips for two plots that have been swapped.
+        """
+        tip1 = p1.toolTip()
+        tip2 = p2.toolTip()
+        
+        p1.set_tooltip(tip2)
+        p2.set_tooltip(tip1)
+        
     def setDark(self):
         self._dark = True
         self._plotGray = self._plotGrayDark
-    
-    @QtCore.pyqtSlot(object)
-    def highlightPlot(self, item):
-        name = item.opts['name']
-        nameList = list(name)
-        unit = int(nameList[0])
-        session = int(nameList[1])
-        
-        p = self.find_plot(session, unit)
-        self.select_plot(p, not p.selected)

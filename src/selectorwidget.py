@@ -273,7 +273,6 @@ class SelectorItem(QtWidgets.QWidget):
         
         """
         QtWidgets.QWidget.__init__(self, *args, **kwargs)      
-        self.resize(100, 100)
         
         self.setMinimumSize(20, 20)
         

@@ -7,7 +7,7 @@ Created on Mon Oct 16 12:56:06 2017
 """
 
 from src.mypgwidget import PyQtWidget3d
-from numpy import shape, count_nonzero, argmax, amax, zeros, any as np_any
+from numpy import shape, count_nonzero, argmax, amax, zeros, multiply, array, trim_zeros, any as np_any
 from sklearn.decomposition import PCA
 from copy import deepcopy
 from itertools import chain
@@ -21,13 +21,16 @@ class pgWidgetPCA(PyQtWidget3d):
         layers = ["units", "sessions"]
         self.toolbar.setupRadioButtons(layers)
         self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
+        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
         
-        self.setup_axes()
+        self.setup_axes(glOptions='opaque')
         self.positions = []
         self.means = []
         
+        self.pgCanvas.setClickable(True)
+        
         self.max_distance = 0
-        self._first = True
         self.wave_length = 0 # Initial dummy value, later updated from data
     
     def addScatterPlot(self, plotItem = None, setGLOptions = 'opaque'):
@@ -38,7 +41,13 @@ class pgWidgetPCA(PyQtWidget3d):
         self.positions = []
         self.means = []
     
+    def connectMeans(self):
+        self.pgCanvas.setMeans(self.means)
+        for plot in self.pgCanvas.means:
+            plot.sigClicked.connect(self.getItem)
+    
     def do_plot(self, vum, data):
+        self.saveCameraPosition()
         self.clear_plot()
         
         if self.toolbar.layers.isChecked():
@@ -48,44 +57,37 @@ class pgWidgetPCA(PyQtWidget3d):
             max_distance = 0
             
             self.wave_length = data.wave_length
-            found = [False for n in range(vum.n_)]
             
-            for i in range(shape(vum.mapping)[0]):
-                for j in range(shape(vum.mapping)[1]):
-                    if vum.visible[j] and vum.mapping[i][j] != 0:
-                        found[j] = True
+            active = vum.get_active()
             
-            if np_any(found) and layers:
-                nums = deepcopy(vum.mapping)
-                for num in nums:
-                    try:
-                        while not num[-1]:
-                            num.pop()
-                    except IndexError:
-                        num = [0]
-                dom = argmax([count_nonzero(nu) for nu in nums])
+            if np_any(active) and layers:
+                for n, num in enumerate(active):
+                    active[n] = trim_zeros(num, 'b')
+                    if not active[n]:
+                        active[n] = [0]
+                
+                dom = argmax([count_nonzero(nu) for nu in active])
                 dom_channel = []
                 
-                for j in range(len(nums[dom])):
+                for j in range(len(active[dom])):
                     runit = vum.get_realunit(dom, j, data)
-                    if vum.mapping[dom][j] != 0 and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+                    if active[dom][j]:
                         dom_channel.append(data.get_data("all", runit))
                             
                 m_dom_channel, lv_dom_channel = self.merge_channel(dom_channel)
                 
                 pca = PCA(n_components = 3)
-                
                 dom_pca = pca.fit_transform(m_dom_channel)
                 dom_ch_pca = self.split_waves(dom_pca, lv_dom_channel, 'all')
                 
                 for layer in layers:
                     if layer == "units":
-                        for i in range(len(data.blocks)):
+                        for i in range(len(active)):
                             if i != dom:
                                 channel = []
-                                for j in range(len(nums[i])):
+                                for j in range(len(active[i])):
                                     runit = vum.get_realunit(i, j, data)
-                                    if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+                                    if active[i][j]:
                                         channel.append(data.get_data("all", runit))
                                 
                                 merged_channel, len_vec = self.merge_channel(channel)
@@ -97,11 +99,11 @@ class pgWidgetPCA(PyQtWidget3d):
                                         self.max_distance = max_distance
                                     
                                     c = 0
-                                    for u in range(len(nums[i])):
-                                        if found[u] and nums[i][u] != 0:
+                                    for u in range(len(active[i])):
+                                        if active[i][u]:
                                             col = vum.get_color(u, False, None, True)
-                                            self.positions.append(self.createScatterPlotItem(pos = pca_channel[c], size = 1, color = col, pxMode=True))
-                                            self.means.append(self.createScatterPlotItem(pos = pca_channel[c].mean(axis = 0), size = 15, color = col, pxMode=True))
+                                            self.positions.append(self.createScatterPlotItem(pos = pca_channel[c], size = 1, color = col, name = "{}{}".format(i, u), pxMode=True))
+                                            self.means.append(self.createScatterPlotItem(pos = pca_channel[c].mean(axis = 0), size = 15, color = col, name = "{}{}".format(i, u), pxMode=True))
                                             c += 1
                                     
                                     del channel
@@ -112,26 +114,28 @@ class pgWidgetPCA(PyQtWidget3d):
                                     pass
                                 
                             elif i == dom:
-                                
-                                max_distance = self.return_max(dom_ch_pca)
-                                if max_distance > self.max_distance:
-                                    self.max_distance = max_distance
-                                
-                                c = 0
-                                for u in range(len(nums[dom])):
-                                    if found[u] and nums[dom][u] != 0:
-                                        col = vum.get_color(u, False, None, True)
-                                        self.positions.append(self.createScatterPlotItem(pos = dom_ch_pca[c], size = 1, color = col, pxMode=True))
-                                        self.means.append(self.createScatterPlotItem(pos = dom_ch_pca[c].mean(axis = 0), size = 15, color = col, pxMode=True))
-                                        c += 1
+                                try:
+                                    max_distance = self.return_max(dom_ch_pca)
+                                    if max_distance > self.max_distance:
+                                        self.max_distance = max_distance
+                                    
+                                    c = 0
+                                    for u in range(len(active[dom])):
+                                        if active[dom][u]:
+                                            col = vum.get_color(u, False, None, True)
+                                            self.positions.append(self.createScatterPlotItem(pos = dom_ch_pca[c], size = 1, color = col, name = "{}{}".format(i, u), pxMode=True))
+                                            self.means.append(self.createScatterPlotItem(pos = dom_ch_pca[c].mean(axis = 0), size = 15, color = col, name = "{}{}".format(i, u), pxMode=True))
+                                            c += 1
+                                except ValueError:
+                                    pass
                     
     #                if layer == "sessions":
     #                    for i in range(len(data.blocks)):
     #                        if i != dom:
     #                            channel = []
-    #                            for j in range(len(nums[i])):
+    #                            for j in range(len(active[i])):
     #                                runit = vum.get_realunit(i, j, data)
-    #                                if nums[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
+    #                                if active[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
     #                                    channel.append(data.get_data("all", runit))
     #                                
     #                            merged_channel, len_vec = self.merge_channel(channel)
@@ -140,16 +144,21 @@ class pgWidgetPCA(PyQtWidget3d):
                     del dom_channel
                     del dom_ch_pca
                     del dom_pca
+            
             if len(self.positions) == len(self.means):
                 for item in self.positions:
                     self.addScatterPlot(item, setGLOptions = 'translucent')
                 for mean in self.means:
                     self.addScatterPlot(mean, setGLOptions = 'opaque')
+                self.connectMeans()
             else:
                 print("Something is wrong!")
                 print("Length of positions list: {}".format(len(self.positions)))
                 print("Length of means list: {}".format(len(self.means)))
-        
+                
+            if self.cameraPosition is not None:
+                self.restoreCameraPosition()
+            
     def merge_channel(self, channel):
         total_length = 0
         length_vector = [0]

@@ -92,11 +92,11 @@ class MplWidgetIsi(MatplotlibWidget):
         self.ghl2.addWidget(self.binStepEdit)
         self.ghl2.addWidget(self.binStepPlusBtn)        
         
-        self.ggl.addWidget(l1)
-        self.ggl.addWidget(w)
-        self.ggl.addWidget(l2)
-        self.ggl.addWidget(y)
-        self.ggl.addWidget(self.errorLabel)
+        self.ggl.addWidget(l1, 0, 0)
+        self.ggl.addWidget(w, 0, 1)
+        self.ggl.addWidget(l2, 0, 2)
+        self.ggl.addWidget(y, 0, 3)
+        self.ggl.addWidget(self.errorLabel, 1, 0, 1, 3)
         
         #adding the bin options group box to the widget
         self.vgl.addWidget(self.group, 0, 1, 1, 1)

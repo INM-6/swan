@@ -9,6 +9,7 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 It is extended by a 2d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget2d
+from numpy import arange
 
 class pgWidget2d(PyQtWidget2d):
     """
@@ -29,6 +30,8 @@ class pgWidget2d(PyQtWidget2d):
         layers = ["average", "standard deviation"]
         self.toolbar.setupCheckboxes(layers)
         self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
+        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
         
         self._plotItem = self.pgCanvas.getPlotItem()
         self._plotItem.enableAutoRange()
@@ -41,14 +44,14 @@ class pgWidget2d(PyQtWidget2d):
     
     #### general methods ####
 
-    def createCurve(self, y, color, name, clickable = True):
-        return self.createCurveItem(y = y, color = color, name = name, clickable = clickable)
+    def createCurve(self, x, y, color, name, clickable = True):
+        return self.createCurveItem(x = x, y = y, color = color, name = name, clickable = clickable)
     
     def createFilledCurve(self, y1, y2, color):
         colorWithAlpha = color + (self._fillbetweenAlpha,)
         return self.createFilledCurveItem(y1 = y1, y2 = y2, color = colorWithAlpha)
         
-    def plotMean(self, y, color, name, clickable = False):
+    def plotMean(self, x, y, color, name, clickable = False):
         """
         Plot mean waveforms to the plot.
         
@@ -66,9 +69,9 @@ class pgWidget2d(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._means.append(self.makePlot(y = y, color = color, name = name, clickable = clickable))
+        self._means.append(self.makePlot(x = x, y = y, color = color, name = name, clickable = clickable))
     
-    def plotStd(self, ys, color):
+    def plotStd(self, xs, ys, color):
         """
         Plots data to the plot.
         
@@ -80,8 +83,8 @@ class pgWidget2d(PyQtWidget2d):
                 The color of the line.
         
         """
-        curve1 = self.createCurve(y = ys[0], color = color, name = None, clickable = False)
-        curve2 = self.createCurve(y = ys[1], color = color, name = None, clickable = False)
+        curve1 = self.createCurve(x = xs, y = ys[0], color = color, name = None, clickable = False)
+        curve2 = self.createCurve(x = xs, y = ys[1], color = color, name = None, clickable = False)
         self._stds.append(self.createFilledCurve(y1 = curve1, y2 = curve2, color = color))
     
     def do_plot(self, vum, data):
@@ -102,27 +105,33 @@ class pgWidget2d(PyQtWidget2d):
         if self.toolbar.layers.isChecked():
             
             layers = self.toolbar.getCheckedLayers()
+            active = vum.get_active()
             
-            for i in range(len(data.blocks)):
-                for j in range(vum.n_):
-                    for layer in layers:
-                        if layer == "standard deviation":                        
-                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+            for i in range(len(active)):
+                for j in range(len(active[i])):
+                    if active[i][j]:
+                        for layer in layers:
+                            if layer == "standard deviation":  
                                 runit = vum.get_realunit(i, j, data)
                                 datas = data.get_data(layer, runit)
                                 col = vum.get_color(j, False, layer, False)
-                                self.plotStd(ys = datas, color = col)
+                                xs = arange(data.wave_length) * 1/data.sampling_rate.magnitude
+                                self.plotStd(xs = xs, ys = datas, color = col)
                                 
-                        elif layer == "average":
-                            if vum.mapping[i][j] != 0 and vum.visible[j]:
+                            elif layer == "average":
                                 runit = vum.get_realunit(i, j, data)
                                 datas = data.get_data(layer, runit)
                                 col = vum.get_color(j, False, layer, False)
-                                self.plotMean(y = datas, color = col, name = "{}{}".format(i, j))
+                                xs = arange(data.wave_length) * 1/data.sampling_rate.magnitude
+                                self.plotMean(x = xs, y = datas, color = col, name = "{}{}".format(i, j), clickable = True)
                         
-                        else:
-                            raise Exception("Invalid layer requested!")
-                            
+                            else:
+                                raise Exception("Invalid layer requested!")
+            
+            self.setXLabel("Time", "s")
+            self.setYLabel("Voltage", "V")
+            self.setPlotTitle("Mean Spike Waveforms")
+            
             if self._stds:
                 for std in self._stds:
                     self._plotItem.addItem(std)

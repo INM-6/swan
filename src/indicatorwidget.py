@@ -16,17 +16,18 @@ class IndicatorWidget(QtGui.QWidget):
     
     selectIndicator = QtCore.pyqtSignal(object)
     
-    def __init__(self, text, row = 0, col = 0, *args, **kwargs):
+    def __init__(self, text, row = 0, col = 0, width = 200, height = 150, const_dim = 60, *args, **kwargs):
         QtGui.QWidget.__init__(self, *args, **kwargs)
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         
-        self._defSize = (200, 150)
-        self._constDim = 60
+        self._defSize = (width, height)
+        self._constDim = const_dim
         self._row = row
         self._col = col
         self._pos = (self._row, self._col)
         self.selected = True
+        self.responsive = True
         
         gridLayout = QtGui.QGridLayout(self)
         gridLayout.setObjectName("indicatorGridLayout")
@@ -119,13 +120,16 @@ class IndicatorWidget(QtGui.QWidget):
         self.dispText.setFont(self.dispFont)
         
     def toggleColourStrip(self, colour):
-        palette = self.colourStrip.palette()
-        palette.setColor(self.backgroundRole(), colour)
-        self.colourStrip.setPalette(palette)
-        self.colourStrip.show()
+        if colour is not None:
+            palette = self.colourStrip.palette()
+            palette.setColor(self.backgroundRole(), colour)
+            self.colourStrip.setPalette(palette)
+            self.colourStrip.show()
+        else:
+            self.colourStrip.hide()
     
     def darkTheme(self):
-        self.bgs = {"deselected":mkColor(0.3), "selected":mkColor('k'), "inFocus":mkColor(0.1)}
+        self.bgs = {"deselected":mkColor(0.25), "selected":mkColor('k'), "inFocus":mkColor(0.1)}
         self._bg = self.bgs["selected"]
         self.setBackground(self._bg)
     
@@ -143,7 +147,7 @@ class IndicatorWidget(QtGui.QWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton and self.responsive:
             self.selectIndicator.emit(self)
             self.selected = not self.selected
             if self.selected:
@@ -191,9 +195,10 @@ class IndicatorWidget(QtGui.QWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        self.inFocus = True
-        self.setBackground(self.bgs["inFocus"])
-        event.accept()
+        if self.responsive:
+            self.inFocus = True
+            self.setBackground(self.bgs["inFocus"])
+            event.accept()
     
     def leaveEvent(self, event):
         """
@@ -206,6 +211,7 @@ class IndicatorWidget(QtGui.QWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)
         
         """
-        self.inFocus = False
-        self.setBackground(self._bg)
-        event.accept()
+        if self.responsive:
+            self.inFocus = False
+            self.setBackground(self._bg)
+            event.accept()

@@ -9,7 +9,7 @@ from :class:`src.mypgwidget.PyQtWidget3d`.
 It is extended by a 3d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget3d
-from numpy import array
+from numpy import array, multiply
 
 
 class pgWidget3d(PyQtWidget3d):
@@ -45,20 +45,24 @@ class pgWidget3d(PyQtWidget3d):
         layers = ["average", "standard deviation"]
         self.toolbar.setupCheckboxes(layers)
         self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
+        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
         
-        self._axesSize = 1000.
+        self._axesSize = 5000.
         self._axesSpacing = 100.
-        self._xScaleFactor = 100.
-        self._yScaleFactor = 10.
+        self._xScaleFactor = 300.
+        self._yScaleFactor = 20.
         self._zScaleFactor = 1/2.
+        self._plotSpacing = 50.
+        self._xOffset = -2000.
+        self._yOffset = -3000.
         
-        self.setup_axes(size = self._axesSize, spacing = self._axesSpacing, axes = 'x')
     
     #### general methods ####    
     
     def reset_plot(self):
         self.pgCanvas.items = []
-        self.setup_axes(size = self._axesSize, spacing = self._axesSpacing, axes = 'x')
+        self.setup_axes(size = self._axesSize, spacing = self._axesSpacing, axes = 'x', setCamera = True)
         
     def createSurfacePlot(self, z, color, x = None, y = None, shader = 'shaded'):
         """
@@ -80,6 +84,7 @@ class pgWidget3d(PyQtWidget3d):
     
     def addSurfacePlot(self, surfaceItem):
         surfaceItem.scale(self._xScaleFactor, self._yScaleFactor, self._zScaleFactor)
+        surfaceItem.translate(self._xOffset, self._yOffset, 0., local = False)
         self.addSurfacePlotItem(surfaceItem)
 
     def do_plot(self, vum, data):
@@ -96,6 +101,7 @@ class pgWidget3d(PyQtWidget3d):
                 The layers that are visible.
         
         """
+        self.saveCameraPosition()
         self.reset_plot()
         
         if self.toolbar.layers.isChecked():
@@ -104,56 +110,61 @@ class pgWidget3d(PyQtWidget3d):
             
             plots = []
             
-            found = False
-            for j in range(vum.n_):
-                if vum.visible[j]:
-                    found = True
-                    break
-            if found:
-                for layer in layers:
-                    if layer == "average":
-                        zs = []
-                        for i in range(len(data.blocks)):
-                            runit = vum.get_realunit(i, j, data)
-                            if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                                datas = data.get_data(layer, runit)
-                                col = vum.get_color(j, False, layer, True)
-                                z = datas
-                                zs.append(z)
-                        zs = array(zs)
-                        x = array(range(zs.shape[0]))
-                        y = array(range(zs.shape[-1]))
-                        if len(zs) > 1:
-                            plot = self.createSurfacePlot(x = x, y = y, z = zs, color = col)
-                            plots.append(plot)
-                        else:
-                            continue
-                    elif layer == "standard deviation":
-                        
-                        zs = []
-                        l = 0
-                        for i in range(len(data.blocks)):
-                            runit = vum.get_realunit(i, j, data)
-                            if vum.mapping[i][j] != 0 and "noise" not in runit.description.split() and "unclassified" not in runit.description.split():
-                                datas = data.get_data(layer, runit)
-                                col = vum.get_color(j, False, layer, True)
-                                z = datas
-                                l = len(z)
-                                zs.append(z)
-                        zs = array(zs)
-                        x = array(range(zs.shape[0]))
-                        y = array(range(zs.shape[-1]))
-                        if l > 1:
-                            for k in range(l):
-                                plot = self.createSurfacePlot(x = x, y = y, z = zs[:, k, :], color = col)
+            mapping = vum.get_mapping()
+            visible = vum.get_visible()
+            
+            checkmap = array(mapping)
+            checkmap[checkmap > 0] = 1
+            
+            active = multiply(checkmap, multiply(visible, 1)).T.tolist()
+            
+            for layer in layers:
+                if layer == "average":
+                    for i in range(len(active)):
+                        if any(active[i]):
+                            zs = []
+                            for j in range(len(active[i])):
+                                if active[i][j]:    
+                                    runit = vum.get_realunit(j, i, data)
+                                    datas = data.get_data(layer, runit)
+                                    col = vum.get_color(i, False, layer, True)
+                                    zs.append(datas)
+                            zs = array(zs)
+                            x = array(range(zs.shape[0]))
+                            y = array(range(zs.shape[-1])) + self._plotSpacing*(i+1)
+                            if len(zs) > 1:
+                                plot = self.createSurfacePlot(x = x, y = y, z = zs, color = col)
                                 plots.append(plot)
-                        else:
-                            continue
-                        
-                    else:
-                        print("invalid layer requested")
+                            else:
+                                continue
+                elif layer == "standard deviation":
+                    for i in range(len(active)):
+                        if any(active[i]):
+                            zs = []
+                            l = 0
+                            for j in range(len(active[i])):
+                                if active[i][j]:    
+                                    runit = vum.get_realunit(j, i, data)
+                                    datas = data.get_data(layer, runit)
+                                    col = vum.get_color(i, False, layer, True)
+                                    l = len(datas)
+                                    zs.append(datas)
+                            zs = array(zs)
+                            x = array(range(zs.shape[0]))
+                            y = array(range(zs.shape[-1])) + self._plotSpacing*(i+1)
+                            if l > 1:
+                                for k in range(l):
+                                    plot = self.createSurfacePlot(x = x, y = y, z = zs[:, k, :], color = col)
+                                    plots.append(plot)
+                            else:
+                                continue
+                    
+                else:
+                    print("invalid layer requested")
                     
             
             if plots:
                 for plot in plots:
                     self.addSurfacePlot(plot)
+            
+            self.restoreCameraPosition()

@@ -22,7 +22,7 @@ if platform.system() == "Linux":
     import resource
 else:
     onLinux = False
-from pyqtgraph.Qt import QtCore, QtGui
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from src import title, about
 from gui.main_ui import Ui_Main
 from file_dialog import File_Dialog
@@ -34,10 +34,9 @@ from export import Export
 try:
     import cPickle as pkl
 except ImportError:
-    print("Importing Pickle, not cPickle")
     import pickle as pkl
 
-class MemoryTask(QtCore.QThread):
+class MemoryTask(QtWidgets.QProgressBar):
     """
     A class to show the memory usage on the main window's status bar.
     
@@ -60,7 +59,7 @@ class MemoryTask(QtCore.QThread):
             *bar* (:class:`PyQt5.QtGui.QStatusBar`)
         
         """
-        super(QtCore.QThread, self).__init__()
+        super(QtWidgets.QProgressBar, self).__init__()
         self.timer = timer
         self.bar = statusBar
         timer.timeout.connect(self.refresh_memory)
@@ -159,6 +158,7 @@ class Main(QtGui.QMainWindow):
             self.ui.view_3.setDark()
             self.ui.view_4.setDark()
             self.ui.view_5.setDark()
+            self.ui.view_6.setDark()
         
         #properties{
         self._program_dir = program_dir
@@ -188,12 +188,8 @@ class Main(QtGui.QMainWindow):
 
         #connect channel selection
         self.ui.tools.selector.doChannel.connect(self.do_channel)
-        #connect layer selection
-        self.ui.tools.layers.doLayer.connect(self.plot_all)
-        #connect unit selection
-        self.ui.tools.units.doUnits.connect(self.plot_all)
-        #connect view change
-#        self.ui.views.currentChanged.connect(self.check_layers)
+        self.ui.plotGrid.child.indicatorToggle.connect(self.plot_all)
+        self.ui.plotGrid.child.visibilityToggle.connect(self._mystorage.changeVisibility)
         #connect loading progress
         self._mystorage.progress.connect(self.setProgress)
         #connect redraw signal of the views
@@ -204,9 +200,13 @@ class Main(QtGui.QMainWindow):
         
         self.ui.view_1.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
         self.ui.view_3.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        self.ui.view_4.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        self.ui.view_6.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
         
         self.ui.plotGrid.child.plotSelected.connect(self.ui.view_1.highlightCurveFromPlot)
         self.ui.plotGrid.child.plotSelected.connect(self.ui.view_3.highlightCurveFromPlot)
+        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_4.highlightCurveFromPlot)
+        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_6.highlightCurveFromPlot)
         
         #shortcut reference
         self.plots = self.ui.plotGrid.child
@@ -214,20 +214,20 @@ class Main(QtGui.QMainWindow):
         
         self.check_dirs()
         
-#        self.check_layers(self.ui.views.currentIndex())
-        
         self.doPlot.connect(self.plots.do_plot)
         self.doPlot.connect(self.ui.view_1.do_plot)
         self.doPlot.connect(self.ui.view_2.do_plot)
         self.doPlot.connect(self.ui.view_3.do_plot)
         self.doPlot.connect(self.ui.view_4.do_plot)
         self.doPlot.connect(self.ui.view_5.do_plot)
+        self.doPlot.connect(self.ui.view_6.do_plot)
         
         self.ui.view_1.refreshPlots.connect(self.refresh_views)
         self.ui.view_2.refreshPlots.connect(self.refresh_views)
         self.ui.view_3.refreshPlots.connect(self.refresh_views)
         self.ui.view_4.refreshPlots.connect(self.refresh_views)
         self.ui.view_5.refreshPlots.connect(self.refresh_views)
+        self.ui.view_6.refreshPlots.connect(self.refresh_views)
         
         #setting up the progress bar
         self.p = QtGui.QProgressBar()
@@ -243,7 +243,7 @@ class Main(QtGui.QMainWindow):
             timer = QtCore.QTimer(self)
             self.timer = timer
             self.memorytask = MemoryTask(timer, self.ui.statusbar)
-            self.memorytask.start()
+            self.memorytask.start_timer()
         
         self.showMaximized()
         
@@ -271,30 +271,30 @@ class Main(QtGui.QMainWindow):
         Look at :class:`src.preferences_dialog.Preferences_Dialog` for more. 
         
         """
-        self.dirty_project()
-        
-        dia = File_Dialog()
-        
-        if dia.exec_():
-            files = dia.get_files()
-            files.sort()
+        if self.dirty_project():
             
-            channel = self._mystorage.get_channel()
+            dia = File_Dialog()
             
-            success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel, files)
-            
-            if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                filesStr = self._mystorage.get_files(True)
-                #setting filelist detail
-                self.set_detail(1, filesStr)
+            if dia.exec_():
+                files = dia.get_files()
+                files.sort()
                 
-                self.save_project()
-                self.update_project()
-                self.reset_dirty()
-                self.selector.select_only(self._mystorage.get_channel())
-                self.set_status("Created new project successfully.")
-            else:
-                self.set_status("No files given. Nothing loaded.")
+                channel = self._mystorage.get_channel()
+                
+                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel, files)
+                
+                if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
+                    filesStr = self._mystorage.get_files(True)
+                    #setting filelist detail
+                    self.set_detail(1, filesStr)
+                    
+                    self.save_project()
+                    self.update_project()
+                    self.reset_dirty()
+                    self.selector.select_only(self._mystorage.get_channel())
+                    self.set_status("Created new project successfully.")
+                else:
+                    self.set_status("No files given. Nothing loaded.")
                 
     @QtCore.pyqtSlot(bool)
     def on_action_Load_Project_triggered(self):
@@ -305,27 +305,27 @@ class Main(QtGui.QMainWindow):
         Loads the project by reading the .txt file and the .vum file.
         
         """
-        self.dirty_project()
-        filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
-        if filename:
-            (prodir, proname) = split(filename)
-            
-            channel = self._mystorage.get_channel()
-            
-            success = self._mystorage.load_project(prodir, proname, channel)
-                       
-            if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                filesStr = self._mystorage.get_files(True)
-                #setting filelist detail
-                self.set_detail(4, filesStr)   
+        if self.dirty_project():
+            filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
+            if filename:
+                (prodir, proname) = split(filename)
                 
-                self.save_project()
-                self.update_project()
-                self.reset_dirty()
-                self.selector.select_only(self._mystorage.get_channel())             
-                self.set_status("Loaded project successfully.")
-            else:
-                self.set_status("No files given. Nothing loaded.")
+                channel = self._mystorage.get_channel()
+                
+                success = self._mystorage.load_project(prodir, proname, channel)
+                           
+                if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
+                    filesStr = self._mystorage.get_files(True)
+                    #setting filelist detail
+                    self.set_detail(4, filesStr)   
+                    
+                    self.save_project()
+                    self.update_project()
+                    self.reset_dirty()
+                    self.selector.select_only(self._mystorage.get_channel())             
+                    self.set_status("Loaded project successfully.")
+                else:
+                    self.set_status("No files given. Nothing loaded.")
     
     @QtCore.pyqtSlot(bool)
     def on_action_Save_Project_triggered(self):
@@ -422,8 +422,10 @@ class Main(QtGui.QMainWindow):
         
             *event* (:class:`PyQt5.QtCore.QEvent`)
         """
-        self.dirty_project()
-        event.accept()
+        if self.dirty_project():
+            event.accept()
+        else:
+            event.ignore()
         
     ### menu:Edit ###
     
@@ -456,11 +458,14 @@ class Main(QtGui.QMainWindow):
                     mapping = 1
                 elif answer.clickedButton() == btn2:
                     mapping = 2
+                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
                 self._mystorage.recalculate(mapping)
                 self._currentdirty = True
                 self._globaldirty = True
+                self.plots.setAllForUpdate()
                 self.plot_all()
                 self.plots.set_tooltips(self._mystorage.get_tooltips())
+                QtGui.QApplication.restoreOverrideCursor()
                 
     @QtCore.pyqtSlot(bool)
     def on_action_Revert_mapping_triggered(self):
@@ -478,8 +483,10 @@ class Main(QtGui.QMainWindow):
                                                 defaultButton=QtGui.QMessageBox.No)
             
             if answer == QtGui.QMessageBox.Yes:
+                print("Current dirty: {}".format(self._currentdirty))
                 self._mystorage.revert()
                 self.reset_current_dirty()
+                self.plots.setAllForUpdate()
                 self.plot_all()
                 self.plots.set_tooltips(self._mystorage.get_tooltips())
     
@@ -501,6 +508,8 @@ class Main(QtGui.QMainWindow):
             #get the positions
             p1 = plots[0]
             p2 = plots[1]
+            p1.toBeUpdated = True
+            p2.toBeUpdated = True
             m = p1.pos[1]
             n1 = p1.pos[0]
             n2 = p2.pos[0]
@@ -509,9 +518,9 @@ class Main(QtGui.QMainWindow):
             self._mystorage.swap(m, n1, n2)
             self.plot_all()
             self.plots.reset_selection()
-
+            
             #setting tooltips
-            self.plots.set_tooltips(self._mystorage.get_tooltips())
+            self.plots.swap_tooltips(p1, p2)
             
             self._currentdirty = True
             self._globaldirty = True
@@ -655,19 +664,20 @@ class Main(QtGui.QMainWindow):
             #let the user know that loading can be take some time
             if onLinux:
                 self.memorytask.stop_timer()
-            self.set_status("Loading ... This may take a while ...", 0)
+            self.set_status("Loading... This may take a while...", 0)
                         
             QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
             
             #checking if the last channel's mapping was dirty
             if self._currentdirty:
                 self.selector.set_dirty(lastchannel, True)
-                self._currentdirty = False
             
-            #loading            
+            self._currentdirty = self.selector.get_item(channel).dirty
+            
+            #loading
             (n, m) = self._mystorage.load_channel(channel)
             
-            self.ui.tools.units.init_units(n)
+#            self.ui.tools.units.init_units(n)
             
             #plotting
             self.plots.reset_selection()
@@ -701,7 +711,7 @@ class Main(QtGui.QMainWindow):
             self.selector.select_only(self._mystorage.get_channel())
             return False
     
-    def plot_all(self, i=None, visible=None):
+    def plot_all(self, i=None, j=None, visible=False):
         """
         Plots everything that has to be plotted.
         
@@ -727,8 +737,8 @@ class Main(QtGui.QMainWindow):
             data = self._mystorage.get_data()
             vum_all = self._mystorage.get_mappings()
 
-            if i is not None and visible is not None :
-                vum.set_visible(i, visible)
+            if i is not None and j is not None:
+                vum.set_visible(j, i, visible)
             
             self.doPlot.emit(vum, data)
             self.vu.do_plot(vum_all, data)
@@ -754,44 +764,12 @@ class Main(QtGui.QMainWindow):
             self.ui.view_3.do_plot(vum, data)
             #view_4: PCA pyqtgraph plot
             self.ui.view_4.do_plot(vum, data)
-            #view_4: 2D PCA pyqtgraph plot
+            #view_5: 2D PCA pyqtgraph plot
             self.ui.view_5.do_plot(vum, data)
+            #view_6: Rate Profiles plot
+            self.ui.view_6.do_plot(vum, data)
 
             QtGui.QApplication.restoreOverrideCursor()
-        
-            
-    def check_layers(self, i):
-        """
-        Checks if there are layers to hide for the current view.
-        
-        **Arguments**
-        
-            *i* (integer):
-                The current view's index.
-        
-        """
-        l1 = ["average", "standard deviation"]
-        l2 = ["units", "sessions"]
-        if i == 0:
-            #view_1: 2D mpl plot
-            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.tools.layers.enable_layers(True, l1)
-        elif i == 1:
-            #view_2: 3D mpl plot
-            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.tools.layers.enable_layers(True, l1)
-        elif i == 2:
-            #view_3: ISI mpl plot
-            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.tools.layers.enable_layers(True, l2)
-        elif i == 3:
-            #view_4: PCA mpl plot
-            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.tools.layers.enable_layers(True, l2)
-        elif i == 4:
-            #view_5: PCA pyqtgraph plot
-            self.ui.tools.layers.enable_layers(False, self.ui.layers.get_layers())
-            self.ui.tools.layers.enable_layers(True, l2)
             
     def setProgress(self, i):
         """
@@ -853,10 +831,17 @@ class Main(QtGui.QMainWindow):
         if self._globaldirty:
             answer = QtGui.QMessageBox.question(self, "Confirmation", 
                                                 "There are unsaved changes.\nDo you want to save your project first?",
-                                                buttons = QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
+                                                buttons = QtGui.QMessageBox.Cancel | QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
                                                 defaultButton = QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
                 self.on_action_Save_Project_triggered()
+                return True
+            elif answer == QtGui.QMessageBox.No:
+                return True
+            else:
+                return False
+        else:
+            return True
                 
     def update_project(self):
         """
