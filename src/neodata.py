@@ -13,7 +13,6 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 from os.path import join, split, exists
 import gc
 
-from neo.io.blackrockio_v4 import BlackrockIO
 from numpy import mean, std, array, histogram, unique, where, subtract
 from numpy import min as nmin
 from numpy import max as nmax
@@ -24,7 +23,8 @@ from neo.io.pickleio import PickleIO
 from neo.io import blackrockio_v4
 from itertools import chain
 import quantities as pq
-from . import neo_utils as nu
+from src.isolationscore import calculate_isolation_scores
+
 
 class NeoData(QObject):
     """        
@@ -56,7 +56,7 @@ class NeoData(QObject):
                 that they can be loaded faster next time.
             *nums* (list of integer):
                 Contains the number of real units per blocks.
-            *rgios* (list of :class:`neo.io.BlackrockIO`):
+            *ios* (list of :class:`neo.io.BlackrockIO`):
                 Contains the IO class to load the neo blocks.
             
         """
@@ -65,7 +65,7 @@ class NeoData(QObject):
         self.cdir = cache_dir
         self.blocks = []
         self.nums = []
-        self.rgios = []
+        self.ios = []
         self.wave_length = 0.
         self.segments = []
         self.units = []
@@ -74,17 +74,7 @@ class NeoData(QObject):
         self.sampling_rate = 0.
         # }
 
-    #### general methods ####    
-
-    #     def load_rgIOs(self, files):
-    #         l = len(files)
-    #         step = int(50/l)
-    #         if not self.rgios:
-    #             for i, f in enumerate(files):
-    #                 rgIO = BlackrockIO(f)
-    #                 self.rgios.append(rgIO)
-    #                 self.progress.emit(step*(i+1))
-    #         return self.rgios
+    #### general methods ####
 
     def load(self, files, channel):
         """
@@ -104,19 +94,11 @@ class NeoData(QObject):
         """
         # information for the progress
         l = len(files)
-        #         if not self.rgios:
-        #             v = 50
-        #             step = int(50/l)
-        #         else:
-        #             v = 0
-        #             step = int(100/l)
         v = 0
         step = int(100 / l)
 
         self.delete_blocks()
         blocks = []
-        # loading the IOs
-        #         rgios = self.load_rgIOs(files)
 
         # loading the blocks
         for i, f in enumerate(files):
@@ -128,17 +110,17 @@ class NeoData(QObject):
                 block = pIO.read_block()
             else:
                 # loading
-                # rgIO = rgios[i]
-                rgIO: BlackrockIO = blackrockio_v4.BlackrockIO(f)
-                block = rgIO.read_block(index=None, name=None, description=None, nsx_to_load='none',
-                                        n_starts=None, n_stops=None, channels=channel, units='all',
-                                        load_waveforms=True, load_events=True,
-                                        lazy=False, cascade=True)
-                del rgIO
+                BlackrockIO = blackrockio_v4.BlackrockIO(f)
+                block = BlackrockIO.read_block(index=None, name=None, description=None, nsx_to_load='none',
+                                               n_starts=None, n_stops=None, channels=channel, units='all',
+                                               load_waveforms=True, load_events=True,
+                                               lazy=False, cascade=True)
+                del BlackrockIO
                 # caching
                 pIO = PickleIO(name)
                 pIO.write_block(block)
 
+            out = calculate_isolation_scores(channel_number=channel, block=block, lambda_value=8, speed=100)
             blocks.append(block)
             # emits a signal with the current progress
             # after loading a block
@@ -256,7 +238,7 @@ class NeoData(QObject):
 
         maxi = nmax(yranges1) + 20.0
         mini = nmin(yranges0) - 20.0
-        return (mini, maxi)
+        return mini, maxi
 
     def get_dates(self):
         """
@@ -284,9 +266,9 @@ class NeoData(QObject):
                 The distance
 
         """
-        y1 = self.get_data("average", unit1)
-        y2 = self.get_data("average", unit2)
-        return norm(subtract(y1 - y2))
+        x1 = self.get_data("average", unit1)
+        x2 = self.get_data("average", unit2)
+        return norm(subtract(x1, x2))
 
     def get_unique_labels(self):
         return self.unique_labels
@@ -324,9 +306,9 @@ class NeoData(QObject):
         Deletes all IOs.
         
         """
-        while self.rgios:
-            rgio = self.rgios.pop()
-            del rgio
+        while self.ios:
+            io = self.ios.pop()
+            del io
         gc.collect()
 
     def create_spiketrains_dictionary(self, units):

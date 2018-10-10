@@ -12,17 +12,10 @@ To run the application, you just have to execute *run.py*.
 
 Look at :mod:`src.run` for more information.
 """
-from os import mkdir, sep
-from os.path import basename, split, isdir, join, exists
 import platform
 import csv
 import webbrowser as web
-
-if platform.system() == "Linux":
-    onLinux = True
-    import resource
-else:
-    onLinux = False
+import os
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from src import title, about
 from gui.main_ui import Ui_Main
@@ -31,12 +24,18 @@ from src.preferences_dialog import Preferences_Dialog
 from src.mystorage import MyStorage
 from src.vunits import VUnits
 from src.export import Export
-import os
+
+if platform.system() == "Linux":
+    onLinux = True
+    import resource
+else:
+    onLinux = False
 
 try:
     import cPickle as pkl
 except ImportError:
     import pickle as pkl
+
 
 class MemoryTask(QtWidgets.QProgressBar):
     """
@@ -46,24 +45,24 @@ class MemoryTask(QtWidgets.QProgressBar):
     
         *timer* (:class:`PyQt5.QtCore.QTimer`):
             The timer that will be called periodic.
-        *statusBar* (:class:`PyQt5.QtGui.QStatusBar`):
+        *status_bar* (:class:`PyQt5.QtGui.QstatusBar`):
             The main window's status bar. 
             The memory usage will be shown here.
             This works only on Linux.
     
     """
 
-    def __init__(self, timer, statusBar):
+    def __init__(self, timer, status_bar):
         """
         **Properties**:
         
             *timer* (:class:`PyQt5.QtCore.QTimer`)
-            *bar* (:class:`PyQt5.QtGui.QStatusBar`)
+            *status_bar* (:class:`PyQt5.QtGui.QstatusBar`)
         
         """
-        super(QtWidgets.QProgressBar, self).__init__()
+        QtWidgets.QProgressBar.__init__(self)
         self.timer = timer
-        self.bar = statusBar
+        self.bar = status_bar
         timer.timeout.connect(self.refresh_memory)
 
     def run(self):
@@ -164,7 +163,7 @@ class Main(QtGui.QMainWindow):
 
         # properties{
         self._program_dir = program_dir
-        self._CACHEDIR = join(program_dir, "cache")
+        self._CACHEDIR = os.path.join(program_dir, "cache")
         self._currentdirty = False
         self._globaldirty = False
         self._preferences = None
@@ -175,7 +174,7 @@ class Main(QtGui.QMainWindow):
                        "expandStep": 5,
                        "collapseStep": 5,
                        }
-        self._prodir = join(home_dir)
+        self._prodir = os.path.join(home_dir)
 
         # preferences have to be present for the storage.
         self.load_preferences()
@@ -282,7 +281,8 @@ class Main(QtGui.QMainWindow):
 
                 channel = self._mystorage.get_channel()
 
-                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel, files)
+                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel,
+                                                       files)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
                     filesStr = self._mystorage.get_files(True)
@@ -307,9 +307,11 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.dirty_project():
-            filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
+            filename, nonsense = QtGui.QFileDialog.getOpenFileName(self,
+                                                                   "Choose the file which includes the absolute paths",
+                                                                   self._prodir)
             if filename:
-                (prodir, proname) = split(filename)
+                (prodir, proname) = os.path.split(filename)
 
                 channel = self._mystorage.get_channel()
 
@@ -354,7 +356,8 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.check_project():
-            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles", self._prodir)
+            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles",
+                                                                   self._prodir)
             if filename:
                 self._mystorage.save_project_as(filename)
                 self.update_project()
@@ -443,7 +446,8 @@ class Main(QtGui.QMainWindow):
         if self._mystorage.has_project():
             answer = QtGui.QMessageBox(self)
             answer.setWindowTitle("Recalculate mapping")
-            answer.setText("WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
+            answer.setText(
+                "WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
 
             btn1 = QtGui.QPushButton("SWAN Implementation")
             btn2 = QtGui.QPushButton("Fraser-Schwarz Implementation")
@@ -697,7 +701,8 @@ class Main(QtGui.QMainWindow):
 
             # setting channel detail
             self.set_detail(1, str(channel))
-            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(channel) + " | " + title)
+            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(
+                channel) + " | " + title)
 
             # setting tooltips
             self.plots.set_tooltips(self._mystorage.get_tooltips())
@@ -849,8 +854,8 @@ class Main(QtGui.QMainWindow):
         
         """
         if self._mystorage.has_project():
-            (prodir, proname) = split(self._mystorage.get_project_path())
-            vumname = basename(self._mystorage.get_map_path())
+            (prodir, proname) = os.path.split(self._mystorage.get_project_path())
+            vumname = os.path.basename(self._mystorage.get_map_path())
             # setting project details
             self.set_detail(0, proname)
             self.set_detail(1, prodir)
@@ -920,9 +925,9 @@ class Main(QtGui.QMainWindow):
         If not, they will be created.
         
         """
-        data_dir = join(self._program_dir, "data")
-        if not isdir(data_dir):
-            mkdir(data_dir)
+        data_dir = os.path.join(self._program_dir, "data")
+        if not os.path.isdir(data_dir):
+            os.mkdir(data_dir)
         self.check_cache()
 
     def check_cache(self):
@@ -931,8 +936,8 @@ class Main(QtGui.QMainWindow):
         If not, it will be created.
         
         """
-        if not isdir(self._preferences["cacheDir"]):
-            mkdir(self._preferences["cacheDir"])
+        if not os.path.isdir(self._preferences["cacheDir"]):
+            os.mkdir(self._preferences["cacheDir"])
 
     def load_connector_map(self, filename):
         """
@@ -981,8 +986,8 @@ class Main(QtGui.QMainWindow):
         If it doesn't exist, defaults are used.
         
         """
-        name = join(self._program_dir, "data", "preferences.pkl")
-        if exists(name):
+        name = os.path.join(self._program_dir, "data", "preferences.pkl")
+        if os.path.exists(name):
             prefs = pkl.load(open(name, "rb"))
             self._preferences = prefs
         else:
@@ -993,7 +998,7 @@ class Main(QtGui.QMainWindow):
         Writes the preferences to a file.
         
         """
-        name = join(self._program_dir, "data", "preferences.pkl")
+        name = os.path.join(self._program_dir, "data", "preferences.pkl")
         with open(name, "wb") as fn:
             pkl.dump(self._preferences, fn)
 

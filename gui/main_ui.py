@@ -8,6 +8,15 @@ Created on Thu Nov  2 23:26:08 2017
 
 from pyqtgraph.Qt import QtCore, QtGui
 from os import sep
+from src.pgwidget2d import pgWidget2d
+from src.plotgridtools import plotGridTools
+from src.viewtoolbar import collapsibleWidget
+from src.myplotgrid import MyPlotGrid
+from src.pgwidgetisi import pgWidgetISI
+from src.pgwidgetpca import pgWidgetPCA
+from src.pgwidget3d import pgWidget3d
+from src.pgwidgetpca2d import pgWidgetPCA2d
+from src.pgwidgetrateprofile import pgWidgetRateProfile
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -361,13 +370,3 @@ class Ui_Main(object):
         except:
             print("Icon Exception")
             pass
-
-from pgwidget2d import pgWidget2d
-from plotgridtools import plotGridTools
-from viewtoolbar import collapsibleWidget
-from myplotgrid import MyPlotGrid
-from pgwidgetisi import pgWidgetISI
-from pgwidgetpca import pgWidgetPCA
-from pgwidget3d import pgWidget3d
-from pgwidgetpca2d import pgWidgetPCA2d
-from pgwidgetrateprofile import pgWidgetRateProfile
