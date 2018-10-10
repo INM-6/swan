@@ -672,7 +672,7 @@ def epoch_time_slice(epoch, t_start=None, t_stop=None):
         t_stop = np.inf
 
     valid_ids = np.where(np.logical_and(
-        epoch.times >= t_start, epoch.times + epoch.durations < t_stop))[0]
+        epoch.times >= t_start, epoch.times + epoch.durations <= t_stop))[0]
 
     new_epoch = _event_epoch_slice_by_valid_ids(epoch, valid_ids=valid_ids)
 
@@ -685,7 +685,8 @@ def _get_from_list(input_list, prop=None):
     """
     output_list = []
     # empty or no dictionary
-    if not prop or bool([b for b in prop.values() if b == []]):
+    if (prop is None) or \
+       [b for b in prop.values() if not np.asarray(b).size]:
         output_list += [e for e in input_list]
     # dictionary is given
     else:
@@ -805,7 +806,7 @@ def _get_valid_ids(obj, annotation_key, annotation_value):
                 valid_mask = np.ones(obj.shape)
             else:
                 valid_mask = np.zeros(obj.shape)
-                if type(check_value) != str:
+                if not isinstance(check_value, str):
                     warnings.warn(
                         'Length of annotation "%s" (%s) does not fit '
                         'to length of object list (%s)' % (

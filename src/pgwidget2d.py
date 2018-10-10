@@ -10,6 +10,7 @@ It is extended by a 2d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget2d
 from numpy import arange
+from quantities import uV, mV, V
 
 class pgWidget2d(PyQtWidget2d):
     """
@@ -116,14 +117,14 @@ class pgWidget2d(PyQtWidget2d):
                                 datas = data.get_data(layer, runit)
                                 col = vum.get_color(j, False, layer, False)
                                 xs = arange(data.wave_length) * 1/data.sampling_rate.magnitude
-                                self.plotStd(xs = xs, ys = datas, color = col)
+                                self.plotStd(xs = xs, ys = datas.rescale(V), color = col)
                                 
                             elif layer == "average":
                                 runit = vum.get_realunit(i, j, data)
                                 datas = data.get_data(layer, runit)
                                 col = vum.get_color(j, False, layer, False)
                                 xs = arange(data.wave_length) * 1/data.sampling_rate.magnitude
-                                self.plotMean(x = xs, y = datas, color = col, name = "{}{}".format(i, j), clickable = True)
+                                self.plotMean(x = xs, y = datas.rescale(V), color = col, name = "{}{}".format(i, j), clickable = True)
                         
                             else:
                                 raise Exception("Invalid layer requested!")

@@ -256,8 +256,8 @@ class MyPlotContent(QtWidgets.QWidget):
                     p.plotWidget.setXRange(0., data.wave_length, padding = None, update = True)
                     if vum.mapping[i][j] != 0:
                         runit = vum.get_realunit(i, j, data)
-                        d = (data.get_data("average", runit) * V).rescale(mV)
-                        d_all = (data.get_data('all', runit) * uV).rescale(mV)
+                        d = data.get_data("average", runit)
+                        d_all = data.get_data('all', runit) * uV
                         p.plot_many(d_all[choice(d_all.shape[0], size = self._sampleWaveformNumber, replace = False)], self._plotGray)
                         p.plot(d, col)
                         p.hasPlot = True

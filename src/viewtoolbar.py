@@ -40,6 +40,8 @@ class ViewToolbar(QtWidgets.QWidget):
         self.options.setLayout(self.optionsLayout)
         self.gridLayout.addWidget(self.options, 0, 1)
         
+        self.gridLayout.setColumnStretch(1, 2)
+        
         self.mainGridLayout.setContentsMargins(0, 0, 0, 0)
         self.mainGridLayout.setSpacing(0)
         

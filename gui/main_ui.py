@@ -65,7 +65,7 @@ class Ui_Main(object):
         
         self.dock_view_2.setWidget(self.view_2)
         
-        self.dock_view_3 = QtGui.QDockWidget("ISI histograms")
+        self.dock_view_3 = QtGui.QDockWidget("ISI Histograms")
         self.dock_view_3.setObjectName(_fromUtf8("ISIHView"))
         self.dock_view_3.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
                                     QtGui.QDockWidget.DockWidgetFloatable)
@@ -89,15 +89,15 @@ class Ui_Main(object):
         
         self.dock_view_4.setWidget(self.view_4)
         
-        self.dock_view_5 = QtGui.QDockWidget("2D PCA")
-        self.dock_view_5.setObjectName(_fromUtf8("2DPCAView"))
+        self.dock_view_5 = QtGui.QDockWidget("Raster Plots")
+        self.dock_view_5.setObjectName(_fromUtf8("RasterPlotView"))
         self.dock_view_5.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
                                     QtGui.QDockWidget.DockWidgetFloatable)
         self.dock_view_5.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         Main.addDockWidget(QtCore.Qt.RightDockWidgetArea , self.dock_view_5, QtCore.Qt.Vertical)
         
         self.view_5 = pgWidgetPCA2d()
-        self.view_5.setObjectName(_fromUtf8("2DPcaView"))
+        self.view_5.setObjectName(_fromUtf8("RasterView"))
         
         self.dock_view_5.setWidget(self.view_5)
         

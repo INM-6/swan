@@ -12,6 +12,8 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
 from os.path import join, split, exists
 import gc
+
+from neo.io.blackrockio_v4 import BlackrockIO
 from numpy import mean, std, array, histogram, unique, where, subtract
 from numpy import min as nmin
 from numpy import max as nmax
@@ -22,6 +24,7 @@ from neo.io.pickleio import PickleIO
 from neo.io import blackrockio_v4
 from itertools import chain
 import quantities as pq
+from . import neo_utils as nu
 
 class NeoData(QObject):
     """        
@@ -58,26 +61,30 @@ class NeoData(QObject):
             
         """
         super(QObject, self).__init__()
-        #properties{
+        # properties{
         self.cdir = cache_dir
         self.blocks = []
         self.nums = []
         self.rgios = []
         self.wave_length = 0.
-        #}
-        
-        
+        self.segments = []
+        self.units = []
+        self.events = []
+        self.unique_labels = []
+        self.sampling_rate = 0.
+        # }
+
     #### general methods ####    
-        
-#     def load_rgIOs(self, files):
-#         l = len(files)
-#         step = int(50/l)
-#         if not self.rgios:
-#             for i, f in enumerate(files):
-#                 rgIO = BlackrockIO(f)
-#                 self.rgios.append(rgIO)
-#                 self.progress.emit(step*(i+1))
-#         return self.rgios
+
+    #     def load_rgIOs(self, files):
+    #         l = len(files)
+    #         step = int(50/l)
+    #         if not self.rgios:
+    #             for i, f in enumerate(files):
+    #                 rgIO = BlackrockIO(f)
+    #                 self.rgios.append(rgIO)
+    #                 self.progress.emit(step*(i+1))
+    #         return self.rgios
 
     def load(self, files, channel):
         """
@@ -95,64 +102,64 @@ class NeoData(QObject):
                 The channel that should be loaded.
         
         """
-        #information for the progress
+        # information for the progress
         l = len(files)
-#         if not self.rgios:
-#             v = 50
-#             step = int(50/l)
-#         else:
-#             v = 0
-#             step = int(100/l)
+        #         if not self.rgios:
+        #             v = 50
+        #             step = int(50/l)
+        #         else:
+        #             v = 0
+        #             step = int(100/l)
         v = 0
-        step = int(100/l)
-        
+        step = int(100 / l)
+
         self.delete_blocks()
         blocks = []
-        #loading the IOs
-#         rgios = self.load_rgIOs(files)
-        
-        #loading the blocks
+        # loading the IOs
+        #         rgios = self.load_rgIOs(files)
+
+        # loading the blocks
         for i, f in enumerate(files):
-                name = join(self.cdir, split(f)[1] + "_" + str(channel) + ".pkl")
- 
-                if exists(name):
-                    #load from cache
-                    pIO = PickleIO(name)
-                    block = pIO.read_block()
-                else:
-                    #loading
-#                     rgIO = rgios[i]
-                    rgIO = blackrockio_v4.BlackrockIO(f)
-                    block = rgIO.read_block(index=None, name=None, description=None, nsx_to_load='none',
-                                            n_starts=None, n_stops=None, channels=channel, units='all',
-                                            load_waveforms=True, load_events=True,
-                                            lazy=False, cascade=True)
-                    del rgIO
-                    #caching
-                    pIO = PickleIO(name)
-                    pIO.write_block(block)
-                 
-                blocks.append(block)
-                #emits a signal with the current progress
-                #after loading a block
-                self.progress.emit(v+step*(i+1))
-        
+            name = join(self.cdir, split(f)[1] + "_" + str(channel) + ".pkl")
+
+            if exists(name):
+                # load from cache
+                pIO = PickleIO(name)
+                block = pIO.read_block()
+            else:
+                # loading
+                # rgIO = rgios[i]
+                rgIO: BlackrockIO = blackrockio_v4.BlackrockIO(f)
+                block = rgIO.read_block(index=None, name=None, description=None, nsx_to_load='none',
+                                        n_starts=None, n_stops=None, channels=channel, units='all',
+                                        load_waveforms=True, load_events=True,
+                                        lazy=False, cascade=True)
+                del rgIO
+                # caching
+                pIO = PickleIO(name)
+                pIO.write_block(block)
+
+            blocks.append(block)
+            # emits a signal with the current progress
+            # after loading a block
+            self.progress.emit(v + step * (i + 1))
+
         self.blocks = blocks
         self.segments = [block.segments for block in self.blocks]
-        nums = [len([unit for unit in b.channel_indexes[0].units 
+        nums = [len([unit for unit in b.channel_indexes[0].units
                      if "noise" not in unit.description.split()
-                     and "unclassified" not in unit.description.split()]) 
-                    for b in self.blocks]
-        self.units = [[unit for unit in b.channel_indexes[0].units 
-                     if "noise" not in unit.description.split()
-                     and "unclassified" not in unit.description.split()]
-                    for b in self.blocks]
-        self.spiketrains = self.create_spiketrains_dictionary(self.units)
-        self.events = self.create_events_dictionary(self.blocks)
+                     and "unclassified" not in unit.description.split()])
+                for b in self.blocks]
+        self.units = [[unit for unit in b.channel_indexes[0].units
+                       if "noise" not in unit.description.split()
+                       and "unclassified" not in unit.description.split()]
+                      for b in self.blocks]
+        # self.spiketrains = self.create_spiketrains_dictionary(self.units)
+        self.set_events_and_labels()
         self.nums = nums
         self.wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
         self.sampling_rate = self.blocks[0].channel_indexes[0].units[0].spiketrains[0].sampling_rate
-    
+
     def get_data(self, layer, unit, **kwargs):
         """
         Returns the data for a specific layer.
@@ -182,42 +189,40 @@ class NeoData(QObject):
         
         """
         if layer == "average":
-            return mean((self.spiketrains[unit].waveforms*pq.uV).rescale(pq.V).magnitude, axis=0)[0]
+            return mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0] * pq.uV
         elif layer == "standard deviation":
-            means = mean((self.spiketrains[unit].waveforms*pq.uV).rescale(pq.V).magnitude, axis=0)[0]
-            stds = std((unit.spiketrains[0].waveforms*pq.uV).rescale(pq.V).magnitude, axis=0)[0]
-            return array([means-2*stds, means+2*stds])
+            means = mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            stds = std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            return array([means - 2 * stds, means + 2 * stds]) * pq.uV
         elif layer == "all":
-            wforms = self.spiketrains[unit].waveforms.magnitude
+            wforms = unit.spiketrains[0].waveforms.magnitude
             return wforms.reshape(wforms.shape[0], wforms.shape[-1])
         elif layer == "spiketrain":
-            return self.spiketrains[unit]
+            return unit.spiketrains[0]
         elif layer == "units":
-            vek = self.spiketrains[unit].copy()
-            vek.units = "ms"
+            vek = unit.spiketrains[0].copy().rescale(pq.s)
             vek.sort()
             d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
-            return (d, )
+            return (d,)
         elif layer == "sessions":
-            vek = self.spiketrains[unit].copy()
-            vek.units = "ms"
+            vek = unit.spiketrains[0].copy().rescale(pq.s)
             vek.sort()
             d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude.tolist()
             return d
         elif layer == "n_spikes":
-            return len(self.spiketrains[unit].magnitude)
+            return len(unit.spiketrains[0].magnitude)
         elif layer == "rate profile":
             order = kwargs.get("order", 4)
             Wn = kwargs.get("Wn", 0.008)
             bins = kwargs.get("bins", 4000)
             b, a = butter(order, Wn)
-            hist, bin_edges = histogram(self.spiketrains[unit].magnitude, bins = bins)
+            hist, bin_edges = histogram(unit.spiketrains[0].magnitude, bins=bins)
             return filtfilt(b, a, hist)
         else:
             raise ValueError("Layer not supported")
-    
+
     def get_channel_lengths(self):
         """
         Returns list containing the number of units in the channel
@@ -225,8 +230,8 @@ class NeoData(QObject):
         
         """
         return self.nums
-        
-    def get_yscale(self, layer = "average"):
+
+    def get_yscale(self, layer="average"):
         """
         Calculates the maximum y-range of the (absolute) y-ranges
         of all average waveforms.
@@ -245,14 +250,14 @@ class NeoData(QObject):
         for data in datas:
             tmp0 = nmin(data)
             tmp1 = nmax(data)
-            
+
             yranges0.append(tmp0)
             yranges1.append(tmp1)
-        
+
         maxi = nmax(yranges1) + 20.0
         mini = nmin(yranges0) - 20.0
         return (mini, maxi)
-    
+
     def get_dates(self):
         """
         Getter for the dates on which the sessions were recorded. This data is
@@ -282,7 +287,13 @@ class NeoData(QObject):
         y1 = self.get_data("average", unit1)
         y2 = self.get_data("average", unit2)
         return norm(subtract(y1 - y2))
-    
+
+    def get_unique_labels(self):
+        return self.unique_labels
+
+    def get_events_dict(self):
+        return self.events
+
     def delete_blocks(self):
         """
         Deletes all blocks.
@@ -307,7 +318,7 @@ class NeoData(QObject):
                 del channel
             del block
         gc.collect()
-            
+
     def delete_IOs(self):
         """
         Deletes all IOs.
@@ -317,7 +328,7 @@ class NeoData(QObject):
             rgio = self.rgios.pop()
             del rgio
         gc.collect()
-        
+
     def create_spiketrains_dictionary(self, units):
         """
         Returns a dictionary of spiketrains to memeoy for easy retrieval.
@@ -335,16 +346,16 @@ class NeoData(QObject):
                 Each key is the unit itself, for easy access. The
                 corresponding value is the spiketrain.
         """
-        
+
         spiketrains = {}
-    
+
         for block in units:
             for unit in block:
                 spiketrains[unit] = unit.spiketrains[0]
-        
+
         return spiketrains
-    
-    def create_events_dictionary(self, blocks):
+
+    def set_events_and_labels(self):
         """
         Returns a dictionary of event times to memory.
         
@@ -366,13 +377,13 @@ class NeoData(QObject):
                 The event list contains all the time points where the
                 event occured in the corresponding block.
         """
-        events = [[seg.events for seg in block.segments] for block in blocks]
+        events = [[seg.events for seg in block.segments] for block in self.blocks]
         labels = [[[event.labels for event in segment] for segment in block] for block in events]
         times = [[[event.times for event in segment] for segment in block] for block in events]
-        
+
         raveled_labels = list(chain.from_iterable(list(chain.from_iterable(list(chain.from_iterable(labels))))))
         unique_labels = unique(raveled_labels)
-        
+
         event_dict = {}
         for label in unique_labels:
             temp_list = []
@@ -383,6 +394,8 @@ class NeoData(QObject):
                     for e in range(len(events[b][s])):
                         temp_list[b][s].append([])
                         t_points = times[b][s][e][where(labels[b][s][e] == label)]
-                        temp_list[b][s][e] = t_points
+                        temp_list[b][s][e] = t_points.rescale(pq.ms)
             event_dict[label] = temp_list
-        return event_dict
+
+        self.unique_labels = unique_labels
+        self.events = event_dict

@@ -6,7 +6,7 @@ Created on Fri Feb  9 15:19:42 2018
 @author: sridhar
 """
 
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtGui, QtWidgets, QtCore
 
 class Ui_isiOptions(QtWidgets.QWidget):
     
@@ -48,6 +48,9 @@ class Ui_isiOptions(QtWidgets.QWidget):
         self.binStepMinusBtn = QtGui.QPushButton("-")
         self.binStepMinusBtn.setMinimumWidth(30)
         self.binStepMinusBtn.setMaximumWidth(50)
+        self.histStyleCheckbox = QtGui.QCheckBox()
+        self.histStyleCheckbox.setText("Step Mode")
+        self.histStyleCheckbox.setCheckState(QtCore.Qt.Unchecked)
         
         self.ghl1.addWidget(self.binMaxMinusBtn)
         self.ghl1.addWidget(self.binMaxEdit)
@@ -56,11 +59,12 @@ class Ui_isiOptions(QtWidgets.QWidget):
         self.ghl2.addWidget(self.binStepEdit)
         self.ghl2.addWidget(self.binStepPlusBtn)        
         
-        self.ggl.addWidget(l1, 0, 0)
-        self.ggl.addWidget(w, 0, 1)
-        self.ggl.addWidget(l2, 0, 2)
-        self.ggl.addWidget(y, 0, 3)
-        self.ggl.addWidget(self.errorLabel, 0, 4)
+        self.ggl.addWidget(l1, 0, 0, 1, 2)
+        self.ggl.addWidget(w, 0, 2, 1, 2)
+        self.ggl.addWidget(l2, 1, 0, 1, 2)
+        self.ggl.addWidget(y, 1, 2, 1, 2)
+        self.ggl.addWidget(self.histStyleCheckbox, 0, 4, 1, 2)
+        self.ggl.addWidget(self.errorLabel, 1, 4, 1, 2)
         
         isiWidget.toolbar.optionsLayout.addWidget(self)
         
@@ -68,6 +72,7 @@ class Ui_isiOptions(QtWidgets.QWidget):
         self.binMaxMinusBtn.clicked.connect(isiWidget.onMaxMinus)
         self.binStepPlusBtn.clicked.connect(isiWidget.onStepPlus)
         self.binStepMinusBtn.clicked.connect(isiWidget.onStepMinus)
+        self.histStyleCheckbox.stateChanged.connect(isiWidget.stepModeChanged)
         
         self.binMaxEdit.textChanged.connect(isiWidget.binMaxChanged)
         self.binStepEdit.textChanged.connect(isiWidget.binStepChanged)

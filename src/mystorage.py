@@ -487,7 +487,7 @@ class MyStorage(Storage, QtCore.QObject):
         vum = self.get_map()
         data = self.get_data()
         vum.calculate_mapping(data, self, automaticMapping = mapping)
-        self.change_map()
+        #self.change_map()
     
     def revert(self):
         """
@@ -556,7 +556,6 @@ class MyStorage(Storage, QtCore.QObject):
         vumap = VirtualUnitMap()
         
         #load a mapping or set the default one
-        print(vum_all.keys())
         try:
             vum = vum_all[name]
             vumap.set_map(data.nums, vum)

@@ -9,7 +9,7 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 It is extended by a 2d plot and the plotting methods.
 """
 from src.mypgwidget import PyQtWidget2d
-from numpy import histogram, sort
+from numpy import histogram, sort, arange
 from gui.isiOptions_ui import Ui_isiOptions
 
 class pgWidgetISI(PyQtWidget2d):
@@ -37,8 +37,9 @@ class pgWidgetISI(PyQtWidget2d):
         self._hists = []
         self.datas = {}
         
-        self.binMax = 50
-        self.binStep = 1
+        self.binMax = 100
+        self.binStep = 5
+        self.stepMode = False
         
         self.isiOptions = Ui_isiOptions(self)
         
@@ -59,9 +60,9 @@ class pgWidgetISI(PyQtWidget2d):
         
         try:
             binMax = int(binMax)
-            binStep = int(binStep)
+            binStep = float(binStep)
             
-            if binMax in range(1, 501) and binStep in range(1, 11):
+            if binMax > 0 and binMax <= 500 and binStep > 0 and binStep <= 500:
                 self.binMax = binMax
                 self.binStep = binStep
                 
@@ -111,7 +112,7 @@ class pgWidgetISI(PyQtWidget2d):
         
         """
         binStep = self.binStep
-        if (binStep + 1) <= 10:
+        if (binStep + 1) <= 500:
             self.binStep += 1
             self.isiOptions.binStepEdit.setText(str(self.binStep))
             self.update()
@@ -139,8 +140,8 @@ class pgWidgetISI(PyQtWidget2d):
         """        
         binMax = value
         try:
-            binMax = int(binMax)
-            if binMax in range(1, 501):
+            binMax = float(binMax)
+            if binMax > 0 and binMax <= 500:
                 self.binMax = binMax
                 self.isiOptions.errorLabel.setText("")
             else:
@@ -158,8 +159,8 @@ class pgWidgetISI(PyQtWidget2d):
         """
         binStep = value
         try:
-            binStep = int(binStep)
-            if binStep in range(1, 11):
+            binStep = float(binStep)
+            if binStep > 0 and binStep <=500:
                 self.binStep = binStep
                 self.isiOptions.errorLabel.setText("")
             else:
@@ -167,6 +168,15 @@ class pgWidgetISI(PyQtWidget2d):
         
         except:
             self.isiOptions.errorLabel.setText("Invalid input!")
+            
+    def stepModeChanged(self):
+        
+        currentStepMode = self.stepMode
+        newStepMode = self.isiOptions.histStyleCheckbox.isChecked()
+        
+        if currentStepMode != newStepMode:
+            self.stepMode = newStepMode
+            self.update()
         
     def plotHist(self, x, y, color, name, clickable = False):
         """
@@ -186,7 +196,7 @@ class pgWidgetISI(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._hists.append(self.makePlot(x = x, y = y, color = color, name = name, clickable = clickable))
+        self._hists.append(self.makePlot(x = x, y = y, color = color, name = name, clickable = clickable, stepMode = self.stepMode))
 
     def do_plot(self, vum, data):
         """
@@ -225,13 +235,16 @@ class pgWidgetISI(PyQtWidget2d):
             
                 if values:
                     for key in self.datas.keys():
-                        y = histogram(self.datas[key][0], bins = range(1, self.binMax + 1, self.binStep))
+                        y = histogram(self.datas[key][0], bins = arange(0., self.binMax/1000., self.binStep/1000.))
                         tmp = y[1]
-                        tmp = tmp[:-1]
-                        self.plotHist(x = tmp, y = y[0]/(1.0*len(values)), color = self.datas[key][1], name = key, clickable = clickable)
-                        self.setXLabel("Inter-spike Interval", "s")
-                        self.setPlotTitle("Inter-spike Interval Histograms")
-            
+                        if self.stepMode:
+                            tmp = tmp[:]
+                        else:
+                            tmp = tmp[:-1]
+                        self.plotHist(x = tmp, y = y[0]/(1.0*len(self.datas[key][0])), color = self.datas[key][1], name = key, clickable = self.datas[key][2])
+                self.setXLabel("Inter-spike Interval", "s")
+                self.setYLabel("Normalized Percentage of Interval Counts")
+                self.setPlotTitle("Inter-spike Interval Histograms")
             elif layer == "units":
                 for i in range(len(active)):
                     for j in range(len(active[i])):
@@ -242,12 +255,16 @@ class pgWidgetISI(PyQtWidget2d):
                             clickable = True
                             self.datas["{}{}".format(i,j)] = [datas, col, clickable]
                             for d in datas:
-                                y = histogram(d, bins = range(1, self.binMax + 1, self.binStep))
+                                y = histogram(d, bins = arange(0., self.binMax/1000., self.binStep/1000.))
                                 tmp = y[1]
-                                tmp = tmp[:-1]
+                                if self.stepMode:
+                                    tmp = tmp[:]
+                                else:
+                                    tmp = tmp[:-1]
                                 self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = "{}{}".format(i, j), clickable = clickable)
-                                self.setXLabel("Inter-spike Interval", "s")
-                                self.setPlotTitle("Inter-spike Interval Histograms")
+                self.setXLabel("Inter-spike Interval", "s")
+                self.setYLabel("Normalized Percentage of Interval Counts")
+                self.setPlotTitle("Inter-spike Interval Histograms")
             self.connectPlots()
     
     def update(self):
@@ -258,11 +275,15 @@ class pgWidgetISI(PyQtWidget2d):
             col = datas[1]
             clickable = datas[2]
             for d in data:
-                y = histogram(d, bins = range(1, self.binMax + 1, self.binStep))
+                y = histogram(d, bins = arange(0., self.binMax/1000., self.binStep/1000.))
                 tmp = y[1]
-                tmp = tmp[:-1]
+                if self.stepMode:
+                    tmp = tmp[:]
+                else:
+                    tmp = tmp[:-1]
                 self.plotHist(x = tmp, y = y[0]/(1.0*len(d)), color = col, name = key, clickable = clickable)
                 self.setXLabel("Inter-spike Interval", "s")
+                self.setYLabel("Normalized Percentage of Interval Counts")
                 self.setPlotTitle("Inter-spike Interval Histograms")
         self.connectPlots()
             

@@ -28,7 +28,7 @@ if __name__ == '__main__':
         p = curdir
 
     from src.main import Main
-    from PyQt4.QtGui import QApplication
+    from PyQt5.Qt import QApplication
     
     app = QApplication(sys.argv)
     m = Main(abspath(p), home)
