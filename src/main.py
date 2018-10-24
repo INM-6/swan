@@ -17,26 +17,27 @@ from os.path import basename, split, isdir, join, exists
 import platform
 import csv
 import webbrowser as web
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from src import title, about
+from gui.main_ui import Ui_Main
+from file_dialog import File_Dialog
+from preferences_dialog import Preferences_Dialog
+from mystorage import MyStorage
+from vunits import VUnits
+from export import Export
+import os
 
 if platform.system() == "Linux":
     onLinux = True
     import resource
 else:
     onLinux = False
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from src import title, about
-from gui.main_ui import Ui_Main
-from src.file_dialog import File_Dialog
-from src.preferences_dialog import Preferences_Dialog
-from src.mystorage import MyStorage
-from src.vunits import VUnits
-from src.export import Export
-import os
 
 try:
     import cPickle as pkl
 except ImportError:
     import pickle as pkl
+
 
 class MemoryTask(QtWidgets.QProgressBar):
     """
@@ -282,7 +283,8 @@ class Main(QtGui.QMainWindow):
 
                 channel = self._mystorage.get_channel()
 
-                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel, files)
+                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel,
+                                                       files)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
                     filesStr = self._mystorage.get_files(True)
@@ -307,7 +309,9 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.dirty_project():
-            filename, nonsense = QtGui.QFileDialog.getOpenFileName(self, "Choose the file which includes the absolute paths", self._prodir)
+            filename, nonsense = QtGui.QFileDialog.getOpenFileName(self,
+                                                                   "Choose the file which includes the absolute paths",
+                                                                   self._prodir)
             if filename:
                 (prodir, proname) = split(filename)
 
@@ -354,7 +358,8 @@ class Main(QtGui.QMainWindow):
         
         """
         if self.check_project():
-            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles", self._prodir)
+            filename, nonsense = QtGui.QFileDialog.getSaveFileName(self, "Choose a name for the savefiles",
+                                                                   self._prodir)
             if filename:
                 self._mystorage.save_project_as(filename)
                 self.update_project()
@@ -443,7 +448,8 @@ class Main(QtGui.QMainWindow):
         if self._mystorage.has_project():
             answer = QtGui.QMessageBox(self)
             answer.setWindowTitle("Recalculate mapping")
-            answer.setText("WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
+            answer.setText(
+                "WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
 
             btn1 = QtGui.QPushButton("SWAN Implementation")
             btn2 = QtGui.QPushButton("Fraser-Schwarz Implementation")
@@ -697,7 +703,8 @@ class Main(QtGui.QMainWindow):
 
             # setting channel detail
             self.set_detail(1, str(channel))
-            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(channel) + " | " + title)
+            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(
+                channel) + " | " + title)
 
             # setting tooltips
             self.plots.set_tooltips(self._mystorage.get_tooltips())
