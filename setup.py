@@ -16,7 +16,14 @@ with open("swan/version.py") as fp:
     exec(fp.read(), d)
     swan_version = d['version']
 
-install_requirements = ['numpy', 'quantities', 'PyQt5', 'pyqtgraph', 'odml']
+install_requirements = ['numpy',
+                        'quantities',
+                        'PyQt5',
+                        'pyqtgraph',
+                        'odml',
+                        'elephant',
+                        'pyopengl',
+                        'matplotlib']
 
 setup(
     name='swan',
