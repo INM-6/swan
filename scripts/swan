@@ -1,0 +1,3 @@
+#! ~/usr/bin/python3
+from swan.app import start
+start.main()

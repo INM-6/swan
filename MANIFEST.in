@@ -1,0 +1,6 @@
+include README.rst
+include LICENSE.txt
+recursive-include doc *
+prune doc/build
+recursive-include tests *
+exclude .gitignore

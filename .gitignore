@@ -50,7 +50,6 @@ Thumbs.db
 /build
 /dist
 /.idea
-win/build
-win/dist
 src/__pycache__
 /backups
+/swan.egg-info
