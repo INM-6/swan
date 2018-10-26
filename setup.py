@@ -23,7 +23,8 @@ install_requirements = ['numpy',
                         'odml',
                         'elephant',
                         'pyopengl',
-                        'matplotlib']
+                        'matplotlib',
+                        'scikit-learn']
 
 setup(
     name='swan',
