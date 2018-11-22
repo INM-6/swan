@@ -69,8 +69,6 @@ class File_Dialog(QtWidgets.QDialog):
         self.ui.selectList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.ui.selectionList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
 
-        #self.connect(self.ui.btnBox, QtCore.SIGNAL("accepted()"), self, QtCore.SLOT("accept()"))
-        #self.connect(self.ui.btnBox, QtCore.SIGNAL("rejected()"), self, QtCore.SLOT("reject()"))
         self.ui.btnBox.accepted.connect(self.accept)
         self.ui.btnBox.rejected.connect(self.reject)
         self.ui.addBtn.clicked.connect(self.add)

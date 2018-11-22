@@ -14,13 +14,14 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_File_Dialog(object):
-    def setupUi(self, File_Dialog):
-        File_Dialog.setObjectName(_fromUtf8("File_Dialog"))
-        File_Dialog.resize(557, 605)
-        self.verticalLayout = QtGui.QVBoxLayout(File_Dialog)
+    def setupUi(self, file_dialog):
+        file_dialog.setObjectName(_fromUtf8("file_dialog"))
+        file_dialog.resize(557, 605)
+        self.verticalLayout = QtGui.QVBoxLayout(file_dialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.groupBox = QtGui.QGroupBox(File_Dialog)
+        self.groupBox = QtGui.QGroupBox(file_dialog)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.groupBox)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
@@ -35,8 +36,12 @@ class Ui_File_Dialog(object):
         self.pathBtn.setObjectName(_fromUtf8("pathBtn"))
         self.horizontalLayout.addWidget(self.pathBtn)
         self.verticalLayout.addWidget(self.groupBox)
-        self.groupBox_2 = QtGui.QGroupBox(File_Dialog)
+        self.groupBox_2 = QtGui.QGroupBox(file_dialog)
         self.groupBox_2.setObjectName(_fromUtf8("groupBox_2"))
+        self.groupBox_2.setStyleSheet('QGroupBox:title {'
+                                      'text-align: center;'
+                                      'subcontrol-origin: content;'
+                                      'subcontrol-position: top center; }')
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.groupBox_2)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.selectList = QtGui.QListWidget(self.groupBox_2)
@@ -55,21 +60,41 @@ class Ui_File_Dialog(object):
         self.selectionList.setObjectName(_fromUtf8("selectionList"))
         self.horizontalLayout_2.addWidget(self.selectionList)
         self.verticalLayout.addWidget(self.groupBox_2)
-        self.btnBox = QtGui.QDialogButtonBox(File_Dialog)
-        self.btnBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.btnBox = QtGui.QDialogButtonBox(file_dialog)
+        self.btnBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok)
         self.btnBox.setObjectName(_fromUtf8("btnBox"))
         self.verticalLayout.addWidget(self.btnBox)
         self.label.setBuddy(self.pathEdit)
 
-        self.retranslateUi(File_Dialog)
-        QtCore.QMetaObject.connectSlotsByName(File_Dialog)
+        self.retranslateUi(file_dialog)
+        QtCore.QMetaObject.connectSlotsByName(file_dialog)
 
-    def retranslateUi(self, File_Dialog):
-        File_Dialog.setWindowTitle(QtGui.QApplication.translate("File_Dialog", "File selection", None))
-        self.groupBox.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the parent folder of your data", None))
-        self.label.setText(QtGui.QApplication.translate("File_Dialog", "Path:", None))
-        self.pathBtn.setText(QtGui.QApplication.translate("File_Dialog", "browse...", None))
-        self.groupBox_2.setTitle(QtGui.QApplication.translate("File_Dialog", "Select the files from the left", None))
-        self.addBtn.setText(QtGui.QApplication.translate("File_Dialog", "Add", None))
-        self.removeBtn.setText(QtGui.QApplication.translate("File_Dialog", "Remove", None))
+    def retranslateUi(self, file_dialog):
+        file_dialog.setWindowTitle(QtGui.QApplication.translate("File_Dialog",
+                                                                "File selection",
+                                                                None))
 
+        self.groupBox.setTitle(QtGui.QApplication.translate("File_Dialog",
+                                                            "Select the parent folder of your data",
+                                                            None))
+
+        self.label.setText(QtGui.QApplication.translate("File_Dialog",
+                                                        "Path:",
+                                                        None))
+
+        self.pathBtn.setText(QtGui.QApplication.translate("File_Dialog",
+                                                          "Browse...",
+                                                          None))
+
+        self.groupBox_2.setTitle(QtGui.QApplication.translate("File_Dialog",
+                                                              "Choose files and add them to (or remove them from) the"
+                                                              " list on the right",
+                                                              None))
+
+        self.addBtn.setText(QtGui.QApplication.translate("File_Dialog",
+                                                         "Add",
+                                                         None))
+
+        self.removeBtn.setText(QtGui.QApplication.translate("File_Dialog",
+                                                            "Remove",
+                                                            None))

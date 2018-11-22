@@ -10,8 +10,8 @@ from pyqtgraph.Qt import QtGui, QtWidgets, QtCore
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from numpy import array
-from swan.src.viewtoolbar import ViewToolbar
-from swan.src.MyGLWidget import myGLWidget
+from swan.src.widgets.viewtoolbar import ViewToolbar
+from swan.src.widgets.myglwidget import myGLWidget
 
 pg.setConfigOptions(useOpenGL=True)
 
@@ -22,14 +22,13 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
 
-        QtGui.QWidget.__init__(self, parent=parent)
+        QtWidgets.QWidget.__init__(self, parent=parent)
 
         layout = QtGui.QGridLayout()
         self.layout = layout
 
         self.pgCanvas = myGLWidget()
-        self.pgCanvas.setBackgroundColor(QtGui.QColor(180, 180, 180))
-        self.pgCanvas.qglColor(QtGui.QColor(255, 255, 255))
+        self.pgCanvas.setBackgroundColor('k')
         self.pgCanvas.unitClicked.connect(self.getItem)
 
         self.layout.addWidget(self.pgCanvas, 0, 0)
@@ -43,32 +42,36 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
         self.cameraPosition = None
         self._axesGLOptions = 'translucent'
+        self._grid_size = 3000
+        self._grid_spacing = 100
         self.means = []
         self.positions = []
         self.selectedPlots = []
         self.suggestedPlots = []
         self.shadowPenColor = (0.9, 0.9, 0.9, 0.5)
 
-    def setup_axes(self, size=None, spacing=None, glOptions='translucent', axes='xyz', setCamera=True, **kwargs):
+    def setup_axes(self, size=None, spacing=None, glOptions=None, axes='xyz', setCamera=True, **kwargs):
 
         if size is None:
-            size = 3000
+            size = self._grid_size
         if spacing is None:
-            spacing = 100
+            spacing = self._grid_spacing
+        if glOptions is None:
+            glOptions=self._axesGLOptions
 
         if 'x' in axes:
-            xg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=self._axesGLOptions)
+            xg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=glOptions)
             xg.setSpacing(spacing=QtGui.QVector3D(spacing, spacing, spacing))
             self.pgCanvas.addItem(xg)
 
         if 'y' in axes:
-            yg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=self._axesGLOptions)
+            yg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=glOptions)
             yg.setSpacing(spacing=QtGui.QVector3D(spacing, spacing, spacing))
             yg.rotate(90, 0, 1, 0)
             self.pgCanvas.addItem(yg)
 
         if 'z' in axes:
-            zg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=self._axesGLOptions)
+            zg = gl.GLGridItem(size=QtGui.QVector3D(size, size, size), glOptions=glOptions)
             zg.setSpacing(spacing=QtGui.QVector3D(spacing, spacing, spacing))
             zg.rotate(90, 1, 0, 0)
             self.pgCanvas.addItem(zg)
@@ -79,20 +82,22 @@ class PyQtWidget3d(QtWidgets.QWidget):
             azimuth = kwargs.get("azimuth", None)
             self.setCameraPosition(distance=distance, elevation=elevation, azimuth=azimuth)
 
-    def addScatterPlotItem(self, plotItem=None, setGLOptions='translucent'):
+    def addScatterPlotItem(self, plotItem=None, gl_options='translucent'):
         if plotItem is None:
             self.pgCanvas.addItem(
                 myScatterPlotItem(pos=array([0, 0, 0]), size=1, color=(0.5, 0.5, 0.5, 0.5), pxMode=True))
         else:
-            plotItem.setGLOptions(setGLOptions)
+            plotItem.setGLOptions(gl_options)
             self.pgCanvas.addItem(plotItem)
 
     def addSurfacePlotItem(self, surfaceItem):
         self.pgCanvas.addItem(surfaceItem)
 
-    def createScatterPlotItem(self, pos, size, color, name, pxMode=True):
+    def createScatterPlotItem(self, pos, size, color, unit_id=None, session=None, pxMode=True, clickable=False):
         item = myScatterPlotItem(pos=pos, size=size, color=color, pxMode=pxMode)
-        item.opts["name"] = name
+        item.opts["clickable"] = clickable
+        item.opts["unit_id"] = unit_id
+        item.opts["session"] = session
         return item
 
     def createSurfacePlotItem(self, x, y, z, color, shader='shaded'):
@@ -120,6 +125,11 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
         self.setCameraPosition(distance=distance, elevation=elevation, azimuth=azimuth)
 
+    def clear_suggests(self):
+        for old_suggested_plot in self.suggestedPlots:
+            old_suggested_plot.restorePen()
+            self.suggestedPlots.remove(old_suggested_plot)
+
     def reset_plot(self):
         self.pgCanvas.items = []
         self.setup_axes(glOptions=self._axesGLOptions)
@@ -136,18 +146,18 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(object, bool)
     def highlightCurveFromPlot(self, plot, select):
-        plotPosStr = "".join(reversed([str(i) for i in plot.pos]))
-
-        scatterPlotMean = next((x for x in self.means if x.opts["name"] == plotPosStr), None)
-        scatterPlotPos = next((x for x in self.positions if x.opts["name"] == plotPosStr), None)
+        scatterPlotMean = next((x for x in self.means if (x.opts["session"], x.opts["unit_id"]) == plot.pos), None)
+        scatterPlotPos = next((x for x in self.positions if (x.opts["session"], x.opts["unit_id"]) == plot.pos), None)
         suggestedPlots = [x for x in self.positions if
-                          x.opts["name"][0] == plotPosStr[0] and x not in self.selectedPlots]
+                          x.opts["session"] == plot.pos[0] and x not in self.selectedPlots]
+
         if scatterPlotMean is not None:
             if select:
-                for pl in suggestedPlots:
-                    if pl not in self.suggestedPlots:
-                        pl.setSuggestPen()
-                        self.suggestedPlots.append(pl)
+                self.clear_suggests()
+                for suggested_plot in suggestedPlots:
+                    if suggested_plot not in self.suggestedPlots:
+                        suggested_plot.setSuggestPen()
+                        self.suggestedPlots.append(suggested_plot)
                 if scatterPlotMean not in self.selectedPlots:
                     self.selectedPlots.append(scatterPlotMean)
                 if scatterPlotPos not in self.selectedPlots:
@@ -160,23 +170,13 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
             elif not select:
                 if scatterPlotMean in self.selectedPlots:
+                    scatterPlotMean.restorePen()
                     self.selectedPlots.remove(scatterPlotMean)
                 if scatterPlotPos in self.selectedPlots:
+                    scatterPlotPos.restorePen()
                     self.selectedPlots.remove(scatterPlotPos)
                 if not self.selectedPlots:
-                    for pl in suggestedPlots:
-                        if pl in self.suggestedPlots:
-                            pl.restorePen()
-                            self.suggestedPlots.remove(pl)
-
-                    scatterPlotMean.restorePen()
-                    scatterPlotPos.restorePen()
-                else:
-                    scatterPlotMean.restorePen(defaultSize=False)
-                    scatterPlotPos.restorePen(defaultSize=False)
-
-    def setDark(self):
-        self.pgCanvas.setBackgroundColor('k')
+                    self.clear_suggests()
 
 
 class myScatterPlotItem(gl.GLScatterPlotItem, QtGui.QGraphicsItem):
@@ -186,7 +186,8 @@ class myScatterPlotItem(gl.GLScatterPlotItem, QtGui.QGraphicsItem):
         gl.GLScatterPlotItem.__init__(self, **kwargs)
         QtGui.QGraphicsItem.__init__(self)
         self.opts = {"clickable": kwargs.get("clickable", False),
-                     "name": "",
+                     "unit_id": None,
+                     "session": None,
                      "defaultColor": self.color,
                      "defaultSize": self.size,
                      "highlightedSize": self.size + 1}
@@ -221,11 +222,11 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
 
-        QtGui.QWidget.__init__(self, parent=parent)
+        QtWidgets.QWidget.__init__(self, parent=parent)
 
         self.layout = QtGui.QGridLayout()
 
-        self.pgCanvas = pg.PlotWidget(background='w')
+        self.pgCanvas = pg.PlotWidget(background='k')
         self.layout.addWidget(self.pgCanvas, 0, 0)
 
         self.toolbar = ViewToolbar(self)
@@ -256,7 +257,8 @@ class PyQtWidget2d(QtWidgets.QWidget):
         dash = kwargs.get('dash', None)
         cosmetic = kwargs.get('cosmetic', True)
         hsv = kwargs.get('hsv', None)
-        name = kwargs.get('name', None)
+        unit_id = kwargs.get('unit_id', None)
+        session = kwargs.get('session', None)
         clickable = kwargs.get('clickable', False)
 
         dataItem = pg.PlotDataItem(pen=pg.mkPen(color=color,
@@ -268,7 +270,8 @@ class PyQtWidget2d(QtWidgets.QWidget):
                                                 ),
                                    *args, **kwargs)
 
-        dataItem.opts['name'] = name
+        dataItem.opts['unit_id'] = unit_id
+        dataItem.opts['session'] = session
         dataItem.opts['clickable'] = clickable
 
         self.addPlot(dataItem)
@@ -339,10 +342,13 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(object, bool)
     def highlightCurveFromPlot(self, plot, select):
-        plotPosStr = "".join(reversed([str(i) for i in plot.pos]))
+        plot_position = plot.pos
 
-        curve = next((x for x in self.pgCanvas.plotItem.curves if x.name() == plotPosStr
-                      and x.opts['clickable'] == True), None)
+        curve = next((x for x in self.pgCanvas.plotItem.curves
+                      if x.opts["unit_id"] == plot_position[1]
+                      and x.opts["session"] == plot_position[0]
+                      and x.opts["clickable"]),
+                     None)
 
         if curve is not None:
             if select:
@@ -362,6 +368,3 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
     def triggerRefresh(self):
         self.refreshPlots.emit()
-
-    def setDark(self):
-        self.pgCanvas.setBackground('k')

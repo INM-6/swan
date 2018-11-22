@@ -12,21 +12,24 @@ To run the application, you just have to execute *run.py*.
 
 Look at :mod:`src.run` for more information.
 """
+# system imports
 from os import mkdir
 from os.path import basename, split, isdir, join, exists
 import platform
 import csv
 import webbrowser as web
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from swan import about, title
-from swan.gui.main_ui import Ui_Main
-from .file_dialog import File_Dialog
-from .preferences_dialog import Preferences_Dialog
-from .mystorage import MyStorage
-from .vunits import VUnits
-from .export import Export
 import os
 import pickle as pkl
+
+# swan-specific imports
+from swan import about, title
+from swan.gui.main_ui import Ui_Main
+from swan.src.widgets.file_dialog import File_Dialog
+from swan.src.widgets.preferences_dialog import Preferences_Dialog
+from swan.src.mystorage import MyStorage
+from swan.src.views.virtual_units_view import VUnits
+from swan.src.export import Export
 
 if platform.system() == "Linux":
     onLinux = True
@@ -120,7 +123,7 @@ class Main(QtGui.QMainWindow):
 
     doPlot = QtCore.pyqtSignal(object, object)
 
-    def __init__(self, program_dir, home_dir, dark_theme=False):
+    def __init__(self, program_dir, home_dir):
         """
         **Properties**:
        
@@ -145,19 +148,8 @@ class Main(QtGui.QMainWindow):
         """
         QtGui.QMainWindow.__init__(self)
 
-        self.dark = dark_theme
-
         self.ui = Ui_Main()
         self.ui.setupUi(self)
-
-        if self.dark is True:
-            self.ui.plotGrid.setDark()
-            self.ui.view_1.setDark()
-            self.ui.view_2.setDark()
-            self.ui.view_3.setDark()
-            self.ui.view_4.setDark()
-            self.ui.view_5.setDark()
-            self.ui.view_6.setDark()
 
         # properties{
         self._program_dir = program_dir
@@ -508,21 +500,21 @@ class Main(QtGui.QMainWindow):
         plots = self.plots.get_selection()
         if len(plots) == 2:
             # get the positions
-            p1 = plots[0]
-            p2 = plots[1]
-            p1.toBeUpdated = True
-            p2.toBeUpdated = True
-            m = p1.pos[1]
-            n1 = p1.pos[0]
-            n2 = p2.pos[0]
+            plot_1 = plots[0]
+            plot_2 = plots[1]
+            plot_1.toBeUpdated = True
+            plot_2.toBeUpdated = True
+            session = plot_1.pos[0]
+            unit_id_1 = plot_1.pos[1]
+            unit_id_2 = plot_2.pos[1]
 
             # swapping
-            self._mystorage.swap(m, n1, n2)
+            self._mystorage.swap(session, unit_id_1, unit_id_2)
             self.plot_all()
             self.plots.reset_selection()
 
             # setting tooltips
-            self.plots.swap_tooltips(p1, p2)
+            self.plots.swap_tooltips(plot_1, plot_2)
 
             self._currentdirty = True
             self._globaldirty = True
@@ -718,10 +710,9 @@ class Main(QtGui.QMainWindow):
         """
         Plots everything that has to be plotted.
         
-        It is possible to make a row in 
-        the :class:`src.virtualunitmap.VirtualUnitMap` (un)visible 
-        by passing extra arguments.
-        This method is called every time something has to be plotted or updated.
+        It is possible to make a row in the :class:`src.virtualunitmap.VirtualUnitMap`
+        (in)visible by passing extra arguments. This method is called every time something
+        has to be plotted or updated.
         
         **Arguments**
         
@@ -741,7 +732,7 @@ class Main(QtGui.QMainWindow):
             vum_all = self._mystorage.get_mappings()
 
             if i is not None and j is not None:
-                vum.set_visible(j, i, visible)
+                vum.set_visible(i, j, visible)
 
             self.doPlot.emit(vum, data)
             self.vu.do_plot(vum_all, data)
@@ -836,7 +827,7 @@ class Main(QtGui.QMainWindow):
                                                 buttons=QtGui.QMessageBox.Cancel | QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
                                                 defaultButton=QtGui.QMessageBox.Yes)
             if answer == QtGui.QMessageBox.Yes:
-                self.on_action_Save_Project_triggered()
+                self.save_project()
                 return True
             elif answer == QtGui.QMessageBox.No:
                 return True

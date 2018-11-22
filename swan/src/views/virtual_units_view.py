@@ -12,8 +12,8 @@ import math
 import numpy as np
 from matplotlib import colors
 #from matplotlib import cm
-from matplotlib.ticker import FixedLocator, FormatStrFormatter, MultipleLocator
-from .matplotlibwidget import MatplotlibWidget
+from matplotlib.ticker import FixedLocator, FormatStrFormatter
+from swan.src.widgets.matplotlibwidget import MatplotlibWidget
 from PyQt5.QtGui import QComboBox
 from PyQt5 import QtCore
 

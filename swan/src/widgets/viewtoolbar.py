@@ -23,7 +23,8 @@ class ViewToolbar(QtWidgets.QWidget):
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setObjectName("viewToolbarGridLayout")
         
-        self.layers = QtGui.QGroupBox("Layers")
+        self.layers = QtGui.QGroupBox("Active")
+        self.layers.setObjectName("Layers")
         self.layersLayout = QtGui.QGridLayout()
         self.layersLayout.setContentsMargins(0, 0, 0, 0)
         self.layersLayout.setSpacing(0)
@@ -58,12 +59,14 @@ class ViewToolbar(QtWidgets.QWidget):
                 rButton.setChecked(True)
     
     def setupCheckboxes(self, layers):
-        for layer in layers:
+        for l, layer in enumerate(layers):
             cBox = QtGui.QCheckBox(layer)
             cBox.toggled.connect(self.refreshLayers)
             self.layerItems.append(cBox)
             
             self.layersLayout.addWidget(cBox)
+            if l == 0:
+                cBox.setChecked(True)
     
     def getCheckedLayers(self):
         checkedLayers = []

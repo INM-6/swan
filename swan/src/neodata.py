@@ -10,21 +10,17 @@ After loading you can get different data for the units.
 
 This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
-from os.path import join, split, exists
 import gc
-
-from neo.io.blackrockio_v4 import BlackrockIO
-from numpy import mean, std, array, histogram, unique, where, subtract
-from numpy import min as nmin
-from numpy import max as nmax
-from numpy.linalg import norm
-from scipy.signal import filtfilt, butter
-from PyQt5.QtCore import QObject, pyqtSignal
-from neo.io.pickleio import PickleIO
-from neo.io import blackrockio_v4
 from itertools import chain
+from neo.io.blackrockio_v4 import BlackrockIO
+from neo.io.pickleio import PickleIO
+from numpy import mean, std, array, histogram, unique, where, subtract, min as nmin, max as nmax
+from numpy.linalg import norm
+from os.path import join, split, exists
+from PyQt5.QtCore import QObject, pyqtSignal
 import quantities as pq
-from . import neo_utils as nu
+from scipy.signal import filtfilt, butter
+
 
 class NeoData(QObject):
     """        
@@ -66,7 +62,7 @@ class NeoData(QObject):
         self.blocks = []
         self.nums = []
         self.rgios = []
-        self.wave_length = 0.
+        self._wave_length = 0.
         self.segments = []
         self.units = []
         self.events = []
@@ -129,12 +125,11 @@ class NeoData(QObject):
             else:
                 # loading
                 # rgIO = rgios[i]
-                rgIO: BlackrockIO = blackrockio_v4.BlackrockIO(f)
-                block = rgIO.read_block(index=None, name=None, description=None, nsx_to_load='none',
-                                        n_starts=None, n_stops=None, channels=channel, units='all',
-                                        load_waveforms=True, load_events=True,
-                                        lazy=False, cascade=True)
-                del rgIO
+                session = BlackrockIO(f)
+                block = session.read_block(index=None, name=None, description=None, nsx_to_load='none',
+                                           n_starts=None, n_stops=None, channels=channel, units='all',
+                                           load_waveforms=True, load_events=True, lazy=False, cascade=True)
+                del session
                 # caching
                 pIO = PickleIO(name)
                 pIO.write_block(block)
@@ -157,7 +152,7 @@ class NeoData(QObject):
         # self.spiketrains = self.create_spiketrains_dictionary(self.units)
         self.set_events_and_labels()
         self.nums = nums
-        self.wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
+        self._wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
         self.sampling_rate = self.blocks[0].channel_indexes[0].units[0].spiketrains[0].sampling_rate
 
     def get_data(self, layer, unit, **kwargs):
@@ -204,7 +199,7 @@ class NeoData(QObject):
             vek.sort()
             d = vek[1:] - vek[:len(vek) - 1]
             d = d.magnitude
-            return (d,)
+            return d,
         elif layer == "sessions":
             vek = unit.spiketrains[0].copy().rescale(pq.s)
             vek.sort()
@@ -294,6 +289,9 @@ class NeoData(QObject):
     def get_events_dict(self):
         return self.events
 
+    def get_wave_length(self):
+        return self._wave_length
+
     def delete_blocks(self):
         """
         Deletes all blocks.
@@ -328,32 +326,6 @@ class NeoData(QObject):
             rgio = self.rgios.pop()
             del rgio
         gc.collect()
-
-    def create_spiketrains_dictionary(self, units):
-        """
-        Returns a dictionary of spiketrains to memeoy for easy retrieval.
-        
-        **Arguments**
-            
-            *units* (list):
-                List of all units in the dataset,
-                arranged as a list of units for every session loaded.
-                
-        **Returns**
-            
-            *spiketrains* (dict):
-                A dictionary of spiketrains corresponding to each unit.
-                Each key is the unit itself, for easy access. The
-                corresponding value is the spiketrain.
-        """
-
-        spiketrains = {}
-
-        for block in units:
-            for unit in block:
-                spiketrains[unit] = unit.spiketrains[0]
-
-        return spiketrains
 
     def set_events_and_labels(self):
         """

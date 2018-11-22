@@ -19,10 +19,11 @@ class myGLWidget(gl.GLViewWidget):
     """
     def __init__(self, app=None):
 
-        super(myGLWidget,self).__init__()
+        gl.GLViewWidget.__init__(self, parent=app)
         self.clickable = False
         self._downpos = []
         self.means = []
+        self.candidates = []
     
     def setMeans(self, means):
         self.means = means
@@ -34,7 +35,7 @@ class myGLWidget(gl.GLViewWidget):
         """ Store the position of the mouse press for later use.
 
         """
-        super(myGLWidget, self).mousePressEvent(ev)
+        gl.GLViewWidget.mousePressEvent(self, ev)
         self._downpos = self.mousePos
 
     def mouseReleaseEvent(self, ev):
@@ -42,7 +43,7 @@ class myGLWidget(gl.GLViewWidget):
 
         Also emits a sigUpdate to refresh listeners.
         """
-        super(myGLWidget, self).mouseReleaseEvent(ev)
+        gl.GLViewWidget.mouseReleaseEvent(self, ev)
         if self._downpos == ev.pos() and self.clickable:
             if ev.button() == 1:
                 self.mPosition()
@@ -54,7 +55,7 @@ class myGLWidget(gl.GLViewWidget):
         ## Get mouse coordinates saved when the mouse is clicked( incase dragging)
         mx = self._downpos.x()
         my = self._downpos.y()
-        self.Candidates = [] #Initiate a list for storing indices of picked points
+        self.candidates = [] #Initiate a list for storing indices of picked points
         #Get height and width of 2D Viewport space
         view_w = self.width()
         view_h = self.height()
@@ -88,9 +89,9 @@ class myGLWidget(gl.GLViewWidget):
             bsqr = np.square(b)
             overlap = bsqr - c
             if overlap >= 0: # means intersection
-                self.Candidates.append(mean)
+                self.candidates.append(mean)
                 overlaps.append(overlap)
         
         if overlaps:
-            winner = self.Candidates[np.argmin(overlaps)]
+            winner = self.candidates[np.argmin(overlaps)]
             self.unitClicked.emit(winner)

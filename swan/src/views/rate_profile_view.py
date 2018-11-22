@@ -8,7 +8,7 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 
 It is extended by a 2d plot and the plotting methods.
 """
-from swan.src.mypgwidget import PyQtWidget2d
+from swan.src.widgets.mypgwidget import PyQtWidget2d
 import numpy as np
 import quantities as pq
 from neo import SpikeTrain
@@ -258,7 +258,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
                                            kernel=GaussianKernel(kernel_width * pq.ms))
         return rate_estimate.rescale('Hz').magnitude, rate_estimate.times.rescale('s').magnitude
 
-    def plotProfile(self, x, y, color, name, clickable=False):
+    def plotProfile(self, x, y, color, unit_id, session, clickable=False):
         """
         Plot mean waveforms to the plot.
         
@@ -276,7 +276,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._profiles.append(self.makePlot(x=x, y=y, color=color, name=name, clickable=clickable))
+        self._profiles.append(self.makePlot(x=x, y=y, color=color, unit_id=unit_id, session=session, clickable=clickable))
 
     def do_plot(self, vum, data):
         """
@@ -297,40 +297,40 @@ class pgWidgetRateProfile(PyQtWidget2d):
         if self.toolbar.layers.isChecked():
 
             layer = self.toolbar.getCheckedLayers()[0]
-
             active = vum.get_active()
-
             event_dict = data.get_events_dict()
             self.events = event_dict
+            triggerEvent = self.triggerEvent
 
             self.populateEventList()
 
-            triggerEvent = self.triggerEvent
             if layer == "individual":
-                for i in range(len(active)):
-                    for j in range(len(active[i])):
-                        if active[i][j]:
-                            runit = vum.get_realunit(i, j, data)
+                clickable = True
+                for session in range(len(active)):
+                    for unit_id in range(len(active[session])):
+                        if active[session][unit_id]:
+                            runit = vum.get_realunit(session, unit_id, data)
                             spiketrain = data.get_data("spiketrain", runit)
-                            col = vum.get_color(j, False, layer, False)
-                            clickable = True
-                            self.datas["{}{}".format(i, j)] = [spiketrain, col, clickable]
+                            col = vum.get_color(unit_id, False, layer, False)
+                            self.datas["{}{}".format(session, unit_id)] = [spiketrain, col, clickable]
 
                 if triggerEvent in event_dict.keys():
                     for key in self.datas.keys():
                         pos = list(key)
-                        column, row = int(pos[0]), int(pos[1])
-                        if active[column][row]:
-                            event_times = event_dict[triggerEvent][column][0][0]
+                        session, unit_id = int(pos[0]), int(pos[1])
+                        if active[session][unit_id]:
+                            event_times = event_dict[triggerEvent][session][0][0]
                             plotData = self.datas[key]
                             spiketrain, color, clickable = plotData
                             raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
                                                              trigger=event_times.rescale(pq.ms),
                                                              timerange=[self.tPre, self.tPost])
                             result = self.compute_psth_from_raster(array_raster_trig=raster,
-                                                                   timerange=[self.tPre, self.tPost], minimum_spikes=10)
-                            self.plotProfile(x=result['times'], y=result['values'], color=color, name=key,
-                                             clickable=clickable)
+                                                                   timerange=[self.tPre, self.tPost],
+                                                                   minimum_spikes=10)
+                            self.plotProfile(x=result['times'], y=result['values'],
+                                             color=color, unit_id=unit_id,
+                                             session=session, clickable=clickable)
                     self.createVerticalLine(xval=0)
                     self.setXLabel("Time", "ms")
                     self.setYLabel("Frequency", "Hz")
@@ -338,20 +338,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
                     self.connectPlots()
 
             elif layer == "pooled":
-                for i in range(len(active)):
-                    for j in range(len(active[i])):
-                        if active[i][j]:
-                            runit = vum.get_realunit(i, j, data)
-                            datas = data.get_data(layer, runit)
-                            col = vum.get_color(j, False, layer, False)
-                            clickable = True
-                            self.datas["{}{}".format(i, j)] = [datas, col, clickable]
-                            for d in datas:
-                                y = histogram(d, bins=range(1, self.binMax + 1, self.binStep))
-                                tmp = y[1]
-                                tmp = tmp[:-1]
-                                self.plotHist(x=tmp, y=y[0] / (1.0 * len(d)), color=col, name="{}{}".format(i, j),
-                                              clickable=clickable)
+                raise ValueError("Layer not supported.")
 
     def update(self):
         self.clear_()
@@ -359,8 +346,8 @@ class pgWidgetRateProfile(PyQtWidget2d):
         event_dict = self.events
         for key in self.datas.keys():
             pos = list(key)
-            column = int(pos[0])
-            event_times = event_dict[triggerEvent][column][0][0]
+            session, unit_id = int(pos[0]), int(pos[1])
+            event_times = event_dict[triggerEvent][session][0][0]
             plotData = self.datas[key]
             spiketrain, color, clickable = plotData
             raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
@@ -368,7 +355,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
                                              timerange=[self.tPre, self.tPost])
             result = self.compute_psth_from_raster(array_raster_trig=raster, timerange=[self.tPre, self.tPost],
                                                    minimum_spikes=10)
-            self.plotProfile(x=result['times'], y=result['values'], color=color, name=key, clickable=clickable)
+            self.plotProfile(x=result['times'], y=result['values'], color=color, unit_id=unit_id, session=session, clickable=clickable)
         self.createVerticalLine(xval=0)
         self.setXLabel("Time", "s")
         self.setYLabel("Frequency", "Hz")

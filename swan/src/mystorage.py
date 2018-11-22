@@ -11,9 +11,12 @@ the data loading and the data writing.
 
 The data loading is called in the :class:`Task` which is a thread.
 """
+# system imports
 from os import remove
 from os.path import splitext, basename, exists, split, join
 from pyqtgraph.Qt import QtGui, QtCore
+
+# swan-specific imports
 from swan.stg.storage import Storage
 from swan.stg.project import Project
 from swan.src.neodata import NeoData
@@ -35,8 +38,6 @@ class Task(QtCore.QThread):
                 
     """
     
-    #mutex = QtCore.QMutex()
-    
     def __init__(self, data, files, channel):
         """
         **Properties**
@@ -49,7 +50,7 @@ class Task(QtCore.QThread):
                 The channel that has to be loaded.
         
         """
-        super(QtCore.QThread, self).__init__()
+        QtCore.QThread.__init__(self)
         self.data = data
         self.files = files
         self.channel = channel
@@ -60,11 +61,7 @@ class Task(QtCore.QThread):
         the :class:`src.neodata.NeoData` object.
         
         """
-        #try:
-            #Task.mutex.lock()
         self.data.load(self.files, self.channel)
-        #finally:
-            #Task.mutex.unlock()
         
 
 class MyStorage(Storage, QtCore.QObject):
@@ -84,8 +81,7 @@ class MyStorage(Storage, QtCore.QObject):
 
     progress = QtCore.pyqtSignal(int)
     """
-    Progress signal to let the main program know
-    how far the loading progress is.
+    Progress signal that indicates how far the given task has progressed.
     
     """
     

@@ -27,7 +27,7 @@ class VirtualUnitMap(object):
             *visible* (list of boolean):
                 Whether or not the unit rows should be visible.
                 Contains one boolean for each unit row.
-            *n_* (integer):
+            *total_units* (integer):
                 The summary of the length of all unit lists.
             *colors* (list of tuple of integer):
                 Contains colors for plotting the units in different colors.
@@ -39,7 +39,7 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.n_ = 0
+        self.total_units = 0
         self.colors = [ (31,	   119,	180),
                         (255,   127,	14),
                         (44,	   160,	44),
@@ -75,19 +75,17 @@ class VirtualUnitMap(object):
                 The number of units per block.
         
         """
-        n_ = sum(data.nums)
-        self.n_ = n_
+        total_units = sum(data.nums)
+        self.total_units = total_units
         vmap = []
         for i in range(len(data.blocks)):
             vmap.append([])
             count = 1
-            for j in range(self.n_):
+            for j in range(self.total_units):
                 try:
                     unit_description = data.blocks[i].channel_indexes[0].units[j].description.split()
                     
-                    if "unclassified" in unit_description:
-                        vmap[i].append(0)
-                    elif "noise" in unit_description:
+                    if "unclassified" in unit_description or "noise" in unit_description:
                         vmap[i].append(0)
                     else:
                         vmap[i].append(count)
@@ -96,7 +94,7 @@ class VirtualUnitMap(object):
                     vmap[i].append(0)
         
         self.mapping = vmap
-        self.visible = [[True for j in range(len(vmap[i]))] for i in range(len(vmap))]
+        self.visible = [[True for unit in session] for session in vmap]
         self.update_active()
         
     def set_map(self, nums, vum):
@@ -112,7 +110,7 @@ class VirtualUnitMap(object):
         
         """
         n_ = sum(nums)
-        self.n_ = n_
+        self.total_units = n_
         
         n = len(nums)
         
@@ -150,26 +148,26 @@ class VirtualUnitMap(object):
             runit = data.blocks[i].channel_indexes[0].units[vunit - 1]
         else:
             runit = data.blocks[i].channel_indexes[0].units[vunit]
-        #runit = data.blocks[i].channel_indexes[0].units[vunit]
+        # runit = data.blocks[i].channel_indexes[0].units[vunit]
         return runit
     
-    def swap(self, m, n1, n2):
+    def swap(self, session_index, first_unit_index, second_unit_index):
         """
         Swaps two virtual units.
         
         **Arguments**
         
-            *m* (integer):
-                The session index.
-            *n1* (integer):
+            *session_index* (integer):
+                The session_index index.
+            *first_unit_index* (integer):
                 The unit index 1.
-            *n2* (integer):
+            *second_unit_index* (integer):
                 The unit index 2.
         
         """
-        tmp = self.mapping[m][n2]
-        self.mapping[m][n2] = self.mapping[m][n1]
-        self.mapping[m][n1] = tmp
+        second_unit = self.mapping[session_index][second_unit_index]
+        self.mapping[session_index][second_unit_index] = self.mapping[session_index][first_unit_index]
+        self.mapping[session_index][first_unit_index] = second_unit
         self.update_active()
         
     def set_visible(self, i, j, visible=True):
@@ -179,24 +177,26 @@ class VirtualUnitMap(object):
         **Arguments**
         
             *i* (integer):
-                The unit row index.
+                The column (session) index.
+            *j* (integer):
+                The row (unit) index.
             *visible* (boolean):
                 Whether or not the unit row should be visible.
                 Default: True.
         
         """
-        self.visible[j][i] = visible
+        self.visible[i][j] = visible
         self.update_active()
         
     def update_active(self):
         """
-        Updates the activae mapping.
+        Updates the active mapping.
         
         The active mapping is a list of N lists, where N is the
         number of loaded sessions. Each nested list consists of
-        zeros or ones. Ones signifiy that a unit is occupying
+        zeros or ones. Ones signify that a unit is occupying
         that position in the mapping and is not hidden. Zeros
-        signify that no unit is occupying that position in the 
+        signify that either no unit is occupying that position in the
         mapping or is hidden/disabled.
         
         Since the number of lists corresponds to the number of
@@ -480,9 +480,11 @@ class VirtualUnitMap(object):
             
         """
         print("Map being calculated")
+
+        wave_length = data.get_wave_length()
         
         for i in range(len(data.blocks) - 1):
-            sessions = np.zeros((sum(data.nums), 2, data.wave_length))
+            sessions = np.zeros((sum(data.nums), 2, wave_length))
             
             for j, val in enumerate(storage.get_map().mapping[i]):
                 if val is not 0:
@@ -491,7 +493,7 @@ class VirtualUnitMap(object):
                     avg = data.get_data("average", runit)
                     sessions[j][0] = avg/np.max(avg)
                 else:
-                    sessions[j][0] = np.zeros(38)
+                    sessions[j][0] = np.zeros(wave_length)
             
             for j, val in enumerate(storage.get_map().mapping[i+1]):
                 if val is not 0:
@@ -500,7 +502,7 @@ class VirtualUnitMap(object):
                     avg = data.get_data("average", runit)
                     sessions[j][1] = avg/np.max(avg)
                 else:
-                    sessions[j][1] = np.zeros(38)
+                    sessions[j][1] = np.zeros(wave_length)
             
             distances = cdist(sessions[:, 0], sessions[:, 1], metric='euclidean')
             threshold = np.mean(distances[distances > 0])
@@ -532,6 +534,7 @@ class VirtualUnitMap(object):
                     else:
                         print("Logic flawed, check again!")
             print(exclude)
+        storage.change_map()
         
     """
     def calculate_mapping(self, data, storage):
@@ -559,13 +562,13 @@ class VirtualUnitMap(object):
                 distances = []
 
                 #for each unit in block i
-                for j in range(self.n_):
+                for j in range(self.total_units):
                     if self.mapping[i][j] != 0:
                         unit1 = self.get_realunit(i, j, data)
                         y1 = data.get_data("average", unit1)[0]
                         
                         #for each unit in block i+1
-                        for k in range(self.n_):
+                        for k in range(self.total_units):
                             if self.mapping[i+1][k] != 0:
                                 unit2 = self.get_realunit(i+1, k, data)
                                 y2 = data.get_data("average", unit2)[0]
@@ -648,5 +651,5 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.n_ = 0
+        self.total_units = 0
     

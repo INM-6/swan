@@ -5,18 +5,21 @@ Created on Thu Nov  2 23:26:08 2017
 
 @author: Shashwat Sridhar
 """
-
+# system imports
 from pyqtgraph.Qt import QtCore, QtGui
 from os import sep
-from swan.src.pgwidget2d import pgWidget2d
-from swan.src.plotgridtools import plotGridTools
-from swan.src.viewtoolbar import collapsibleWidget
-from swan.src.myplotgrid import MyPlotGrid
-from swan.src.pgwidgetisi import pgWidgetISI
-from swan.src.pgwidgetpca import pgWidgetPCA
-from swan.src.pgwidget3d import pgWidget3d
-from swan.src.pgwidgetpca2d import pgWidgetPCA2d
-from swan.src.pgwidgetrateprofile import pgWidgetRateProfile
+
+# swan-specific imports
+from swan.res import icons
+from swan.src.views.mean_waveforms_view import pgWidget2d
+from swan.src.widgets.myplotgrid import MyPlotGrid
+from swan.src.views.isi_histograms_view import pgWidgetISI
+from swan.src.views.pca_3d_view import pgWidgetPCA
+from swan.src.views.waveforms_3d_view import pgWidget3d
+from swan.src.views.pca_2d_view import pgWidgetPCA2d
+from swan.src.views.rate_profile_view import pgWidgetRateProfile
+from swan.src.widgets.plotgridtools import plotGridTools
+from swan.src.widgets.viewtoolbar import collapsibleWidget
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -151,7 +154,7 @@ class Ui_Main(object):
         Main.setStatusBar(self.statusbar)
         self.toolBar = QtGui.QToolBar(Main)
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
-        #self.toolBar.setStyleSheet('QToolBar{spacing:10px;}')
+        # self.toolBar.setStyleSheet('QToolBar{spacing:10px;}')
         Main.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
         self.action_New_Project = QtGui.QAction(Main)
         self.action_New_Project.setObjectName(_fromUtf8("action_New_Project"))
@@ -243,8 +246,7 @@ class Ui_Main(object):
         self.toolBar.addAction(self.action_Collapse_overview)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.action_Virtual_Units)
-        
-        self.addIcons(Main)
+
         self.load_icons()
         self.retranslateUi(Main)
         
@@ -315,12 +317,6 @@ class Ui_Main(object):
         self.action_Import_from_csv.setText(_translate("Main", "Import from csv", None))
         self.action_Import_from_odML.setText(_translate("Main", "Import from odML", None))
         self.action_RestoreState.setText(_translate("Main", "Restore GUI state", None))
-    
-    def addIcons(self, Main):
-        if Main.dark == True:
-            from swan.res import icons_dark
-        else:
-            from swan.res import icons
     
     def load_icons(self):
         """

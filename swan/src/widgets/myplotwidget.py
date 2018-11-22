@@ -15,6 +15,7 @@ from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath
 import numpy as np
 from copy import deepcopy
 
+
 class MyPlotWidget(QtWidgets.QWidget):
     """
     Pyqtgraph's PlotWidget extended to have a fast and simple one 
@@ -24,7 +25,7 @@ class MyPlotWidget(QtWidgets.QWidget):
 
     
     """
-    
+
     selectPlot = QtCore.pyqtSignal("PyQt_PyObject", bool)
     colourStripToggle = QtCore.pyqtSignal(object, int)
     visibilityToggle = QtCore.pyqtSignal(int, int, bool)
@@ -32,8 +33,8 @@ class MyPlotWidget(QtWidgets.QWidget):
     Signal to emit if this plot is selected by clicking on it.
     
     """
-    
-    def __init__(self, width = 200, height = 150, *args, **kwargs):
+
+    def __init__(self, width=200, height=150, *args, **kwargs):
         """
         **Properties**
         
@@ -54,26 +55,14 @@ class MyPlotWidget(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self)
         self.centralLayout = QtGui.QGridLayout()
-        self.centralLayout.setSpacing(0)
-        self.centralLayout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.centralLayout)
-        
         self.plotWidget = PlotWidget(*args, **kwargs)
-        
-        self.plotWidget.setMenuEnabled(False)
-        self.plotWidget.setAntialiasing(False)
-        self.plotWidget.hideButtons()
-        self.plotWidget.setMouseEnabled(False, False)
-        self.plotWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.plotWidget.setMouseTracking(True)
-        self.plotWidget.hideAxis("bottom")
-        self.plotWidget.hideAxis("left")
-        
-        self.centralLayout.addWidget(self.plotWidget)
-        
-        #properties{
+
+        self.setup()
+
+        # attributes and properties
         self._plotitem = self.plotWidget.getPlotItem()
         self._plotitem.disableAutoRange()
+
         self.selected = False
         self.inFocus = False
         self.disabled = False
@@ -82,19 +71,40 @@ class MyPlotWidget(QtWidgets.QWidget):
         self.toBeUpdated = True
         self.hasPlot = False
         self._std = (width, height)
-        self._defPenColour = None
-        self.bgs = {"normal":mkColor('w'), "selected":mkColor(0.8), "disabled":mkColor(0.7), "inFocus":mkColor(0.9)}
-        self._bg = self.bgs["normal"]
         self.pos = (0, 0)
         self.defPens = []
-        self.disPen = mkColor('w')
         self._dataItems = []
-        #}
+
+        # setting the palette
+        self._defPenColour = None
+        self.bgs = {"normal": mkColor('k'),
+                    "selected": mkColor(0.2),
+                    "disabled": mkColor(0.25),
+                    "inFocus": mkColor(0.1)}
+        self._bg = self.bgs["normal"]
+        self.disPen = mkColor('k')
+
         self.setFixedSize(self._std[0], self._std[1])
-        
-        
+
     #### general methods ####
-        
+
+    def setup(self):
+
+        self.centralLayout.setSpacing(0)
+        self.centralLayout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.centralLayout)
+
+        self.plotWidget.setMenuEnabled(False)
+        self.plotWidget.setAntialiasing(False)
+        self.plotWidget.hideButtons()
+        self.plotWidget.setMouseEnabled(False, False)
+        self.plotWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.plotWidget.setMouseTracking(True)
+        self.plotWidget.hideAxis("bottom")
+        self.plotWidget.hideAxis("left")
+
+        self.centralLayout.addWidget(self.plotWidget)
+
     def plot(self, y, color='w'):
         """
         Plots data on the PlotItem.
@@ -108,10 +118,10 @@ class MyPlotWidget(QtWidgets.QWidget):
                 Default: w for white.
         
         """
-        plot = self._plotitem.plot(y, pen=mkPen(mkColor(color), width = 2), antialias=False)
+        plot = self._plotitem.plot(y, pen=mkPen(mkColor(color), width=2), antialias=False)
         self.defPens.append(mkColor(color))
         self._dataItems.append(plot)
-    
+
     def plot_many(self, ys, color='w'):
         """
         Plots data on the PlotItem.
@@ -127,7 +137,7 @@ class MyPlotWidget(QtWidgets.QWidget):
         """
         lines = MultiLine(ys, color)
         self._plotitem.addItem(lines)
-            
+
     def change_size(self, width, height):
         """
         Resizes the plot by the given steps.
@@ -141,11 +151,11 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         oldw = float(self.size().width())
-        neww = int(oldw + oldw*(width/100.0))
-        newh = int((3./4.)*neww)
+        neww = int(oldw + oldw * (width / 100.0))
+        newh = int((3. / 4.) * neww)
         if neww > 0 and newh > 0:
             self.setFixedSize(neww, newh)
-        
+
     def change_background(self, change):
         """
         Changes the background of the widget.
@@ -159,11 +169,11 @@ class MyPlotWidget(QtWidgets.QWidget):
         """
         if change:
             self._bg = self.bgs["selected"]
-            self.plotWidget.setBackground(self.bgs["selected"])   
+            self.plotWidget.setBackground(self.bgs["selected"])
         else:
             self._bg = self.bgs["normal"]
             self.plotWidget.setBackground(self.bgs["normal"])
-    
+
     def clear_(self):
         """
         Clears the :class:`pyqtgraph.PlotItem`.
@@ -186,11 +196,11 @@ class MyPlotWidget(QtWidgets.QWidget):
         """
         self.setToolTip(tooltip)
         QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
-    
+
     def toggleColourStrip(self, col):
         colour = mkColor(col)
-        self.colourStripToggle.emit(colour, self.pos[0])
-    
+        self.colourStripToggle.emit(colour, self.pos[1])
+
     def disable(self):
         if self.selected:
             self.selectPlot.emit(self, not self.selected)
@@ -199,7 +209,7 @@ class MyPlotWidget(QtWidgets.QWidget):
         self.plotWidget.setBackground(self.bgs["disabled"])
         for dataItem in self._dataItems:
             dataItem.setPen(self.disPen)
-        
+
     def enable(self, which):
         if which == "row":
             self.rowInhibited = False
@@ -208,25 +218,20 @@ class MyPlotWidget(QtWidgets.QWidget):
         elif which == "all":
             self.rowInhibited = False
             self.colInhibited = False
-        
+
         if not self.rowInhibited and not self.colInhibited:
             self.disabled = False
             self.visibilityToggle.emit(self.pos[0], self.pos[1], True)
             self.plotWidget.setBackground(self.bgs["normal"])
             for dataItem in self._dataItems:
-                dataItem.setPen(mkColor(self._defPenColour), width = 2)
-        
+                dataItem.setPen(mkColor(self._defPenColour), width=2)
+
     def close(self):
         self.plotWidget.close()
         self.setParent(None)
-        
-    def darkTheme(self):
-        self.bgs = {"normal":mkColor('k'), "selected":mkColor(0.2), "disabled":mkColor(0.25), "inFocus":mkColor(0.1)}
-        self._bg = self.bgs["normal"]
-        self.disPen = mkColor('k')
-        
+
     #### mouse interaction ####
-        
+
     def mousePressEvent(self, event):
         """
         This method is called you click on this widget.
@@ -241,11 +246,11 @@ class MyPlotWidget(QtWidgets.QWidget):
         """
         if event.button() == QtCore.Qt.LeftButton and not self.disabled:
             self.selectPlot.emit(self, not self.selected)
-            super(PlotWidget, self.plotWidget).mousePressEvent(event)
+            PlotWidget.mousePressEvent(self.plotWidget, event)
             event.accept()
         else:
             event.ignore()
-        
+
     def mouseMoveEvent(self, event):
         """
         Overwritten method to avoid strange behavior.
@@ -255,9 +260,9 @@ class MyPlotWidget(QtWidgets.QWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)        
         
         """
-        #super(PlotWidget, self).mouseMoveEvent(event)
+        # super(PlotWidget, self).mouseMoveEvent(event)
         event.accept()
-     
+
     def mouseReleaseEvent(self, event):
         """
         Overwritten method to avoid strange behavior.
@@ -267,9 +272,9 @@ class MyPlotWidget(QtWidgets.QWidget):
             *event* (:class:`PyQt5.QtCore.QEvent`)        
         
         """
-        #super(PlotWidget, self).mouseReleaseEvent(event)
+        # super(PlotWidget, self).mouseReleaseEvent(event)
         event.accept()
-        
+
     def enterEvent(self, event):
         """
         This method is called the mouse enters this widget.
@@ -287,7 +292,7 @@ class MyPlotWidget(QtWidgets.QWidget):
             event.accept()
         else:
             event.ignore()
-    
+
     def leaveEvent(self, event):
         """
         This method is called the mouse leaves this widget.
@@ -306,19 +311,19 @@ class MyPlotWidget(QtWidgets.QWidget):
         else:
             event.ignore()
 
+
 class MultiLine(pg.QtGui.QGraphicsPathItem):
     def __init__(self, data, color):
         """x and y are 2D arrays of shape (Nplots, Nsamples)"""
         connect = np.ones(data.shape, dtype=bool)
-        connect[:,-1] = 0 # don't draw the segment between each trace
+        connect[:, -1] = 0  # don't draw the segment between each trace
         x = np.tile([i for i in range(data.shape[1])], data.shape[0]).reshape(data.shape)
         self.path = arrayToQPath(x.flatten(), data.flatten(), connect.flatten())
         QtGui.QGraphicsPathItem.__init__(self, self.path)
         self.setPen(mkPen(color))
-    def shape(self): # override because QGraphicsPathItem.shape is too expensive.
+
+    def shape(self):  # override because QGraphicsPathItem.shape is too expensive.
         return QtGui.QGraphicsItem.shape(self)
+
     def boundingRect(self):
         return self.path.boundingRect()
-        
-        
-        
