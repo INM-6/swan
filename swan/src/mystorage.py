@@ -177,7 +177,7 @@ class MyStorage(Storage, QtCore.QObject):
             #checking if standard name is already existing
             #if so, the name will be changed 
             
-            while (True):
+            while True:
                 try:
                     self._project.add_file(self.get_pro_name(proname))
                     break
@@ -495,7 +495,7 @@ class MyStorage(Storage, QtCore.QObject):
         vum = self.get_map_backup()
         data = self.get_data()
         if vum is not None:
-            vumap.set_map(data.nums, vum)
+            vumap.set_map(data.total_units_per_block, vum)
         else:
             vumap.set_initial_map(data)
         
@@ -554,13 +554,13 @@ class MyStorage(Storage, QtCore.QObject):
         #load a mapping or set the default one
         try:
             vum = vum_all[name]
-            vumap.set_map(data.nums, vum)
+            vumap.set_map(data.total_units_per_block, vum)
         except KeyError:
             vumap.set_initial_map(data)
             
         self.store("vum", vumap)
                 
-        return sum(data.nums), len(vumap.mapping)
+        return sum(data.total_units_per_block), len(vumap.mapping)
             
     def read_file(self):
         """
@@ -645,14 +645,13 @@ class MyStorage(Storage, QtCore.QObject):
         vum_all = self.get("vum_all")
         files = [basename(f) for f in self.get("files")]
         vum = self.get("vum")
-        d = {}
-        d["channel"] = channel
-        
-        for i in range(1, len(vum.mapping[0])+1):
+        d = {"channel": channel}
+
+        for i in range(vum.maximum_units):
             d[i] = []
         for filename, vus in zip(files, vum.mapping):
             for i in range(len(vus)):
-                d[i+1].append((basename(filename), vus[i]))
+                d[i].append((basename(filename), vus[i]))
         
         name = "vum" + str(channel)
         vum_all[name] = d

@@ -200,8 +200,12 @@ class Ui_Main(object):
         self.action_Import_from_csv.setObjectName(_fromUtf8("action_Import_from_csv"))
         self.action_Import_from_odML = QtGui.QAction(Main)
         self.action_Import_from_odML.setObjectName(_fromUtf8("action_Import_from_odML"))
+        self.action_RevertState = QtGui.QAction(Main)
+        self.action_RevertState.setObjectName(_fromUtf8("action_RevertState"))
         self.action_RestoreState = QtGui.QAction(Main)
         self.action_RestoreState.setObjectName(_fromUtf8("action_RestoreState"))
+        self.action_SaveState = QtGui.QAction(Main)
+        self.action_SaveState.setObjectName(_fromUtf8("action_SaveState"))
         
         self.menu_File.addAction(self.action_New_Project)
         self.menu_File.addAction(self.action_Load_Project)
@@ -226,7 +230,9 @@ class Ui_Main(object):
         self.menu_Help.addAction(self.action_Tutorials)
         self.menu_Help.addAction(self.action_About)
         self.menu_View.addAction(self.action_Virtual_Units)
+        self.menu_View.addAction(self.action_SaveState)
         self.menu_View.addAction(self.action_RestoreState)
+        self.menu_View.addAction(self.action_RevertState)
         self.menubar.addAction(self.menu_File.menuAction())
         self.menubar.addAction(self.menu_Edit.menuAction())
         self.menubar.addAction(self.menu_View.menuAction())
@@ -317,6 +323,8 @@ class Ui_Main(object):
         self.action_Import_from_csv.setText(_translate("Main", "Import from csv", None))
         self.action_Import_from_odML.setText(_translate("Main", "Import from odML", None))
         self.action_RestoreState.setText(_translate("Main", "Restore GUI state", None))
+        self.action_RevertState.setText(_translate("Main", "Revert GUI state", None))
+        self.action_SaveState.setText(_translate("Main", "Save GUI state", None))
     
     def load_icons(self):
         """

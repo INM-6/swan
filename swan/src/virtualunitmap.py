@@ -27,7 +27,7 @@ class VirtualUnitMap(object):
             *visible* (list of boolean):
                 Whether or not the unit rows should be visible.
                 Contains one boolean for each unit row.
-            *total_units* (integer):
+            *maximum_units* (integer):
                 The summary of the length of all unit lists.
             *colors* (list of tuple of integer):
                 Contains colors for plotting the units in different colors.
@@ -39,7 +39,7 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.total_units = 0
+        self.maximum_units = 0
         self.colors = [ (31,	   119,	180),
                         (255,   127,	14),
                         (44,	   160,	44),
@@ -71,27 +71,27 @@ class VirtualUnitMap(object):
         
         **Arguments**
         
-            *nums* (list of integer):
+            *total_units_per_block* (list of integer):
                 The number of units per block.
         
         """
-        total_units = sum(data.nums)
-        self.total_units = total_units
+        maximum_units = sum(data.nums)
+        self.maximum_units = maximum_units
         vmap = []
-        for i in range(len(data.blocks)):
+        for session in range(len(data.blocks)):
             vmap.append([])
             count = 1
-            for j in range(self.total_units):
+            for global_unit_id in range(maximum_units):
                 try:
-                    unit_description = data.blocks[i].channel_indexes[0].units[j].description.split()
+                    unit_description = data.blocks[session].channel_indexes[0].units[global_unit_id].description.split()
                     
                     if "unclassified" in unit_description or "noise" in unit_description:
-                        vmap[i].append(0)
+                        vmap[session].append(0)
                     else:
-                        vmap[i].append(count)
+                        vmap[session].append(count)
                         count += 1
                 except:
-                    vmap[i].append(0)
+                    vmap[session].append(0)
         
         self.mapping = vmap
         self.visible = [[True for unit in session] for session in vmap]
@@ -103,23 +103,23 @@ class VirtualUnitMap(object):
         
         **Arguments**
         
-            *nums* (list of integer):
+            *total_units_per_block* (list of integer):
                 The number of units per block.
             *vum* (dictionary):
                 A dictionary containing the mappings and other information.
         
         """
-        n_ = sum(nums)
-        self.total_units = n_
+        maximum_units = sum(nums)
+        self.maximum_units = maximum_units
         
-        n = len(nums)
+        total_sessions = len(nums)
         
-        for i in range(n):
+        for i in range(total_sessions):
             self.mapping.append([])
         
         for l in vum.values():
             if type(l) == list:
-                for i in range(n):
+                for i in range(total_sessions):
                     unit = l[i][1]
                     self.mapping[i].append(unit)
                 
@@ -165,9 +165,11 @@ class VirtualUnitMap(object):
                 The unit index 2.
         
         """
-        second_unit = self.mapping[session_index][second_unit_index]
-        self.mapping[session_index][second_unit_index] = self.mapping[session_index][first_unit_index]
-        self.mapping[session_index][first_unit_index] = second_unit
+        self.mapping[session_index][first_unit_index], self.mapping[session_index][second_unit_index] = \
+            self.mapping[session_index][second_unit_index], self.mapping[session_index][first_unit_index]
+        # second_unit = self.mapping[session_index][second_unit_index]
+        # self.mapping[session_index][second_unit_index] = self.mapping[session_index][first_unit_index]
+        # self.mapping[session_index][first_unit_index] = second_unit
         self.update_active()
         
     def set_visible(self, i, j, visible=True):
@@ -214,13 +216,13 @@ class VirtualUnitMap(object):
         # mapping and the checkmap array (outer multiply). Effectively,
         # combines information contained in visibility and mapping.
         #
-        active = np.multiply(checkmap, np.multiply(self.visible, 1)).tolist()
+        active = np.multiply(checkmap, np.multiply(self.visible, 1))
         
         # Strips trailing zeros
-        for n, num in enumerate(active):
-            active[n] = np.trim_zeros(num, 'b')
-            if not active[n]:
-                active[n] = [0]
+        # for n, num in enumerate(active):
+        #     active[n] = np.trim_zeros(num, 'b')
+        #     if not active[n]:
+        #         active[n] = [0]
         
         self.active = active
     
@@ -257,8 +259,7 @@ class VirtualUnitMap(object):
                 The rgb color.
     
         """
-        if i >= self.coln:
-            return (0, 0, 0)
+        i = i % self.coln
         if mpl:
             col = (self.colors[i][0]/255., self.colors[i][1]/255., self.colors[i][2]/255.)
             if layer == "standard deviation":
@@ -558,17 +559,17 @@ class VirtualUnitMap(object):
             swapped2 = []
             
             #do it so often that each real unit can find a partner
-            for n in range(data.nums[i]):
+            for n in range(data.total_units_per_block[i]):
                 distances = []
 
                 #for each unit in block i
-                for j in range(self.total_units):
+                for j in range(self.maximum_units):
                     if self.mapping[i][j] != 0:
                         unit1 = self.get_realunit(i, j, data)
                         y1 = data.get_data("average", unit1)[0]
                         
                         #for each unit in block i+1
-                        for k in range(self.total_units):
+                        for k in range(self.maximum_units):
                             if self.mapping[i+1][k] != 0:
                                 unit2 = self.get_realunit(i+1, k, data)
                                 y2 = data.get_data("average", unit2)[0]
@@ -651,5 +652,5 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.total_units = 0
+        self.maximum_units = 0
     

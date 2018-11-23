@@ -48,6 +48,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
         self.samplingPeriod = 10
         self.kernelWidth = 60.0
         self.triggerEvent = ""
+        self.border_correction_multiplier = 1
 
         self.events = {}
 
@@ -168,7 +169,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
         except:
             self.rpOptions.errorLabel.setText("Invalid input!")
 
-    def create_raster_psth(self, spiketrain, trigger, timerange):
+    def create_raster_psth(self, spiketrain, trigger, timerange, border_correction=0):
         '''
         It calculates a list of concatenated spikes around stimulus onset and offset, for a later PSTH analysis.
     
@@ -183,6 +184,8 @@ class pgWidgetRateProfile(PyQtWidget2d):
             # raise(ValueError, "The spiketrain contains fewer than 2 spikes.")
             print("The spiketrain contains fewer than 2 spikes. Returning empty list.")
             return []
+
+        border_correction = border_correction * pq.ms
 
         spiketrain = spiketrain * pq.ms
 
@@ -200,14 +203,14 @@ class pgWidgetRateProfile(PyQtWidget2d):
         # extract spike times around saccade and fixation
         raster_trig = []  # spikes around trig
         for i_trig, t_trig in enumerate(trig_unit):
-            mask_trig = (spiketrain >= (t_trig + timerange[0] * pq.ms)) & (
-                        spiketrain <= (t_trig + timerange[1] * pq.ms))
+            mask_trig = (spiketrain >= (t_trig + timerange[0] * pq.ms - border_correction)) & \
+                        (spiketrain <= (t_trig + timerange[1] * pq.ms + border_correction))
             spikes = spiketrain[mask_trig] - t_trig
             raster_trig.append(spikes.magnitude)
 
         return raster_trig
 
-    def compute_psth_from_raster(self, array_raster_trig, timerange, minimum_spikes=10):
+    def compute_psth_from_raster(self, array_raster_trig, timerange, minimum_spikes=10, border_correction=0):
 
         out = dict()
         if len(array_raster_trig) < 1:
@@ -224,7 +227,8 @@ class pgWidgetRateProfile(PyQtWidget2d):
             return out
 
         rate_estimate, PSTH_times = self.calc_rate_estimate(raster_trig, timerange, sampling_period=self.samplingPeriod,
-                                                            kernel_width=self.kernelWidth)
+                                                            kernel_width=self.kernelWidth,
+                                                            border_correction=border_correction)
         PSTH_trig = rate_estimate / float(len(array_raster_trig))
         PSTH_trig = np.array(PSTH_trig)[:, 0]
 
@@ -233,18 +237,18 @@ class pgWidgetRateProfile(PyQtWidget2d):
         return out
 
     def calc_rate_estimate(self, spike_times, timerange, sampling_period=2.0,
-                           kernel_width="auto"):  # version=v2 => kfactor = 1.0/2.0/2.7
+                           kernel_width="auto", border_correction=0):  # version=v2 => kfactor = 1.0/2.0/2.7
         """
         :param spike_times: array of spike times
         :return rate_estimate: neo object containing rate estimate and time scale
         :return kernel_width: optimized kernel width for the calculation of the rate estimate
         """
-        mask = (spike_times >= timerange[0]) & (spike_times <= timerange[1])
+        t_start = timerange[0] - border_correction
+        t_stop = timerange[1] + border_correction
+        mask = (spike_times >= t_start) & (spike_times <= t_stop)
         spiketrain = spike_times[mask].copy()
-        t_start = timerange[0]
-        t_stop = timerange[1]
         if len(spiketrain) < 2:
-            times = np.linspace(timerange[0], timerange[1], int((t_stop - t_start) * 1000 / sampling_period),
+            times = np.linspace(t_start, t_stop, int((t_stop - t_start) * 1000 / sampling_period),
                                 endpoint=False)
             rate = np.zeros_like(times)
             kw = 0
@@ -256,6 +260,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
         spike_train = SpikeTrain(spiketrain * pq.ms, t_start=t_start * pq.ms, t_stop=t_stop * pq.ms)
         rate_estimate = instantaneous_rate(spike_train, sampling_period=sampling_period * pq.ms,
                                            kernel=GaussianKernel(kernel_width * pq.ms))
+        rate_estimate = rate_estimate.time_slice(t_start=timerange[0] * pq.ms, t_stop=timerange[1] * pq.ms)
         return rate_estimate.rescale('Hz').magnitude, rate_estimate.times.rescale('s').magnitude
 
     def plotProfile(self, x, y, color, unit_id, session, clickable=False):
@@ -301,6 +306,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
             event_dict = data.get_events_dict()
             self.events = event_dict
             triggerEvent = self.triggerEvent
+            bcm = self.border_correction_multiplier
 
             self.populateEventList()
 
@@ -324,10 +330,12 @@ class pgWidgetRateProfile(PyQtWidget2d):
                             spiketrain, color, clickable = plotData
                             raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
                                                              trigger=event_times.rescale(pq.ms),
-                                                             timerange=[self.tPre, self.tPost])
+                                                             timerange=[self.tPre, self.tPost],
+                                                             border_correction=bcm * self.kernelWidth)
                             result = self.compute_psth_from_raster(array_raster_trig=raster,
                                                                    timerange=[self.tPre, self.tPost],
-                                                                   minimum_spikes=10)
+                                                                   minimum_spikes=10,
+                                                                   border_correction=bcm * self.kernelWidth)
                             self.plotProfile(x=result['times'], y=result['values'],
                                              color=color, unit_id=unit_id,
                                              session=session, clickable=clickable)
@@ -344,6 +352,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
         self.clear_()
         triggerEvent = self.triggerEvent
         event_dict = self.events
+        bcm = self.border_correction_multiplier
         for key in self.datas.keys():
             pos = list(key)
             session, unit_id = int(pos[0]), int(pos[1])
@@ -352,10 +361,14 @@ class pgWidgetRateProfile(PyQtWidget2d):
             spiketrain, color, clickable = plotData
             raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
                                              trigger=event_times.rescale(pq.ms),
-                                             timerange=[self.tPre, self.tPost])
-            result = self.compute_psth_from_raster(array_raster_trig=raster, timerange=[self.tPre, self.tPost],
-                                                   minimum_spikes=10)
-            self.plotProfile(x=result['times'], y=result['values'], color=color, unit_id=unit_id, session=session, clickable=clickable)
+                                             timerange=[self.tPre, self.tPost],
+                                             border_correction=bcm * self.kernelWidth)
+            result = self.compute_psth_from_raster(array_raster_trig=raster,
+                                                   timerange=[self.tPre, self.tPost],
+                                                   minimum_spikes=10,
+                                                   border_correction=bcm * self.kernelWidth)
+            self.plotProfile(x=result['times'], y=result['values'], color=color,
+                             unit_id=unit_id, session=session, clickable=clickable)
         self.createVerticalLine(xval=0)
         self.setXLabel("Time", "s")
         self.setYLabel("Frequency", "Hz")

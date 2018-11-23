@@ -14,7 +14,7 @@ import gc
 from itertools import chain
 from neo.io.blackrockio_v4 import BlackrockIO
 from neo.io.pickleio import PickleIO
-from numpy import mean, std, array, histogram, unique, where, subtract, min as nmin, max as nmax
+import numpy as np
 from numpy.linalg import norm
 from os.path import join, split, exists
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -50,8 +50,8 @@ class NeoData(QObject):
             *blocks* (list of :class:`neo.core.block.Block`):
                 The loaded neo Blocks. Will be cached after loading so 
                 that they can be loaded faster next time.
-            *nums* (list of integer):
-                Contains the number of real units per blocks.
+            *total_units_per_block* (list of integer):
+                Contains the number of real units per block.
             *rgios* (list of :class:`neo.io.BlackrockIO`):
                 Contains the IO class to load the neo blocks.
             
@@ -60,7 +60,7 @@ class NeoData(QObject):
         # properties{
         self.cdir = cache_dir
         self.blocks = []
-        self.nums = []
+        self.total_units_per_block = []
         self.rgios = []
         self._wave_length = 0.
         self.segments = []
@@ -151,8 +151,11 @@ class NeoData(QObject):
                       for b in self.blocks]
         # self.spiketrains = self.create_spiketrains_dictionary(self.units)
         self.set_events_and_labels()
-        self.nums = nums
+        self.total_units_per_block = nums
+
         self._wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
+        # TODO: Loop over all sessions to find the first session which has a unit with waveforms
+
         self.sampling_rate = self.blocks[0].channel_indexes[0].units[0].spiketrains[0].sampling_rate
 
     def get_data(self, layer, unit, **kwargs):
@@ -184,11 +187,11 @@ class NeoData(QObject):
         
         """
         if layer == "average":
-            return mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0] * pq.uV
+            return np.mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0] * pq.uV
         elif layer == "standard deviation":
-            means = mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
-            stds = std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
-            return array([means - 2 * stds, means + 2 * stds]) * pq.uV
+            means = np.mean(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            stds = np.std(unit.spiketrains[0].waveforms.magnitude, axis=0)[0]
+            return np.array([means - 2 * stds, means + 2 * stds]) * pq.uV
         elif layer == "all":
             wforms = unit.spiketrains[0].waveforms.magnitude
             return wforms.reshape(wforms.shape[0], wforms.shape[-1])
@@ -213,7 +216,7 @@ class NeoData(QObject):
             Wn = kwargs.get("Wn", 0.008)
             bins = kwargs.get("bins", 4000)
             b, a = butter(order, Wn)
-            hist, bin_edges = histogram(unit.spiketrains[0].magnitude, bins=bins)
+            hist, bin_edges = np.histogram(unit.spiketrains[0].magnitude, bins=bins)
             return filtfilt(b, a, hist)
         else:
             raise ValueError("Layer not supported")
@@ -224,7 +227,7 @@ class NeoData(QObject):
         on each block.
         
         """
-        return self.nums
+        return self.total_units_per_block
 
     def get_yscale(self, layer="average"):
         """
@@ -243,15 +246,15 @@ class NeoData(QObject):
                 if "noise" not in unit.description.split() and "unclassified" not in unit.description.split():
                     datas.append(self.get_data(layer, unit))
         for data in datas:
-            tmp0 = nmin(data)
-            tmp1 = nmax(data)
+            tmp0 = np.min(data)
+            tmp1 = np.max(data)
 
             yranges0.append(tmp0)
             yranges1.append(tmp1)
 
-        maxi = nmax(yranges1) + 20.0
-        mini = nmin(yranges0) - 20.0
-        return (mini, maxi)
+        maxi = np.max(yranges1) + 20.0
+        mini = np.min(yranges0) - 20.0
+        return mini, maxi
 
     def get_dates(self):
         """
@@ -281,7 +284,7 @@ class NeoData(QObject):
         """
         y1 = self.get_data("average", unit1)
         y2 = self.get_data("average", unit2)
-        return norm(subtract(y1 - y2))
+        return norm(np.subtract(y1 - y2))
 
     def get_unique_labels(self):
         return self.unique_labels
@@ -354,7 +357,7 @@ class NeoData(QObject):
         times = [[[event.times for event in segment] for segment in block] for block in events]
 
         raveled_labels = list(chain.from_iterable(list(chain.from_iterable(list(chain.from_iterable(labels))))))
-        unique_labels = unique(raveled_labels)
+        unique_labels = np.unique(raveled_labels)
 
         event_dict = {}
         for label in unique_labels:
@@ -365,7 +368,7 @@ class NeoData(QObject):
                     temp_list[b].append([])
                     for e in range(len(events[b][s])):
                         temp_list[b][s].append([])
-                        t_points = times[b][s][e][where(labels[b][s][e] == label)]
+                        t_points = times[b][s][e][np.where(labels[b][s][e] == label)]
                         temp_list[b][s][e] = t_points.rescale(pq.ms)
             event_dict[label] = temp_list
 

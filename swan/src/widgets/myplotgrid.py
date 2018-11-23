@@ -120,23 +120,32 @@ class MyPlotContent(QtWidgets.QWidget):
             if unit_id == 0:
                 for session in range(cols + 1):
                     if session == 0:
-                        iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", row=unit_id, col=session, width=self._width,
-                                             height=self._height, const_dim=self._constDim)
+                        iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", row=unit_id, col=session,
+                                             width=self._width, height=self._height, const_dim=self._constDim)
                         iw.responsive = False
                         self._indicators.append(iw)
                         self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
                     else:
                         if dates is not None:
-                            iw = IndicatorWidget(str(session) + " (" + str(dates[session - 1].strftime("%d.%m.%y")) + ")", row=unit_id, col=session,
-                                                 width=self._width, height=self._height, const_dim=self._constDim)
+                            iw = IndicatorWidget(
+                                str(session) + " (" + str(dates[session - 1].strftime("%d.%m.%y")) + ")",
+                                row=unit_id, col=session, width=self._width, height=self._height,
+                                const_dim=self._constDim
+                            )
                         else:
-                            iw = IndicatorWidget(str(session), row=unit_id, col=session, width=self._width, height=self._height,
-                                                 const_dim=self._constDim)
+                            iw = IndicatorWidget(
+                                str(session), row=unit_id, col=session, width=self._width,
+                                height=self._height, const_dim=self._constDim
+                            )
                         self._indicators.append(iw)
                         iw.selectIndicator.connect(self.indicatorToggled)
                         self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
             else:
-                iw = IndicatorWidget(str(unit_id), row = unit_id, col = 0, width=self._width, height=self._height, const_dim=self._constDim)
+                iw = IndicatorWidget(
+                    str(unit_id), row=unit_id, col=0,
+                    width=self._width, height=self._height,
+                    const_dim=self._constDim
+                )
                 self._indicators.append(iw)
                 iw.selectIndicator.connect(self.indicatorToggled)
                 self.ui.gridLayout.addWidget(iw, unit_id, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
@@ -236,11 +245,10 @@ class MyPlotContent(QtWidgets.QWidget):
                     p.clear_()
                     col = vum.get_color(unit_id, False, "average", False)
                     p._defPenColour = col
-                    p.plotWidget.setXRange(0., data.get_wave_length(), padding=None, update=True)
                     if active[session][unit_id]:
                         runit = vum.get_realunit(session, unit_id, data)
                         d = data.get_data("average", runit)
-                        d_all = data.get_data('all', runit) * uV
+                        d_all = data.get_data('all', runit)
                         try:
                             p.plot_many(d_all[choice(d_all.shape[0], size=self._sampleWaveformNumber, replace=False)],
                                         self._plotGray)
@@ -249,8 +257,8 @@ class MyPlotContent(QtWidgets.QWidget):
                         p.plot(d, col)
                         p.hasPlot = True
                         p.toggleColourStrip(col)
+                        p.plotWidget.setXRange(0., data.get_wave_length(), padding=None, update=True)
                     else:
-                        p.clear_()
                         p.toggleColourStrip(col)
                     p.toBeUpdated = False
 
@@ -258,22 +266,22 @@ class MyPlotContent(QtWidgets.QWidget):
         for plot in self._plots:
             plot.toBeUpdated = True
 
-    def find_plot(self, i, j):
+    def find_plot(self, global_unit_id, session_id):
         """
         Finds a plot at a given position.
         
         **Arguments**
         
-            *i* (integer):
+            *global_unit_id* (integer):
                 The row index.
-            *j* (integer):
+            *session_id* (integer):
                 The column index.
         
             **Returns**: :class:`src.myplotwidget.MyPlotWidget`
-                The plot at position (i, j).
+                The plot at position (global_unit_id, session_id).
         
         """
-        return self._rows[i][j]
+        return self._rows[global_unit_id][session_id]
 
     @QtCore.pyqtSlot(object)
     def highlightPlot(self, item):

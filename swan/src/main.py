@@ -228,6 +228,7 @@ class Main(QtGui.QMainWindow):
         self.p.hide()
 
         self._defaultGuiState = self.saveState()
+        self.saved_gui_state = self._defaultGuiState
 
         if onLinux:
             # starting memory usage task
@@ -622,14 +623,35 @@ class Main(QtGui.QMainWindow):
         QtGui.QMessageBox.information(self, "About", about)
 
     @QtCore.pyqtSlot(bool)
-    def on_action_RestoreState_triggered(self):
+    def on_action_RevertState_triggered(self):
         """
-        This method is called if you click on *View->Restore GUI State*.
+        This method is called if you click on *View->Revert GUI State*.
         
         Restores the GUI to it's default configuration.
         """
 
         self.restoreState(self._defaultGuiState)
+
+    @QtCore.pyqtSlot(bool)
+    def on_action_RestoreState_triggered(self):
+        """
+        This method is called if you click on *View->Restore GUI State*.
+
+        Restores the GUI to the previously saved configuration. Restores to default
+        configuration if no saves were performed.
+        """
+
+        self.restoreState(self.saved_gui_state)
+
+    @QtCore.pyqtSlot(bool)
+    def on_action_SaveState_triggered(self):
+        """
+        This method is called if you click on *View->Save GUI State*.
+
+        Saves the current configuration of the GUI to be restored later.
+        """
+
+        self.saved_gui_state = self.saveState()
 
     #### signal handler ####
 
@@ -678,7 +700,7 @@ class Main(QtGui.QMainWindow):
             data = self._mystorage.get_data()
             self.plots.make_plots(n, m, data.get_dates())
 
-            if any(data.nums):
+            if any(data.total_units_per_block):
                 min0, max0 = data.get_yscale()
             else:
                 min0, max0 = [-100, 100]
