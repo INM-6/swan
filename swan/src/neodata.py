@@ -111,8 +111,6 @@ class NeoData(QObject):
 
         self.delete_blocks()
         blocks = []
-        # loading the IOs
-        #         rgios = self.load_rgIOs(files)
 
         # loading the blocks
         for i, f in enumerate(files):
@@ -124,12 +122,12 @@ class NeoData(QObject):
                 block = pIO.read_block()
             else:
                 # loading
-                # rgIO = rgios[i]
                 session = BlackrockIO(f)
                 block = session.read_block(index=None, name=None, description=None, nsx_to_load='none',
                                            n_starts=None, n_stops=None, channels=channel, units='all',
                                            load_waveforms=True, load_events=True, lazy=False, cascade=True)
                 del session
+
                 # caching
                 pIO = PickleIO(name)
                 pIO.write_block(block)

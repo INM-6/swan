@@ -77,7 +77,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         self.ui.optionsList.itemSelectionChanged.connect(self.itemChanged)
         self.ui.defaultBtn.clicked.connect(self.onRestoreDefault)
         #option: General
-        self.ui.defaultProNameEdit.textChanged.connect(self.checkName)
+        self.ui.projectNameEdit.textChanged.connect(self.checkName)
         self.ui.cacheDirEdit.textChanged.connect(self.checkCache)
         self.ui.cacheDirBtn.clicked.connect(self.onCacheDir)
         #option: Overview
@@ -140,11 +140,11 @@ class Preferences_Dialog(QtWidgets.QDialog):
                 The current input value for the default project name.
         
         """
-        result = re.match("^[a-zA-Z]+\w*", name) 
+        result = re.match('^[a-zA-Z]+\w*.txt', name)
         if not result:
             self.ui.errorLabel.setText("There are wrong input values")
         else:
-            self._preferences["defaultProName"] = str(name)
+            self._preferences["projectName"] = str(name)
             self.ui.errorLabel.setText("")
             
     def checkCache(self, dirname):
@@ -298,7 +298,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         
         """
         try:
-            self.checkName(self.ui.defaultProNameEdit.text())
+            self.checkName(self.ui.projectNameEdit.text())
             if str(self.ui.errorLabel.text()):
                 return
             self.checkCache(self.ui.cacheDirEdit.text())
@@ -345,7 +345,7 @@ class Preferences_Dialog(QtWidgets.QDialog):
         """
         #setting up the given preferences
         #option: general
-        self.ui.defaultProNameEdit.setText(pref["defaultProName"])
+        self.ui.projectNameEdit.setText(pref["projectName"])
         self.ui.cacheDirEdit.setText(pref["cacheDir"])
         #option: overview
         self.ui.zinStepEdit.setText(str(pref["zinStep"]))

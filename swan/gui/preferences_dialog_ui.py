@@ -67,9 +67,9 @@ class Ui_Preferences(object):
         self.formLayout_3 = QtGui.QFormLayout(self.groupBox)
         self.formLayout_3.setObjectName(_fromUtf8("formLayout_3"))
         
-        self.defaultProNameEdit = QtGui.QLineEdit(self.groupBox)
-        self.defaultProNameEdit.setObjectName(_fromUtf8("defaultProNameEdit"))
-        self.formLayout_3.setWidget(1, QtGui.QFormLayout.FieldRole, self.defaultProNameEdit)
+        self.projectNameEdit = QtGui.QLineEdit(self.groupBox)
+        self.projectNameEdit.setObjectName(_fromUtf8("projectNameEdit"))
+        self.formLayout_3.setWidget(1, QtGui.QFormLayout.FieldRole, self.projectNameEdit)
         
         self.label = QtGui.QLabel(self.groupBox)
         self.label.setObjectName(_fromUtf8("label"))
@@ -215,7 +215,7 @@ class Ui_Preferences(object):
         
         self.verticalLayout.addLayout(self.horizontalLayout)
         
-        self.label.setBuddy(self.defaultProNameEdit)
+        self.label.setBuddy(self.projectNameEdit)
         self.label_6.setBuddy(self.cacheDirEdit)
         self.label_2.setBuddy(self.zinStepEdit)
         self.label_3.setBuddy(self.zoutStepEdit)

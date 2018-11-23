@@ -153,18 +153,18 @@ class Main(QtGui.QMainWindow):
 
         # properties{
         self._program_dir = program_dir
-        self._CACHEDIR = join(program_dir, "cache")
+        self._CACHEDIR = join(home_dir, "swan", "cache")
         self._currentdirty = False
         self._globaldirty = False
         self._preferences = None
-        self._PREFS = {"defaultProName": "swan.txt",
+        self._PREFS = {"projectName": "swan.txt",
                        "zinStep": 20.0,
                        "cacheDir": self._CACHEDIR,
                        "zoutStep": 20.0,
                        "expandStep": 5,
                        "collapseStep": 5,
                        }
-        self._prodir = join(home_dir)
+        self._prodir = join(home_dir, "swan")
 
         # preferences have to be present for the storage.
         self.load_preferences()
@@ -272,8 +272,7 @@ class Main(QtGui.QMainWindow):
 
                 channel = self._mystorage.get_channel()
 
-                success = self._mystorage.load_project(self._prodir, self._preferences["defaultProName"], channel,
-                                                       files)
+                success = self._mystorage.load_project(self._prodir, self._preferences["projectName"], channel, files)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
                     filesStr = self._mystorage.get_files(True)
@@ -713,7 +712,7 @@ class Main(QtGui.QMainWindow):
 
             # setting channel detail
             self.set_detail(1, str(channel))
-            self.ui.setProgramTitle(self, self._preferences["defaultProName"] + " | " + "Channel " + str(
+            self.ui.setProgramTitle(self, self._preferences["projectName"] + " | " + "Channel " + str(
                 channel) + " | " + title)
 
             # setting tooltips

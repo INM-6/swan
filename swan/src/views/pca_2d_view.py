@@ -80,7 +80,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
 
             self.wave_length = data.get_wave_length()
 
-            active = vum.get_active()
+            active = vum.get_active().tolist()
 
             if np_any(active) and layers:
                 for n, num in enumerate(active):

@@ -126,15 +126,15 @@ class VirtualUnitMap(object):
         self.visible = [[True for j in range(len(self.mapping[i]))] for i in range(len(self.mapping))]
         self.update_active()
         
-    def get_realunit(self, i, j, data):
+    def get_realunit(self, session_index, unit_index, data):
         """
         Returns the real unit for a virtual unit.
         
         **Arguments**
         
-            *i* (integer):
+            *session_index* (integer):
                 The session index.
-            *j* (integer):
+            *unit_index* (integer):
                 The unit index.
             *data* (:class:`src.neodata.NeoData`):
                 The data object that contains the real unit.
@@ -143,12 +143,12 @@ class VirtualUnitMap(object):
                 The real unit.
         
         """
-        vunit = self.mapping[i][j]
-        if "unclassified" not in data.blocks[i].channel_indexes[0].units[0].description.split():
-            runit = data.blocks[i].channel_indexes[0].units[vunit - 1]
+        vunit = self.mapping[session_index][unit_index]
+        if "unclassified" not in data.blocks[session_index].channel_indexes[0].units[0].description.split():
+            runit = data.blocks[session_index].channel_indexes[0].units[vunit - 1]
         else:
-            runit = data.blocks[i].channel_indexes[0].units[vunit]
-        # runit = data.blocks[i].channel_indexes[0].units[vunit]
+            runit = data.blocks[session_index].channel_indexes[0].units[vunit]
+        # runit = data.blocks[session_index].channel_indexes[0].units[vunit]
         return runit
     
     def swap(self, session_index, first_unit_index, second_unit_index):

@@ -52,7 +52,7 @@ class pgWidget3d(PyQtWidget3d):
         self._axesSpacing = 100.
         self._xScaleFactor = 300.
         self._yScaleFactor = 20.
-        self._zScaleFactor = 1 / 2.
+        self._zScaleFactor = 1.
         self._plotSpacing = 50.
         self._xOffset = -2000.
         self._yOffset = -3000.
@@ -109,42 +109,43 @@ class pgWidget3d(PyQtWidget3d):
 
             plots = []
 
-            active = vum.get_active()
+            active = vum.get_active().T
+            # Transposing the active matrix so that i can loop over the units first
 
             for layer in layers:
                 if layer == "average":
-                    for i in range(len(active)):
-                        if any(active[i]):
+                    for unit_index in range(len(active)):
+                        if any(active[unit_index]):
+                            col = vum.get_color(unit_index, False, layer, True)
                             zs = []
-                            for j in range(len(active[i])):
-                                if active[i][j]:
-                                    runit = vum.get_realunit(j, i, data)
-                                    datas = data.get_data(layer, runit)
-                                    col = vum.get_color(i, False, layer, True)
+                            for session_index in range(len(active[unit_index])):
+                                if active[unit_index][session_index]:
+                                    runit = vum.get_realunit(unit_index, session_index, data)
+                                    datas = data.get_data(layer, runit).magnitude
                                     zs.append(datas)
                             zs = np.array(zs)
                             x = np.array(range(zs.shape[0]))
-                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (i + 1)
+                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (unit_index + 1)
                             if len(zs) > 1:
                                 plot = self.createSurfacePlot(x=x, y=y, z=zs, color=col)
                                 plots.append(plot)
                             else:
                                 continue
                 elif layer == "standard deviation":
-                    for i in range(len(active)):
-                        if any(active[i]):
+                    for unit_index in range(len(active)):
+                        if any(active[unit_index]):
+                            col = vum.get_color(unit_index, False, layer, True)
                             zs = []
                             l = 0
-                            for j in range(len(active[i])):
-                                if active[i][j]:
-                                    runit = vum.get_realunit(j, i, data)
-                                    datas = data.get_data(layer, runit)
-                                    col = vum.get_color(i, False, layer, True)
+                            for session_index in range(len(active[unit_index])):
+                                if active[unit_index][session_index]:
+                                    runit = vum.get_realunit(session_index, unit_index, data)
+                                    datas = data.get_data(layer, runit).magnitude
                                     l = len(datas)
                                     zs.append(datas)
                             zs = np.array(zs)
                             x = np.array(range(zs.shape[0]))
-                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (i + 1)
+                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (unit_index + 1)
                             if l > 1:
                                 for k in range(l):
                                     plot = self.createSurfacePlot(x=x, y=y, z=zs[:, k, :], color=col)
