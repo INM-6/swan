@@ -220,8 +220,6 @@ class pgWidgetISI(PyQtWidget2d):
             layer = self.toolbar.getCheckedLayers()[0]
 
             active = vum.get_active()
-            print("Active:\n{0}".format(active))
-            print("Type: {0}".format(type(active)))
 
             if layer == "pooled":
                 clickable = False
