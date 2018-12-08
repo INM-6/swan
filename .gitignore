@@ -53,3 +53,13 @@ Thumbs.db
 src/__pycache__
 /backups
 /swan.egg-info
+/cache
+swan/__pycache__/
+swan/app/__pycache__/
+swan/data/
+swan/gui/__pycache__/
+swan/res/__pycache__/
+swan/src/__pycache__/
+swan/src/views/__pycache__/
+swan/src/widgets/__pycache__/
+swan/stg/__pycache__/
