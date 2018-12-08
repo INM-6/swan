@@ -1,6 +1,0 @@
-[submodule "python-odml"]
-	path = python-odml
-	url = https://github.com/G-Node/python-odml.git
-[submodule "python-neo"]
-	path = python-neo
-	url = https://github.com/mdenker/python-neo.git
