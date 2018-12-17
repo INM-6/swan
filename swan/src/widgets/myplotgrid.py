@@ -239,28 +239,30 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         active = vum.get_active()
         for session in range(len(active)):
-            for unit_id in range(len(active[session])):
-                p = self.find_plot(unit_id, session)
-                if p.toBeUpdated:
-                    p.clear_()
-                    col = vum.get_color(unit_id, False, "average", False)
-                    p._defPenColour = col
-                    if active[session][unit_id]:
-                        runit = vum.get_realunit(session, unit_id, data)
-                        d = data.get_data("average", runit)
-                        d_all = data.get_data('all', runit)
+            for global_unit_id in range(len(active[session])):
+                plot_widget = self.find_plot(global_unit_id, session)
+                if plot_widget.toBeUpdated:
+                    plot_widget.clear_()
+                    pen_color = vum.get_color(global_unit_id, False, "average", False)
+                    plot_widget._defPenColour = pen_color
+                    if active[session][global_unit_id]:
+                        unit = vum.get_realunit(session, global_unit_id, data)
+                        mean_waveform = data.get_data("average", unit)
+                        all_waveforms = data.get_data("all", unit)
                         try:
-                            p.plot_many(d_all[choice(d_all.shape[0], size=self._sampleWaveformNumber, replace=False)],
-                                        self._plotGray)
+                            plot_widget.plot_many(all_waveforms[choice(all_waveforms.shape[0],
+                                                                       size=self._sampleWaveformNumber,
+                                                                       replace=False)],
+                                                  self._plotGray)
                         except ValueError:
-                            p.plot_many(d_all, self._plotGray)
-                        p.plot(d, col)
-                        p.hasPlot = True
-                        p.toggleColourStrip(col)
-                        p.plotWidget.setXRange(0., data.get_wave_length(), padding=None, update=True)
+                            plot_widget.plot_many(all_waveforms, self._plotGray)
+                        plot_widget.plot(mean_waveform.magnitude, pen_color)
+                        plot_widget.hasPlot = True
+                        plot_widget.toggleColourStrip(pen_color)
+                        plot_widget.plotWidget.setXRange(0., data.get_wave_length(), padding=None, update=True)
                     else:
-                        p.toggleColourStrip(col)
-                    p.toBeUpdated = False
+                        plot_widget.toggleColourStrip(pen_color)
+                    plot_widget.toBeUpdated = False
 
     def setAllForUpdate(self):
         for plot in self._plots:

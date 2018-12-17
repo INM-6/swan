@@ -13,14 +13,14 @@ To run the application, you just have to execute *run.py*.
 Look at :mod:`src.run` for more information.
 """
 # system imports
-from os import mkdir
-from os.path import basename, split, isdir, join, exists
-import platform
+from os.path import basename, split, join, exists
 import csv
 import webbrowser as web
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import os
 import pickle as pkl
+import pathlib
+import psutil
 
 # swan-specific imports
 from swan import about, title
@@ -30,12 +30,6 @@ from swan.src.widgets.preferences_dialog import Preferences_Dialog
 from swan.src.mystorage import MyStorage
 from swan.src.views.virtual_units_view import VUnits
 from swan.src.export import Export
-
-if platform.system() == "Linux":
-    onLinux = True
-    import resource
-else:
-    onLinux = False
 
 
 class MemoryTask(QtWidgets.QProgressBar):
@@ -93,9 +87,9 @@ class MemoryTask(QtWidgets.QProgressBar):
         
         """
         QtGui.QApplication.processEvents()
-        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        usage = int((usage / 1024.0) * 100) / 100.0
-        self.bar.showMessage("Memory used: " + str(usage) + "Mb", 0)
+        usage = psutil.Process(os.getpid()).memory_info().rss
+        usage = int(usage / 2 ** 20)
+        self.bar.showMessage("Memory used: {0} MB".format(usage), 0)
 
 
 class Main(QtGui.QMainWindow):
@@ -181,44 +175,49 @@ class Main(QtGui.QMainWindow):
         self.ui.tools.selector.doChannel.connect(self.do_channel)
         self.ui.plotGrid.child.indicatorToggle.connect(self.plot_all)
         self.ui.plotGrid.child.visibilityToggle.connect(self._mystorage.changeVisibility)
+
         # connect loading progress
         self._mystorage.progress.connect(self.setProgress)
-        # connect redraw signal of the views
-        # self.ui.view_3.redraw.connect(self.plot_all)
+
+        # connect redraw signal of the virtual unit view
         self.vu.redraw.connect(self.plot_all)
+
         # connect channel loading
         self.vu.load.connect(self.load_channel)
 
-        self.ui.view_1.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        self.ui.view_3.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        self.ui.view_4.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        self.ui.view_6.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-
-        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_1.highlightCurveFromPlot)
-        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_3.highlightCurveFromPlot)
-        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_4.highlightCurveFromPlot)
-        self.ui.plotGrid.child.plotSelected.connect(self.ui.view_6.highlightCurveFromPlot)
+        # self.ui.mean_waveforms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        # self.ui.isi_histograms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        # self.ui.pca_3d_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        # self.ui.rate_profiles_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
+        #
+        # self.ui.plotGrid.child.plotSelected.connect(self.ui.mean_waveforms_view.highlightCurveFromPlot)
+        # self.ui.plotGrid.child.plotSelected.connect(self.ui.isi_histograms_view.highlightCurveFromPlot)
+        # self.ui.plotGrid.child.plotSelected.connect(self.ui.pca_3d_view.highlightCurveFromPlot)
+        # self.ui.plotGrid.child.plotSelected.connect(self.ui.rate_profiles_view.highlightCurveFromPlot)
 
         # shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.tools.selector
 
+        # store all views in one list for easy access
+        self.views = [self.ui.mean_waveforms_view,
+                      self.ui.isi_histograms_view,
+                      self.ui.rate_profiles_view,
+                      self.ui.pca_3d_view,
+                      self.ui.waveforms_3d_view,
+                      self.ui.raster_plots_view]
+
         self.check_dirs()
 
         self.doPlot.connect(self.plots.do_plot)
-        self.doPlot.connect(self.ui.view_1.do_plot)
-        self.doPlot.connect(self.ui.view_2.do_plot)
-        self.doPlot.connect(self.ui.view_3.do_plot)
-        self.doPlot.connect(self.ui.view_4.do_plot)
-        self.doPlot.connect(self.ui.view_5.do_plot)
-        self.doPlot.connect(self.ui.view_6.do_plot)
 
-        self.ui.view_1.refreshPlots.connect(self.refresh_views)
-        self.ui.view_2.refreshPlots.connect(self.refresh_views)
-        self.ui.view_3.refreshPlots.connect(self.refresh_views)
-        self.ui.view_4.refreshPlots.connect(self.refresh_views)
-        self.ui.view_5.refreshPlots.connect(self.refresh_views)
-        self.ui.view_6.refreshPlots.connect(self.refresh_views)
+        # connect all views for update
+        for view in self.views:
+            self.doPlot.connect(view.do_plot)
+            view.refreshPlots.connect(self.refresh_views)
+
+            view.sigClicked.connect(self.plots.highlightPlot)
+            self.plots.plotSelected.connect(view.highlightCurveFromPlot)
 
         # setting up the progress bar
         self.p = QtGui.QProgressBar()
@@ -230,12 +229,11 @@ class Main(QtGui.QMainWindow):
         self._defaultGuiState = self.saveState()
         self.saved_gui_state = self._defaultGuiState
 
-        if onLinux:
-            # starting memory usage task
-            timer = QtCore.QTimer(self)
-            self.timer = timer
-            self.memorytask = MemoryTask(timer, self.ui.statusbar)
-            self.memorytask.start_timer()
+        # starting memory usage task
+        timer = QtCore.QTimer(self)
+        self.timer = timer
+        self.memorytask = MemoryTask(timer, self.ui.statusbar)
+        self.memorytask.start_timer()
 
         self.showMaximized()
 
@@ -275,9 +273,9 @@ class Main(QtGui.QMainWindow):
                 success = self._mystorage.load_project(self._prodir, self._preferences["projectName"], channel, files)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                    filesStr = self._mystorage.get_files(True)
+                    filesStr = self._mystorage.get_files(as_string=True, only_basenames=True)
                     # setting filelist detail
-                    self.set_detail(1, filesStr)
+                    self.set_detail(3, filesStr)
 
                     self.save_project()
                     self.update_project()
@@ -308,9 +306,10 @@ class Main(QtGui.QMainWindow):
                 success = self._mystorage.load_project(prodir, proname, channel)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                    filesStr = self._mystorage.get_files(True)
+                    filesStr = self._mystorage.get_files(as_string=True, only_basenames=True)
+
                     # setting filelist detail
-                    self.set_detail(4, filesStr)
+                    self.set_detail(3, filesStr)
 
                     self.save_project()
                     self.update_project()
@@ -677,8 +676,7 @@ class Main(QtGui.QMainWindow):
             self.check_cache()
 
             # let the user know that loading can be take some time
-            if onLinux:
-                self.memorytask.stop_timer()
+            self.memorytask.stop_timer()
             self.set_status("Loading... This may take a while...", 0)
 
             QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
@@ -720,9 +718,9 @@ class Main(QtGui.QMainWindow):
 
             self.p.hide()
             QtGui.QApplication.restoreOverrideCursor()
-            if onLinux:
-                self.memorytask.start_timer()
+            self.memorytask.start_timer()
             return True
+
         elif self._mystorage.is_loading():
             self.selector.select_only(self._mystorage.get_channel())
             return False
@@ -771,18 +769,18 @@ class Main(QtGui.QMainWindow):
             # plotting
             # plots: pyqtgraph plotwidget overview
             self.plots.do_plot(vum, data)
-            # view_1: 2D mpl plot
-            self.ui.view_1.do_plot(vum, data)
+            # mean_waveforms_view: 2D mpl plot
+            self.ui.mean_waveforms_view.do_plot(vum, data)
             # view_2: mpl movie plot
-            self.ui.view_2.do_plot(vum, data)
+            self.ui.waveforms_3d_view.do_plot(vum, data)
             # view_3: ISI mpl plot
-            self.ui.view_3.do_plot(vum, data)
+            self.ui.isi_histograms_view.do_plot(vum, data)
             # view_4: PCA pyqtgraph plot
-            self.ui.view_4.do_plot(vum, data)
-            # view_5: 2D PCA pyqtgraph plot
-            self.ui.view_5.do_plot(vum, data)
-            # view_6: Rate Profiles plot
-            self.ui.view_6.do_plot(vum, data)
+            self.ui.pca_3d_view.do_plot(vum, data)
+            # raster_plots_view: 2D PCA pyqtgraph plot
+            self.ui.raster_plots_view.do_plot(vum, data)
+            # rate_profiles_view: Rate Profiles plot
+            self.ui.rate_profiles_view.do_plot(vum, data)
 
             QtGui.QApplication.restoreOverrideCursor()
 
@@ -927,27 +925,30 @@ class Main(QtGui.QMainWindow):
                 The value that should be shown.
         
         """
-        self.ui.tools.details.item(i, 0).setText(value)
+        self.ui.tools.details.item(i, 1).setText(value)
+        self.ui.tools.details.resizeRowToContents(i)
 
     def check_dirs(self):
         """
-        Checks if all directories exist which are needed by the program.
-        If not, they will be created.
+        Creates all necessary directories.
+        No error is raised if they exist.
         
         """
         data_dir = join(self._program_dir, "data")
-        if not isdir(data_dir):
-            mkdir(data_dir)
+        # if not isdir(data_dir):
+        #     mkdir(data_dir)
+        pathlib.Path(data_dir).mkdir(parents=True, exist_ok=True)
         self.check_cache()
 
     def check_cache(self):
         """
-        Checks if the cache directory exists.
-        If not, it will be created.
+        Creates cache directory.
+        If it exists, no error is raised.
         
         """
-        if not isdir(self._preferences["cacheDir"]):
-            mkdir(self._preferences["cacheDir"])
+        # if not isdir(self._preferences["cacheDir"]):
+        #     mkdir(self._preferences["cacheDir"])
+        pathlib.Path(self._preferences["cacheDir"]).mkdir(parents=True, exist_ok=True)
 
     def load_connector_map(self, filename):
         """

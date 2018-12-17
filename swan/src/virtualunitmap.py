@@ -75,7 +75,7 @@ class VirtualUnitMap(object):
                 The number of units per block.
         
         """
-        maximum_units = sum(data.nums)
+        maximum_units = sum(data.total_units_per_block)
         self.maximum_units = maximum_units
         vmap = []
         for session in range(len(data.blocks)):
@@ -485,7 +485,7 @@ class VirtualUnitMap(object):
         wave_length = data.get_wave_length()
         
         for i in range(len(data.blocks) - 1):
-            sessions = np.zeros((sum(data.nums), 2, wave_length))
+            sessions = np.zeros((sum(data.total_units_per_block), 2, wave_length))
             
             for j, val in enumerate(storage.get_map().mapping[i]):
                 if val is not 0:
@@ -528,8 +528,8 @@ class VirtualUnitMap(object):
                         exclude.append((j, min_arg))
                         exclude.append((min_arg, j))
                     elif distances[j, min_arg] >= threshold:
-                        print("Swapping {} and {}".format(j, data.nums[i+1] + extend))
-                        self.swap(i+1, j, data.nums[i+1] + extend)
+                        print("Swapping {} and {}".format(j, data.total_units_per_block[i+1] + extend))
+                        self.swap(i+1, j, data.total_units_per_block[i+1] + extend)
                         extend+=1
                         print(extend)
                     else:

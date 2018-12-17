@@ -376,13 +376,13 @@ class MyStorage(Storage, QtCore.QObject):
         """
         return self.get("lastchannel")
     
-    def get_files(self, asStr=False):
+    def get_files(self, as_string=False, only_basenames=False):
         """
         Wraps the files getter.
         
         **Arguments**
         
-            *asStr* (boolean):
+            *as_string* (boolean):
                 If you want a string containing the file paths instead.
                 Default: False.
         
@@ -391,7 +391,9 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         files = self.get("files")
-        if asStr:
+        if only_basenames:
+            files = [basename(file_path) for file_path in files]
+        if as_string:
             return "\n".join(files)
         return files
     
