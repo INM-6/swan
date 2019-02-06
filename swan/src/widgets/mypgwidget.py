@@ -239,6 +239,7 @@ class PyQtWidget2d(QtWidgets.QWidget):
         self.selectedCurves = []
 
         self._home = None
+        self._processing = False
 
     def showGrid(self):
         self.pgCanvas.plotItem.showGrid(x=True, y=True)
@@ -368,3 +369,6 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
     def triggerRefresh(self):
         self.refreshPlots.emit()
+
+    def is_processing(self):
+        return self._processing

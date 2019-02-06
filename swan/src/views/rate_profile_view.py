@@ -15,6 +15,7 @@ from neo import SpikeTrain
 from elephant.statistics import instantaneous_rate
 from elephant.kernels import GaussianKernel
 from time import time
+from PyQt5 import QtCore, QtGui
 
 # swan-specific imports
 from swan.src.widgets.mypgwidget import PyQtWidget2d
@@ -358,21 +359,16 @@ class pgWidgetRateProfile(PyQtWidget2d):
                 The layers that are visible.
         
         """
-        self.clear_()
         self.datas = {}
         if self.toolbar.layers.isChecked():
 
             layer = self.toolbar.getCheckedLayers()[0]
             active = vum.get_active()
-            event_dict = data.get_events_dict()
-            self.events = event_dict
-            triggerEvent = self.triggerEvent
-            bcm = self.border_correction_multiplier
+            self.events = data.get_events_dict()
 
             self.populateEventList()
 
             if layer == "individual":
-                profile_times = []
                 clickable = True
                 for session in range(len(active)):
                     for global_unit_id in range(len(active[session])):
@@ -382,99 +378,71 @@ class pgWidgetRateProfile(PyQtWidget2d):
                             col = vum.get_color(global_unit_id, False, layer, False)
                             self.datas[(session, global_unit_id)] = [spiketrain, col, clickable]
 
-                if triggerEvent in event_dict.keys():
-                    for key in self.datas.keys():
-                        session, global_unit_id = key[0], key[1]
-                        if active[session][global_unit_id]:
-                            event_times = event_dict[triggerEvent][session][0][0]
-                            spiketrain, color, clickable = self.datas[key]
+                if self.triggerEvent in self.events.keys():
+                    paramaters = {
+                        'trigger_event': self.triggerEvent,
+                        'bcm': self.border_correction_multiplier,
+                        'kernel_width': self.kernelWidth,
+                        't_pre': self.tPre,
+                        't_post': self.tPost
+                    }
+                    profiles = dict()
 
-                            # t_begin = time()
-                            # raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
-                            #                                  trigger=event_times.rescale(pq.ms),
-                            #                                  timerange=[self.tPre, self.tPost],
-                            #                                  border_correction=bcm * self.kernelWidth)
-                            # times, values = self.compute_psth_from_raster(array_raster_trig=raster,
-                            #                                        timerange=[self.tPre, self.tPost],
-                            #                                        minimum_spikes=10,
-                            #                                        border_correction=bcm * self.kernelWidth)
+                    worker = RateProfileWorker(self.datas, profiles, self.events, paramaters, self.compute_psth)
+                    worker.start()
+                    while worker.isRunning():
+                        self._processing = worker.isRunning()
+                        QtGui.QApplication.processEvents()
+                    self._processing = worker.isRunning()
 
-                            t_begin = time()
-                            times, values = self.compute_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
-                                                              trigger=event_times.rescale(pq.ms).magnitude,
-                                                              timerange=[self.tPre, self.tPost], minimum_spikes=10,
-                                                              border_correction=bcm * self.kernelWidth)
-                            t_end = time()
-                            if np.any(times) and np.any(values):
-                                profile_times.append(t_end - t_begin)
+                    self.clear_()
+                    for key in profiles:
+                        self.plotProfile(x=profiles[key][0], y=profiles[key][1],
+                                         color=self.datas[key][1],
+                                         unit_id=key[1],
+                                         session=key[0],
+                                         clickable=self.datas[key][2])
 
-                            self.plotProfile(x=times, y=values,
-                                             color=color, unit_id=global_unit_id,
-                                             session=session, clickable=clickable)
                     self.createVerticalLine(xval=0)
                     self.setXLabel("Time", "s")
                     self.setYLabel("Frequency", "Hz")
-                    self.setPlotTitle("Rate Profiles around trigger {}".format(triggerEvent))
+                    self.setPlotTitle("Rate Profiles around trigger {}".format(self.triggerEvent))
                     self.connectPlots()
-
-                if profile_times:
-                    print("\nTime profile:\n"
-                          "Total calculations: {0:.3f}\n"
-                          "Total time: {1:.3f}s\n"
-                          "Mean +- std: {2:.3f}s +- {3:.3f}s".format(len(profile_times),
-                                                                     np.sum(profile_times),
-                                                                     np.mean(profile_times),
-                                                                     np.std(profile_times)))
 
             elif layer == "pooled":
                 raise ValueError("Layer not supported.")
 
     def update_plot(self):
+        paramaters = {
+            'trigger_event': self.triggerEvent,
+            'bcm': self.border_correction_multiplier,
+            'kernel_width': self.kernelWidth,
+            't_pre': self.tPre,
+            't_post': self.tPost
+        }
+        profiles = dict()
+
+        worker = RateProfileWorker(self.datas, profiles, self.events, paramaters, self.compute_psth)
+        worker.start()
+        while worker.isRunning():
+            self._processing = worker.isRunning()
+            self.rpOptions.errorLabel.setText('Processing...')
+            QtGui.QApplication.processEvents()
+        self._processing = worker.isRunning()
+        self.rpOptions.errorLabel.setText('')
+
         self.clear_()
-        profile_times = []
-        triggerEvent = self.triggerEvent
-        event_dict = self.events
-        bcm = self.border_correction_multiplier
-        for key in self.datas.keys():
-            session, global_unit_id = key[0], key[1]
-            event_times = event_dict[triggerEvent][session][0][0]
-            plotData = self.datas[key]
-            spiketrain, color, clickable = plotData
-
-            # t_begin = time()
-            # raster = self.create_raster_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
-            #                                  trigger=event_times.rescale(pq.ms),
-            #                                  timerange=[self.tPre, self.tPost],
-            #                                  border_correction=bcm * self.kernelWidth)
-            # times, values = self.compute_psth_from_raster(array_raster_trig=raster,
-            #                                        timerange=[self.tPre, self.tPost],
-            #                                        minimum_spikes=10,
-            #                                        border_correction=bcm * self.kernelWidth)
-
-            t_begin = time()
-            times, values = self.compute_psth(spiketrain=spiketrain.rescale(pq.ms).magnitude,
-                                              trigger=event_times.rescale(pq.ms).magnitude,
-                                              timerange=[self.tPre, self.tPost], minimum_spikes=10,
-                                              border_correction=bcm * self.kernelWidth)
-            t_end = time()
-            if np.any(times) and np.any(values):
-                profile_times.append(t_end - t_begin)
-
-            self.plotProfile(x=times, y=values, color=color,
-                             unit_id=global_unit_id, session=session, clickable=clickable)
+        for key in profiles:
+            self.plotProfile(x=profiles[key][0], y=profiles[key][1],
+                             color=self.datas[key][1],
+                             unit_id=key[1],
+                             session=key[0],
+                             clickable=self.datas[key][2])
         self.createVerticalLine(xval=0)
         self.setXLabel("Time", "s")
         self.setYLabel("Frequency", "Hz")
-        self.setPlotTitle("Rate Profiles around trigger {}".format(triggerEvent))
+        self.setPlotTitle("Rate Profiles around trigger {}".format(self.triggerEvent))
         self.connectPlots()
-        if profile_times:
-            print("\nTime profile:\n"
-                  "Total calculations: {0:.3f}\n"
-                  "Total time: {1:.3f}s\n"
-                  "Mean +- std: {2:.3f}s +- {3:.3f}s".format(len(profile_times),
-                                                             np.sum(profile_times),
-                                                             np.mean(profile_times),
-                                                             np.std(profile_times)))
 
     def connectPlots(self):
         for item in self._profiles:
@@ -499,3 +467,30 @@ class pgWidgetRateProfile(PyQtWidget2d):
         eventDict = self.events
         self.rpOptions.eventDropDown.clear()
         self.rpOptions.eventDropDown.addItems([""] + sorted(eventDict.keys()))
+
+
+class RateProfileWorker(QtCore.QThread):
+
+    def __init__(self, data_dictionary, output_dictionary, event_dictionary, param_dictionary, compute_function):
+
+        QtCore.QThread.__init__(self)
+        self.data_dictionary = data_dictionary
+        self.output_dictionary = output_dictionary
+        self.event_dictionary = event_dictionary
+        self.parameters = param_dictionary
+        self.compute_function = compute_function
+
+    def run(self):
+        for key in self.data_dictionary.keys():
+            session, global_unit_id = key[0], key[1]
+            event_times = self.event_dictionary[self.parameters['trigger_event']][session][0][0]
+            unit_data = self.data_dictionary[key]
+            spiketrain, color, clickable = unit_data
+
+            times, values = self.compute_function(
+                spiketrain=spiketrain.rescale(pq.ms).magnitude, trigger=event_times.rescale(pq.ms).magnitude,
+                timerange=[self.parameters['t_pre'], self.parameters['t_post']], minimum_spikes=10,
+                border_correction=self.parameters['bcm'] * self.parameters['kernel_width']
+            )
+
+            self.output_dictionary[key] = [times, values]

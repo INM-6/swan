@@ -24,7 +24,7 @@ import psutil
 
 # swan-specific imports
 from swan import about, title
-from swan.gui.main_ui import Ui_Main
+from swan.gui.main_ui import MainUI
 from swan.src.widgets.file_dialog import File_Dialog
 from swan.src.widgets.preferences_dialog import Preferences_Dialog
 from swan.src.mystorage import MyStorage
@@ -142,8 +142,7 @@ class Main(QtGui.QMainWindow):
         """
         QtGui.QMainWindow.__init__(self)
 
-        self.ui = Ui_Main()
-        self.ui.setupUi(self)
+        self.ui = MainUI(self)
 
         # properties{
         self._program_dir = program_dir
@@ -177,7 +176,7 @@ class Main(QtGui.QMainWindow):
         self.ui.plotGrid.child.visibilityToggle.connect(self._mystorage.changeVisibility)
 
         # connect loading progress
-        self._mystorage.progress.connect(self.setProgress)
+        self._mystorage.progress.connect(self.set_progress)
 
         # connect redraw signal of the virtual unit view
         self.vu.redraw.connect(self.plot_all)
@@ -237,12 +236,8 @@ class Main(QtGui.QMainWindow):
 
         self.showMaximized()
 
-    #### action handler ####
-
-    ### menu:File ###
-
-    @QtCore.pyqtSlot(bool)
-    def on_action_New_Project_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_new_project_triggered(self):
         """
         This method is called if you click on *File->New Project*.
         
@@ -273,9 +268,9 @@ class Main(QtGui.QMainWindow):
                 success = self._mystorage.load_project(self._prodir, self._preferences["projectName"], channel, files)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                    filesStr = self._mystorage.get_files(as_string=True, only_basenames=True)
+                    files_str = self._mystorage.get_files(as_string=True, only_basenames=True)
                     # setting filelist detail
-                    self.set_detail(3, filesStr)
+                    self.set_detail(3, files_str)
 
                     self.save_project()
                     self.update_project()
@@ -285,8 +280,8 @@ class Main(QtGui.QMainWindow):
                 else:
                     self.set_status("No files given. Nothing loaded.")
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Load_Project_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_load_project_triggered(self):
         """
         This method is called if you click on *File->Load Project*.
         
@@ -306,10 +301,10 @@ class Main(QtGui.QMainWindow):
                 success = self._mystorage.load_project(prodir, proname, channel)
 
                 if success and self.do_channel(self._mystorage.get_channel(), self._mystorage.get_last_channel()):
-                    filesStr = self._mystorage.get_files(as_string=True, only_basenames=True)
+                    files_str = self._mystorage.get_files(as_string=True, only_basenames=True)
 
                     # setting filelist detail
-                    self.set_detail(3, filesStr)
+                    self.set_detail(3, files_str)
 
                     self.save_project()
                     self.update_project()
@@ -319,19 +314,19 @@ class Main(QtGui.QMainWindow):
                 else:
                     self.set_status("No files given. Nothing loaded.")
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Save_Project_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_save_project_triggered(self):
         """
         This method is called if you click on *File->Save Project*.
         
-        Works like :func:`on_action_Save_as_triggered()` but without asking you to type in a save name.
+        Works like :func:`on_action_save_as_triggered()` but without asking you to type in a save name.
         
         """
         if self.check_project():
             self.save_project()
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Save_as_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_save_as_triggered(self):
         """
         This method is called if you click on *File->Save as*.
         
@@ -352,8 +347,8 @@ class Main(QtGui.QMainWindow):
                 self.update_project()
                 self.save_project()
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Load_connector_map_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_load_connector_map_triggered(self):
         """
         This method is called if you click on *File->Load connector map*.
         
@@ -368,8 +363,8 @@ class Main(QtGui.QMainWindow):
         except ValueError:
             QtGui.QMessageBox.critical(self, "Loading error", "The connector map could not be loaded!")
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Export_to_csv_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_export_to_csv_triggered(self):
         """
         This method is called if you click on *File->Export to csv*.
 
@@ -385,8 +380,8 @@ class Main(QtGui.QMainWindow):
             except IOError:
                 QtGui.QMessageBox.critical(self, "Export error", "The virtual unit maps could not be exported")
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Export_to_odML_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_export_to_odml_triggered(self):
         """
         This method is called if you click on *File->Export to odML*.
 
@@ -402,7 +397,8 @@ class Main(QtGui.QMainWindow):
             except IOError:
                 QtGui.QMessageBox.critical(self, "Export error", "The virtual unit maps could not be exported")
 
-    def closeEvent(self, event):
+    @QtCore.pyqtSlot(name="")
+    def on_action_quit_triggered(self, event):
         """
         This method is called if you click on *File->Quit*.
         
@@ -420,10 +416,8 @@ class Main(QtGui.QMainWindow):
         else:
             event.ignore()
 
-    ### menu:Edit ###
-
-    @QtCore.pyqtSlot(bool)
-    def on_action_Recalculate_mapping_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_recalculate_mapping_triggered(self):
         """
         This method is called if you click on *Edit->Recalculate mapping*.
         
@@ -436,7 +430,8 @@ class Main(QtGui.QMainWindow):
             answer = QtGui.QMessageBox(self)
             answer.setWindowTitle("Recalculate mapping")
             answer.setText(
-                "WARNING! This will irreversibly change the current mapping!\n\nChoose the mapping algorithm to implement:")
+                "WARNING! This will irreversibly change the current mapping!"
+                "\n\nChoose the mapping algorithm to implement:")
 
             btn1 = QtGui.QPushButton("SWAN Implementation")
             btn2 = QtGui.QPushButton("Fraser-Schwarz Implementation")
@@ -452,6 +447,9 @@ class Main(QtGui.QMainWindow):
                     mapping = 1
                 elif answer.clickedButton() == btn2:
                     mapping = 2
+                else:
+                    raise ValueError("Invalid value for mapping.\n"
+                                     "The button clicked was {button}".format(button=answer.clickedButton()))
                 QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
                 self._mystorage.recalculate(mapping)
                 self._currentdirty = True
@@ -461,8 +459,8 @@ class Main(QtGui.QMainWindow):
                 self.plots.set_tooltips(self._mystorage.get_tooltips())
                 QtGui.QApplication.restoreOverrideCursor()
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Revert_mapping_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_revert_mapping_triggered(self):
         """
         This method is called if you click on *Edit->Revert mapping*.
         
@@ -483,8 +481,8 @@ class Main(QtGui.QMainWindow):
                 self.plot_all()
                 self.plots.set_tooltips(self._mystorage.get_tooltips())
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Swap_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_swap_triggered(self):
         """
         This method is called if you click on *Edit->Swap*.
         
@@ -518,8 +516,8 @@ class Main(QtGui.QMainWindow):
             self._currentdirty = True
             self._globaldirty = True
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Zoom_in_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_zoom_in_triggered(self):
         """
         This method is called if you click on *Edit->Zoom in*.
         
@@ -530,8 +528,8 @@ class Main(QtGui.QMainWindow):
         """
         self.plots.zoom_in(self._preferences["zinStep"])
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Zoom_out_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_zoom_out_triggered(self):
         """
         This method is called if you click on *Edit->Zoom out*.
         
@@ -542,8 +540,8 @@ class Main(QtGui.QMainWindow):
         """
         self.plots.zoom_out(self._preferences["zoutStep"])
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Expand_overview_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_expand_overview_triggered(self):
         """
         This method is called if you click on *Edit->Expand overview*.
         
@@ -555,8 +553,8 @@ class Main(QtGui.QMainWindow):
         """
         self.plots.expand(self._preferences["expandStep"])
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Collapse_overview_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_collapse_overview_triggered(self):
         """
         This method is called if you click on *Edit->Collapse overview*.
         
@@ -568,8 +566,8 @@ class Main(QtGui.QMainWindow):
         """
         self.plots.collapse(self._preferences["collapseStep"])
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_Preferences_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_preferences_triggered(self):
         """
         This method is called if you click on *Edit->Preferences*.
         
@@ -584,10 +582,8 @@ class Main(QtGui.QMainWindow):
             self.save_preferences()
             self._mystorage.set_cache_dir(pref["cacheDir"])
 
-    ### menu:View ###
-
-    @QtCore.pyqtSlot(bool)
-    def on_action_Virtual_Units_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_virtual_units_triggered(self):
         """
         This method is called if you click on *View->Virtual units*.
 
@@ -596,10 +592,8 @@ class Main(QtGui.QMainWindow):
         """
         self.vu.show()
 
-    ### menu:Help ###
-
-    @QtCore.pyqtSlot(bool)
-    def on_action_Tutorials_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_tutorials_triggered(self):
         """
         This method is called if you click on *Help->Tutorials*.
         
@@ -610,8 +604,8 @@ class Main(QtGui.QMainWindow):
         d = "file://" + p
         web.open_new_tab(d)
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_About_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_about_triggered(self):
         """
         This method is called if you click on *Help->About*.
         
@@ -620,8 +614,8 @@ class Main(QtGui.QMainWindow):
         """
         QtGui.QMessageBox.information(self, "About", about)
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_RevertState_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_revert_state_triggered(self):
         """
         This method is called if you click on *View->Revert GUI State*.
         
@@ -630,8 +624,8 @@ class Main(QtGui.QMainWindow):
 
         self.restoreState(self._defaultGuiState)
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_RestoreState_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_restore_state_triggered(self):
         """
         This method is called if you click on *View->Restore GUI State*.
 
@@ -641,8 +635,8 @@ class Main(QtGui.QMainWindow):
 
         self.restoreState(self.saved_gui_state)
 
-    @QtCore.pyqtSlot(bool)
-    def on_action_SaveState_triggered(self):
+    @QtCore.pyqtSlot(name="")
+    def on_action_save_state_triggered(self):
         """
         This method is called if you click on *View->Save GUI State*.
 
@@ -651,9 +645,7 @@ class Main(QtGui.QMainWindow):
 
         self.saved_gui_state = self.saveState()
 
-    #### signal handler ####
-
-    def do_channel(self, channel, lastchannel, automaticMapping=0):
+    def do_channel(self, channel, lastchannel, automatic_mapping=0):
         """
         Loads the data from the given electrode and plots it.
         
@@ -704,13 +696,13 @@ class Main(QtGui.QMainWindow):
             self.plots.set_yranges(min0, max0)
 
             vum = self._mystorage.get_map()
-            vum.calculate_mapping(data, self._mystorage, automaticMapping)
+            vum.calculate_mapping(data, self._mystorage, automatic_mapping)
 
             self.plot_all()
 
             # setting channel detail
             self.set_detail(1, str(channel))
-            self.ui.setProgramTitle(self, self._preferences["projectName"] + " | " + "Channel " + str(
+            self.ui.set_program_title(self, self._preferences["projectName"] + " | " + "Channel " + str(
                 channel) + " | " + title)
 
             # setting tooltips
@@ -784,7 +776,7 @@ class Main(QtGui.QMainWindow):
 
             QtGui.QApplication.restoreOverrideCursor()
 
-    def setProgress(self, i):
+    def set_progress(self, i):
         """
         Sets the progress in the status bar.
 
@@ -796,7 +788,7 @@ class Main(QtGui.QMainWindow):
         """
         self.p.setValue(i)
 
-    def showProgressBar(self, show):
+    def show_progress_bar(self, show):
         """
         Shows or hides the progress bar.
 
@@ -830,8 +822,6 @@ class Main(QtGui.QMainWindow):
                 self.selector.select_channel(item, channel)
                 self.selector.select_only(channel)
 
-    #### general methods ####
-
     def dirty_project(self):
         """
         Lets you save your project before losing your progress.
@@ -841,10 +831,14 @@ class Main(QtGui.QMainWindow):
         
         """
         if self._globaldirty:
-            answer = QtGui.QMessageBox.question(self, "Confirmation",
-                                                "There are unsaved changes.\nDo you want to save your project first?",
-                                                buttons=QtGui.QMessageBox.Cancel | QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
-                                                defaultButton=QtGui.QMessageBox.Yes)
+            answer = QtGui.QMessageBox.question(
+
+                self, "Confirmation",
+                "There are unsaved changes.\nDo you want to save your project first?",
+                buttons=QtGui.QMessageBox.Cancel | QtGui.QMessageBox.No | QtGui.QMessageBox.Yes,
+                defaultButton=QtGui.QMessageBox.Yes
+
+            )
             if answer == QtGui.QMessageBox.Yes:
                 self.save_project()
                 return True

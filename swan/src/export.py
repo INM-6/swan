@@ -6,6 +6,7 @@ Created on Jun 24, 2015
 """
 import csv
 import odml
+from datetime import date
 
 
 class Export(object):
@@ -63,22 +64,23 @@ class Export(object):
         """
         keys = (key for key in vums if key != "files")
         files = vums["files"]
-        doc = odml.Document()
-        filesec = odml.Section(name="files")
+        doc = odml.Document(date=date.today())
+        filesec = odml.Section(name="Files",
+                               definition="Filenames of sessions loaded in project.")
         doc.append(filesec)
         for i, f in enumerate(files):
-            filesec.append(odml.Property(name=str(i), value=odml.Value(data=f)))
+            filesec.append(odml.Property(name=str(i), value=f, dtype=odml.DType.string))
         for vum in keys:
             keysec = odml.Section(name=vum)
             doc.append(keysec)
             vus = (key for key in vums[vum] if key != "channel")
-            channelprop = odml.Property(name="channel", value=odml.Value(data=vums[vum]["channel"]))
+            channelprop = odml.Property(name="channel", value=vums[vum]["channel"])
             keysec.append(channelprop)
             for vu in vus:
                 vusec = odml.Section(name=vu, type=odml.DType.int)
                 keysec.append(vusec)
                 for t in vums[vum][vu]:
-                    v = odml.Value(data=t[1] if isinstance(t[1], int) else str(t[1]))
+                    v = t[1] if isinstance(t[1], int) else str(t[1])
                     prop = odml.Property(name=t[0], value=v)
                     vusec.append(prop)
         odml.tools.xmlparser.XMLWriter(doc).write_file(filename + ".odml")
