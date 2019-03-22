@@ -103,17 +103,17 @@ class MainUI(object):
 
         self.dock_pca_3d_view.setWidget(self.pca_3d_view)
 
-        self.dock_raster_plots_view = QtGui.QDockWidget("Raster Plots")
-        self.dock_raster_plots_view.setObjectName(_from_utf_8("RasterPlotView"))
-        self.dock_raster_plots_view.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
-                                                QtGui.QDockWidget.DockWidgetFloatable)
-        self.dock_raster_plots_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_raster_plots_view, QtCore.Qt.Vertical)
-
-        self.raster_plots_view = pgWidgetPCA2d()
-        self.raster_plots_view.setObjectName(_from_utf_8("RasterView"))
-
-        self.dock_raster_plots_view.setWidget(self.raster_plots_view)
+        # self.dock_raster_plots_view = QtGui.QDockWidget("Raster Plots")
+        # self.dock_raster_plots_view.setObjectName(_from_utf_8("RasterPlotView"))
+        # self.dock_raster_plots_view.setFeatures(QtGui.QDockWidget.DockWidgetMovable |
+        #                                         QtGui.QDockWidget.DockWidgetFloatable)
+        # self.dock_raster_plots_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+        # main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_raster_plots_view, QtCore.Qt.Vertical)
+        #
+        # self.raster_plots_view = pgWidgetPCA2d()
+        # self.raster_plots_view.setObjectName(_from_utf_8("RasterView"))
+        #
+        # self.dock_raster_plots_view.setWidget(self.raster_plots_view)
 
         self.dock_rate_profiles_view = QtGui.QDockWidget("Rate Profiles")
         self.dock_rate_profiles_view.setObjectName(_from_utf_8("RateProfiles"))
@@ -261,8 +261,9 @@ class MainUI(object):
         self.load_icons()
         self.retranslate_ui(main_application)
 
-        main_application.tabifyDockWidget(self.dock_rate_profiles_view, self.dock_raster_plots_view)
-        main_application.tabifyDockWidget(self.dock_raster_plots_view, self.dock_pca_3d_view)
+        # main_application.tabifyDockWidget(self.dock_rate_profiles_view, self.dock_raster_plots_view)
+        # main_application.tabifyDockWidget(self.dock_raster_plots_view, self.dock_pca_3d_view)
+        main_application.tabifyDockWidget(self.dock_rate_profiles_view, self.dock_pca_3d_view)
         main_application.tabifyDockWidget(self.dock_pca_3d_view, self.dock_isi_histograms_view)
         main_application.tabifyDockWidget(self.dock_isi_histograms_view, self.dock_waveforms_3d_view)
         main_application.tabifyDockWidget(self.dock_waveforms_3d_view, self.dock_mean_waveforms_view)

@@ -26,7 +26,9 @@ install_requirements = ['numpy',
                         'matplotlib',
                         'scikit-learn',
                         'psutil',
-                        'neo']
+                        'neo',
+                        'scipy',
+                        'pandas']
 
 setup(
     name='swan',

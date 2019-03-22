@@ -203,8 +203,8 @@ class Main(QtGui.QMainWindow):
                       self.ui.isi_histograms_view,
                       self.ui.rate_profiles_view,
                       self.ui.pca_3d_view,
-                      self.ui.waveforms_3d_view,
-                      self.ui.raster_plots_view]
+                      self.ui.waveforms_3d_view]#,
+                      # self.ui.raster_plots_view]
 
         self.check_dirs()
 
@@ -427,31 +427,24 @@ class Main(QtGui.QMainWindow):
         
         """
         if self._mystorage.has_project():
-            answer = QtGui.QMessageBox(self)
-            answer.setWindowTitle("Recalculate mapping")
-            answer.setText(
-                "WARNING! This will irreversibly change the current mapping!"
-                "\n\nChoose the mapping algorithm to implement:")
 
-            btn1 = QtGui.QPushButton("SWAN Implementation")
-            btn2 = QtGui.QPushButton("Fraser-Schwarz Implementation")
-            btn3 = QtGui.QPushButton("Cancel")
+            implementations = ["SWAN Implementation",
+                               "Old Implementation"]
 
-            answer.addButton(btn1, QtGui.QMessageBox.AcceptRole)
-            answer.addButton(btn2, QtGui.QMessageBox.AcceptRole)
-            answer.addButton(btn3, QtGui.QMessageBox.NoRole)
+            dialog = QtWidgets.QInputDialog(self)
+            answer, okay = dialog.getItem(dialog,
+                                          "Recalculate mapping",
+                                          "WARNING! This will irreversibly change the current mapping!"
+                                          "\n\nChoose the mapping algorithm to implement:",
+                                          implementations,
+                                          0, editable=False
+                                          )
 
-            answer.exec_()
-            if answer.clickedButton() in [btn1, btn2]:
-                if answer.clickedButton() == btn1:
-                    mapping = 1
-                elif answer.clickedButton() == btn2:
-                    mapping = 2
-                else:
-                    raise ValueError("Invalid value for mapping.\n"
-                                     "The button clicked was {button}".format(button=answer.clickedButton()))
+            if answer and okay:
+                mapping = implementations.index(answer)
+
                 QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-                self._mystorage.recalculate(mapping)
+                self._mystorage.recalculate(mapping, parent=self)
                 self._currentdirty = True
                 self._globaldirty = True
                 self.plots.setAllForUpdate()
@@ -695,8 +688,8 @@ class Main(QtGui.QMainWindow):
                 min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
 
-            vum = self._mystorage.get_map()
-            vum.calculate_mapping(data, self._mystorage, automatic_mapping)
+            # vum = self._mystorage.get_map()
+            # vum.calculate_mapping(data, self._mystorage, automatic_mapping)
 
             self.plot_all()
 
@@ -761,18 +754,21 @@ class Main(QtGui.QMainWindow):
             # plotting
             # plots: pyqtgraph plotwidget overview
             self.plots.do_plot(vum, data)
-            # mean_waveforms_view: 2D mpl plot
-            self.ui.mean_waveforms_view.do_plot(vum, data)
-            # view_2: mpl movie plot
-            self.ui.waveforms_3d_view.do_plot(vum, data)
-            # view_3: ISI mpl plot
-            self.ui.isi_histograms_view.do_plot(vum, data)
-            # view_4: PCA pyqtgraph plot
-            self.ui.pca_3d_view.do_plot(vum, data)
-            # raster_plots_view: 2D PCA pyqtgraph plot
-            self.ui.raster_plots_view.do_plot(vum, data)
-            # rate_profiles_view: Rate Profiles plot
-            self.ui.rate_profiles_view.do_plot(vum, data)
+            # # mean_waveforms_view: 2D mpl plot
+            # self.ui.mean_waveforms_view.do_plot(vum, data)
+            # # view_2: mpl movie plot
+            # self.ui.waveforms_3d_view.do_plot(vum, data)
+            # # view_3: ISI mpl plot
+            # self.ui.isi_histograms_view.do_plot(vum, data)
+            # # view_4: PCA pyqtgraph plot
+            # self.ui.pca_3d_view.do_plot(vum, data)
+            # # raster_plots_view: 2D PCA pyqtgraph plot
+            # self.ui.raster_plots_view.do_plot(vum, data)
+            # # rate_profiles_view: Rate Profiles plot
+            # self.ui.rate_profiles_view.do_plot(vum, data)
+
+            for view in self.views:
+                view.do_plot(vum, data)
 
             QtGui.QApplication.restoreOverrideCursor()
 

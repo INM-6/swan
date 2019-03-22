@@ -10,6 +10,9 @@ same units in the same row.
 import numpy as np
 from scipy.spatial.distance import cdist
 
+from swan.src.automatic_mapping import SwanImplementation
+
+
 class VirtualUnitMap(object):
     """        
     A class for mapping real units to virtual units.
@@ -40,31 +43,30 @@ class VirtualUnitMap(object):
         self.visible = []
         self.active = []
         self.maximum_units = 0
-        self.colors = [ (31,	   119,	180),
-                        (255,   127,	14),
-                        (44,	   160,	44),
-                        (214,   39, 	40),
-                        (148,   103,	189),
-                        (140,   86, 	75),
-                        (227,   119,	194),
-                        (127,   127,	127),
-                        (188,   189,	34),
-                        (158,   218,	229),
-                        (23,	   190,	207),
-                        (174,   199,	232),
-                        (255,   187,	120),
-                        (152,   223,	138),
-                        (255,   152,	150),
-                        (197,   176,	213),
-                        (196,   156,	148),
-                        (247,   182,	210),
-                        (199,   199,	199),
-                        (219,   219,	141)]
+        self.colors = [(31, 119, 180),
+                       (255, 127, 14),
+                       (44, 160, 44),
+                       (214, 39, 40),
+                       (148, 103, 189),
+                       (140, 86, 75),
+                       (227, 119, 194),
+                       (127, 127, 127),
+                       (188, 189, 34),
+                       (158, 218, 229),
+                       (23, 190, 207),
+                       (174, 199, 232),
+                       (255, 187, 120),
+                       (152, 223, 138),
+                       (255, 152, 150),
+                       (197, 176, 213),
+                       (196, 156, 148),
+                       (247, 182, 210),
+                       (199, 199, 199),
+                       (219, 219, 141)]
         self.coln = len(self.colors)
-        
-        
+
     #### general methods ####    
-        
+
     def set_initial_map(self, data):
         """
         Sets the default mapping.
@@ -84,19 +86,31 @@ class VirtualUnitMap(object):
             for global_unit_id in range(maximum_units):
                 try:
                     unit_description = data.blocks[session].channel_indexes[0].units[global_unit_id].description.split()
-                    
+
                     if "unclassified" in unit_description or "noise" in unit_description:
                         vmap[session].append(0)
                     else:
                         vmap[session].append(count)
                         count += 1
-                except:
+                except IndexError:
                     vmap[session].append(0)
-        
+
         self.mapping = vmap
         self.visible = [[True for unit in session] for session in vmap]
         self.update_active()
-        
+
+    def set_map_from_dataframe(self, dataframe):
+        if not dataframe.empty:
+            vmap = np.zeros((len(set(dataframe.session)), self.maximum_units))
+            for session_id in set(dataframe.session):
+                session_frame = dataframe.loc[dataframe.session == session_id]
+                for global_unit_id, real_unit_id in zip(session_frame.label, session_frame.unit):
+                    vmap[session_id][global_unit_id] = real_unit_id
+
+            self.mapping = vmap.astype(np.int32).tolist()
+            self.visible = [[True for unit in session] for session in vmap]
+            self.update_active()
+
     def set_map(self, nums, vum):
         """
         Sets the mapping given from the VUMap.
@@ -111,21 +125,21 @@ class VirtualUnitMap(object):
         """
         maximum_units = sum(nums)
         self.maximum_units = maximum_units
-        
+
         total_sessions = len(nums)
-        
+
         for i in range(total_sessions):
             self.mapping.append([])
-        
+
         for l in vum.values():
             if type(l) == list:
                 for i in range(total_sessions):
                     unit = l[i][1]
                     self.mapping[i].append(unit)
-                
+
         self.visible = [[True for j in range(len(self.mapping[i]))] for i in range(len(self.mapping))]
         self.update_active()
-        
+
     def get_realunit(self, session_index, unit_index, data):
         """
         Returns the real unit for a virtual unit.
@@ -150,7 +164,7 @@ class VirtualUnitMap(object):
             runit = data.blocks[session_index].channel_indexes[0].units[vunit]
         # runit = data.blocks[session_index].channel_indexes[0].units[vunit]
         return runit
-    
+
     def swap(self, session_index, first_unit_index, second_unit_index):
         """
         Swaps two virtual units.
@@ -171,7 +185,7 @@ class VirtualUnitMap(object):
         # self.mapping[session_index][second_unit_index] = self.mapping[session_index][first_unit_index]
         # self.mapping[session_index][first_unit_index] = second_unit
         self.update_active()
-        
+
     def set_visible(self, i, j, visible=True):
         """
         Sets a unit row as visible or not.
@@ -189,7 +203,7 @@ class VirtualUnitMap(object):
         """
         self.visible[i][j] = visible
         self.update_active()
-        
+
     def update_active(self):
         """
         Updates the active mapping.
@@ -217,28 +231,28 @@ class VirtualUnitMap(object):
         # combines information contained in visibility and mapping.
         #
         active = np.multiply(checkmap, np.multiply(self.visible, 1))
-        
+
         # Strips trailing zeros
         # for n, num in enumerate(active):
         #     active[n] = np.trim_zeros(num, 'b')
         #     if not active[n]:
         #         active[n] = [0]
-        
+
         self.active = active
-    
+
     def get_mapping(self):
         return self.mapping
-    
+
     def get_visible(self):
         return self.visible
-    
+
     def get_active(self):
         return self.active
-    
+
     def get_color_list(self):
         return self.colors
-        
-    def get_color(self, i, mpl=False, layer=None, pqt = False):
+
+    def get_color(self, i, mpl=False, layer=None, pqt=False):
         """
         Returns the color for the given unit row.
         
@@ -261,19 +275,19 @@ class VirtualUnitMap(object):
         """
         i = i % self.coln
         if mpl:
-            col = (self.colors[i][0]/255., self.colors[i][1]/255., self.colors[i][2]/255.)
+            col = (self.colors[i][0] / 255., self.colors[i][1] / 255., self.colors[i][2] / 255.)
             if layer == "standard deviation":
-                col = (col[0]/2., col[1]/2., col[2]/2.)
+                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
             elif layer == "session":
-                col = (col[0]/2., col[1]/2., col[2]/2.)
+                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
         elif pqt:
-            col = [self.colors[i][0]/255., self.colors[i][1]/255., self.colors[i][2]/255., 0.9]
+            col = [self.colors[i][0] / 255., self.colors[i][1] / 255., self.colors[i][2] / 255., 0.9]
         else:
             col = self.colors[i]
         return col
-    
+
     def swan_implementation(self, data, storage):
-        
+
         print("Map being calculated")
         swaps = 0
         # Retrieve mapping from storage
@@ -283,7 +297,7 @@ class VirtualUnitMap(object):
         for s in range(pre_mapping.shape[1]):
             # initialize array of mean waveform max amplitudes
             averages = np.zeros((pre_mapping.shape[0]))
-            
+
             # loop over rows/units
             for j in range(len(averages)):
                 # ignore zeros in the map (correspond to non-existent units)
@@ -294,12 +308,12 @@ class VirtualUnitMap(object):
                     wave = data.get_data("average", runit)
                     # Store max amplitude of mean waveform
                     averages[j] = np.amax(np.abs(wave))
-            
+
             #
             # Sort the units in each session by max amplitude of mean waveform
             # and swap the corresponding units in the storage.
             #
-            
+
             # loop over rows/units
             for i in range(len(averages)):
                 # retrieve index of max value in session
@@ -310,16 +324,16 @@ class VirtualUnitMap(object):
                     averages[max_index] = averages[i]
                     averages[i] = tmp
                     swaps += 1
-        
+
         storage.change_map()
         # Refresh the mapping using the values in storage
         mapping = np.array(storage.get_map().mapping.copy()).T
-        
+
         # Initialize an array shaped like "mapping" and set all values to np.nan
-        history = np.zeros_like(mapping, dtype = np.float)
+        history = np.zeros_like(mapping, dtype=np.float)
         history[history == 0.0] = None
         print("Initial Mapping: {}".format(mapping))
-        
+
         # Loop over all columns/sessions except the last one
         for i in range(mapping.shape[1] - 1):
             # Loop over all rows/units
@@ -327,16 +341,16 @@ class VirtualUnitMap(object):
             for j in range(mapping.shape[0]):
                 # ignore zeros in the map (correspond to non-existent units)
                 print("\tSecond Loop: {}".format(j))
-                if mapping[j][i] > 0: # to avoid errors in float comparison
+                if mapping[j][i] > 0:  # to avoid errors in float comparison
                     # Choose (j, i)th unit as the actor and obtain it's mean waveform
                     runit_actor = self.get_realunit(i, j, data)
                     actor_wave = data.get_data("average", runit_actor)
                     actor_rp = data.get_data("rate profile", runit_actor)
-                    
+
                     # Initialize matrix to store distances to the actor unit
                     distances_waves = np.zeros((mapping.shape[0], mapping.shape[1]))
                     distances_rp = np.zeros((mapping.shape[0], mapping.shape[1]))
-                    
+
                     # Loop over all columns/sessions again
                     for k in range(mapping.shape[1]):
                         # Loop over all rows/units again
@@ -353,39 +367,40 @@ class VirtualUnitMap(object):
                                 # support from actor (multiplied by a distance
                                 # factor)
                                 #
-                                distances_waves[l][k] = np.linalg.norm(np.subtract(actor_wave, support_wave)) #* np.exp(abs(k-i))
+                                distances_waves[l][k] = np.linalg.norm(
+                                    np.subtract(actor_wave, support_wave))  # * np.exp(abs(k-i))
                                 distances_rp[l][k] = np.linalg.norm(np.subtract(actor_rp, support_rp))
-#                            if mapping[l][k] > 0:
-#                                history[l][k] = distances[l][k]
-                    
-                    #print("Distances:\n {}\n".format(distances))
-                    
+                    #                            if mapping[l][k] > 0:
+                    #                                history[l][k] = distances[l][k]
+
+                    # print("Distances:\n {}\n".format(distances))
+
                     #
                     # Extract the dataset corresponding to all distance measures
                     # with non-zero mapping values and calculate the reject threshold
                     #
-                    
-                    distances = distances_waves#+ distances_rp
-                    
+
+                    distances = distances_waves  # + distances_rp
+
                     threshold_dataset = distances[mapping > 0]
                     dataset_reject_threshold = np.mean(threshold_dataset)
-                    #dataset_std = np.std(threshold_dataset)
-                    #threshold_range_L = threshold_mean + 0.5 * threshold_std
-                    #dataset_reject_threshold = dataset_mean + 0.5 * dataset_std
-                    
-                    #print("Threshold: {}\n".format(dataset_reject_threshold))
-                    
+                    # dataset_std = np.std(threshold_dataset)
+                    # threshold_range_L = threshold_mean + 0.5 * threshold_std
+                    # dataset_reject_threshold = dataset_mean + 0.5 * dataset_std
+
+                    # print("Threshold: {}\n".format(dataset_reject_threshold))
+
                     # 
                     # The following loop is the main part of the mapping algorithm,
                     # which uses the distances between units to rearrange (swap) them.
                     #
-                    
+
                     # Generate loop range for the loop
                     if mapping.shape[1] < 10:
                         loop_range = range(mapping.shape[1])
                     else:
-                        loop_range = [x for x in range(i+9) if (i+x) <= mapping.shape[1]]
-                    
+                        loop_range = [x for x in range(i + 9) if (i + x) <= mapping.shape[1]]
+
                     # Start looping over sessions/columns
                     for k in loop_range:
                         # Find the argument of the minimum in the kth column
@@ -401,9 +416,9 @@ class VirtualUnitMap(object):
                                 # If the unit has not been swapped earlier.
                                 history[j][k] = distances[min_arg][k]
                                 self.swap(k, min_arg, j)
-                                #mapping = backup_mapping.copy()
+                                # mapping = backup_mapping.copy()
                                 swaps += 1
-                                #print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, history[j][k]))
+                                # print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, history[j][k]))
                             else:
                                 # If the unit has been swapped earlier, swap only if
                                 # the new distance is less than the old distance
@@ -412,16 +427,16 @@ class VirtualUnitMap(object):
                                 if curr_dist < prev_dist:
                                     history[j][k] = distances[min_arg][k]
                                     self.swap(k, min_arg, j)
-                                    #mapping = backup_mapping.copy()
+                                    # mapping = backup_mapping.copy()
                                     swaps += 1
-                                    #print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, history[j][k], prev_dist, curr_dist))
+                                    # print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, history[j][k], prev_dist, curr_dist))
                         elif distances[min_arg][k] > dataset_reject_threshold:
                             # If the distance between the two waveforms is greater than
                             # the threshold, move the unit to the first available free
                             # plot
                             loc = 0
                             first_zero = np.where(mapping[:, k] == 0)[0][loc]
-                                
+
                             try:
                                 while np.sum(mapping[first_zero]) > 0.5:
                                     loc += 1
@@ -429,11 +444,11 @@ class VirtualUnitMap(object):
                             except IndexError:
                                 first_zero = 0
                             self.swap(k, first_zero, min_arg)
-                            history[min_arg][k] =  np.nan
+                            history[min_arg][k] = np.nan
                             mapping = backup_mapping.copy()
                             swaps += 1
-                            #print("Swapped {} with empty plot {} on day {}".format(min_arg, first_zero, k))
-                            #print("Mapping: {}".format(mapping))
+                            # print("Swapped {} with empty plot {} on day {}".format(min_arg, first_zero, k))
+                            # print("Mapping: {}".format(mapping))
                         else:
                             # If none of the above cases yield true, something is wrong
                             print("Exception reached")
@@ -443,8 +458,8 @@ class VirtualUnitMap(object):
                             mapping = backup_mapping.copy()
         storage.change_map()
         print("Total swaps: {}\n".format(swaps))
-    
-    def calculate_mapping(self, data, storage, automaticMapping = 0):
+
+    def calculate_mapping(self, data, storage, automaticMapping=0, parent=None):
         """
         Calculates a mapping for the units based on features like distance.
         
@@ -460,13 +475,16 @@ class VirtualUnitMap(object):
                 The class which handles the data and the project files.
         
         """
-        if automaticMapping == 1:
+        if automaticMapping == 0:
             print("New Implementation")
-            self.swan_implementation(data = data, storage = storage)
-        elif automaticMapping == 2:
+            # self.swan_implementation(data=data, storage=storage)
+            algorithm = SwanImplementation(neodata=data, parent=parent)
+            self.set_map_from_dataframe(algorithm.result)
+
+        elif automaticMapping == 1:
             print("Old Implementation")
-            self.calculate_mapping_bu(data = data, storage = storage)
-        
+            self.calculate_mapping_bu(data=data, storage=storage)
+
     def calculate_mapping_bu(self, data, storage):
         """
         Calculates a mapping for the units based on features like distance.
@@ -483,60 +501,60 @@ class VirtualUnitMap(object):
         print("Map being calculated")
 
         wave_length = data.get_wave_length()
-        
+
         for i in range(len(data.blocks) - 1):
             sessions = np.zeros((sum(data.total_units_per_block), 2, wave_length))
-            
+
             for j, val in enumerate(storage.get_map().mapping[i]):
                 if val is not 0:
                     runit = self.get_realunit(i, j, data)
-                    #sessions[j][0] = data.get_data("average", runit)
+                    # sessions[j][0] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
-                    sessions[j][0] = avg/np.max(avg)
+                    sessions[j][0] = avg / np.max(avg)
                 else:
                     sessions[j][0] = np.zeros(wave_length)
-            
-            for j, val in enumerate(storage.get_map().mapping[i+1]):
+
+            for j, val in enumerate(storage.get_map().mapping[i + 1]):
                 if val is not 0:
-                    runit = self.get_realunit(i+1, j, data)
-                    #sessions[j][1] = data.get_data("average", runit)
+                    runit = self.get_realunit(i + 1, j, data)
+                    # sessions[j][1] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
-                    sessions[j][1] = avg/np.max(avg)
+                    sessions[j][1] = avg / np.max(avg)
                 else:
                     sessions[j][1] = np.zeros(wave_length)
-            
+
             distances = cdist(sessions[:, 0], sessions[:, 1], metric='euclidean')
             threshold = np.mean(distances[distances > 0])
             print(threshold)
             extend = 0
             exclude = []
-            for j, val in enumerate(storage.get_map().mapping[i+1]):
+            for j, val in enumerate(storage.get_map().mapping[i + 1]):
                 print("Executing this in session {}".format(i))
                 print("J: {}, Val: {}".format(j, val))
 
                 if val is not 0:
                     print(distances[j])
-                    
+
                     min_arg = np.argmin(distances[j])
                     print("Min Arg: {}".format(min_arg))
-                    
+
                     if min_arg == j:
                         pass
                     elif distances[j, min_arg] < threshold and (j, min_arg) not in exclude:
                         print("Swapping {} and {}".format(j, min_arg))
-                        self.swap(i+1, j, min_arg)
+                        self.swap(i + 1, j, min_arg)
                         exclude.append((j, min_arg))
                         exclude.append((min_arg, j))
                     elif distances[j, min_arg] >= threshold:
-                        print("Swapping {} and {}".format(j, data.total_units_per_block[i+1] + extend))
-                        self.swap(i+1, j, data.total_units_per_block[i+1] + extend)
-                        extend+=1
+                        print("Swapping {} and {}".format(j, data.total_units_per_block[i + 1] + extend))
+                        self.swap(i + 1, j, data.total_units_per_block[i + 1] + extend)
+                        extend += 1
                         print(extend)
                     else:
                         print("Logic flawed, check again!")
             print(exclude)
         storage.change_map()
-        
+
     """
     def calculate_mapping(self, data, storage):
         
@@ -644,6 +662,7 @@ class VirtualUnitMap(object):
         #plt.plot(dis.keys(), dis.values(), "o")
         #plt.show()
     """
+
     def reset(self):
         """
         Resets the mapping.
@@ -653,4 +672,3 @@ class VirtualUnitMap(object):
         self.visible = []
         self.active = []
         self.maximum_units = 0
-    

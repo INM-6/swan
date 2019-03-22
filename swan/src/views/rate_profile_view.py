@@ -392,8 +392,10 @@ class pgWidgetRateProfile(PyQtWidget2d):
                     worker.start()
                     while worker.isRunning():
                         self._processing = worker.isRunning()
+                        self.rpOptions.errorLabel.setText('Processing...')
                         QtGui.QApplication.processEvents()
                     self._processing = worker.isRunning()
+                    self.rpOptions.errorLabel.setText('')
 
                     self.clear_()
                     for key in profiles:
@@ -457,7 +459,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
     def changeTriggerEvent(self, text):
 
         if text == "":
-            self.clearAll()
+            self.clear_()
         else:
             self.triggerEvent = text
             self.update_plot()
@@ -483,7 +485,10 @@ class RateProfileWorker(QtCore.QThread):
     def run(self):
         for key in self.data_dictionary.keys():
             session, global_unit_id = key[0], key[1]
-            event_times = self.event_dictionary[self.parameters['trigger_event']][session][0][0]
+            try:
+                event_times = self.event_dictionary[self.parameters['trigger_event']][session][0][0]
+            except IndexError:
+                event_times = np.array([]) * pq.ms
             unit_data = self.data_dictionary[key]
             spiketrain, color, clickable = unit_data
 

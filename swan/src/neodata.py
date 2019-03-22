@@ -366,7 +366,7 @@ class NeoData(QObject):
                     temp_list[b].append([])
                     for e in range(len(events[b][s])):
                         temp_list[b][s].append([])
-                        t_points = times[b][s][e][np.where(labels[b][s][e] == label)]
+                        t_points = times[b][s][e][np.where(labels[b][s][e] == label)[0]]
                         temp_list[b][s][e] = t_points.rescale(pq.ms)
             event_dict[label] = temp_list
 

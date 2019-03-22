@@ -116,60 +116,112 @@ class MyPlotContent(QtWidgets.QWidget):
         self._rows = {}
         self._cols = {}
 
-        for unit_id in range(rows + 1):
-            if unit_id == 0:
-                for session in range(cols + 1):
-                    if session == 0:
-                        iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", row=unit_id, col=session,
-                                             width=self._width, height=self._height, const_dim=self._constDim)
-                        iw.responsive = False
-                        self._indicators.append(iw)
-                        self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-                    else:
-                        if dates is not None:
-                            iw = IndicatorWidget(
-                                str(session) + " (" + str(dates[session - 1].strftime("%d.%m.%y")) + ")",
-                                row=unit_id, col=session, width=self._width, height=self._height,
-                                const_dim=self._constDim
-                            )
-                        else:
-                            iw = IndicatorWidget(
-                                str(session), row=unit_id, col=session, width=self._width,
-                                height=self._height, const_dim=self._constDim
-                            )
-                        self._indicators.append(iw)
-                        iw.selectIndicator.connect(self.indicatorToggled)
-                        self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        pivot_indicator = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units",
+                                          indicator_type='pivot', position=None,
+                                          width=self._width, height=self._height,
+                                          const_dim=self._constDim)
+        pivot_indicator.responsive = False
+        self.ui.gridLayout.addWidget(pivot_indicator, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+
+        for global_unit_id in range(rows):
+            iw = IndicatorWidget(
+                str(global_unit_id), indicator_type='unit', position=global_unit_id,
+                width=self._width, height=self._height, const_dim=self._constDim
+            )
+            self._indicators.append(iw)
+            iw.selectIndicator.connect(self.indicatorToggled)
+            self.ui.gridLayout.addWidget(iw, global_unit_id + 1, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+
+        for session_id in range(cols):
+            if dates is not None:
+                iw = IndicatorWidget(
+                    str(session_id) + " (" + str(dates[session_id].strftime("%d.%m.%y")) + ")",
+                    indicator_type='session', position=session_id,
+                    width=self._width, height=self._height, const_dim=self._constDim
+                )
             else:
                 iw = IndicatorWidget(
-                    str(unit_id), row=unit_id, col=0,
-                    width=self._width, height=self._height,
-                    const_dim=self._constDim
+                    str(session_id), indicator_type='session', position=session_id,
+                    width=self._width, height=self._height, const_dim=self._constDim
                 )
-                self._indicators.append(iw)
-                iw.selectIndicator.connect(self.indicatorToggled)
-                self.ui.gridLayout.addWidget(iw, unit_id, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+            self._indicators.append(iw)
+            iw.selectIndicator.connect(self.indicatorToggled)
+            self.ui.gridLayout.addWidget(iw, 0, session_id + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for unit_id in range(rows):
             self._rows[unit_id] = []
-            for session in range(cols):
-                if session not in self._cols:
-                    self._cols[session] = []
-                mpw = MyPlotWidget(width=self._width, height=self._height, parent=self)
-                self._plots.append(mpw)
-                mpw.pos = (session, unit_id)
-                mpw.selectPlot.connect(self.select_plot)
-                mpw.colourStripToggle.connect(self.toggleIndicatorColour)
-                mpw.visibilityToggle.connect(self.togglePlotVisibility)
-                self._rows[unit_id].append(mpw)
-                self._cols[session].append(mpw)
-                self.ui.gridLayout.addWidget(mpw, unit_id + 1, session + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+            for session_id in range(cols):
+                if session_id not in self._cols:
+                    self._cols[session_id] = []
+                plot_widget = MyPlotWidget(width=self._width, height=self._height, parent=self)
+                self._plots.append(plot_widget)
+
+                plot_widget.pos = (session_id, unit_id)
+
+                self._rows[unit_id].append(plot_widget)
+                self._cols[session_id].append(plot_widget)
+
+                plot_widget.selectPlot.connect(self.select_plot)
+                plot_widget.colourStripToggle.connect(self.toggleIndicatorColour)
+                plot_widget.visibilityToggle.connect(self.togglePlotVisibility)
+
+                self.ui.gridLayout.addWidget(plot_widget, unit_id + 1, session_id + 1,
+                                             QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+
+        # for unit_id in range(rows + 1):
+        #     if unit_id == 0:
+        #         for session in range(cols + 1):
+        #             if session == 0:
+        #                 iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", row=unit_id, col=session,
+        #                                      width=self._width, height=self._height, const_dim=self._constDim)
+        #                 iw.responsive = False
+        #                 self._indicators.append(iw)
+        #                 self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        #             else:
+        #                 if dates is not None:
+        #                     iw = IndicatorWidget(
+        #                         str(session) + " (" + str(dates[session - 1].strftime("%d.%m.%y")) + ")",
+        #                         row=unit_id, col=session, width=self._width, height=self._height,
+        #                         const_dim=self._constDim
+        #                     )
+        #                 else:
+        #                     iw = IndicatorWidget(
+        #                         str(session), row=unit_id, col=session, width=self._width,
+        #                         height=self._height, const_dim=self._constDim
+        #                     )
+        #                 self._indicators.append(iw)
+        #                 iw.selectIndicator.connect(self.indicatorToggled)
+        #                 self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        #     else:
+        #         iw = IndicatorWidget(
+        #             str(unit_id-1), row=unit_id-1, col=0,
+        #             width=self._width, height=self._height,
+        #             const_dim=self._constDim
+        #         )
+        #         self._indicators.append(iw)
+        #         iw.selectIndicator.connect(self.indicatorToggled)
+        #         self.ui.gridLayout.addWidget(iw, unit_id, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        #
+        # for unit_id in range(rows):
+        #     self._rows[unit_id] = []
+        #     for session in range(cols):
+        #         if session not in self._cols:
+        #             self._cols[session] = []
+        #         mpw = MyPlotWidget(width=self._width, height=self._height, parent=self)
+        #         self._plots.append(mpw)
+        #         mpw.pos = (session, unit_id)
+        #         mpw.selectPlot.connect(self.select_plot)
+        #         mpw.colourStripToggle.connect(self.toggleIndicatorColour)
+        #         mpw.visibilityToggle.connect(self.togglePlotVisibility)
+        #         self._rows[unit_id].append(mpw)
+        #         self._cols[session].append(mpw)
+        #         self.ui.gridLayout.addWidget(mpw, unit_id + 1, session + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         return self._plots
 
     @QtCore.pyqtSlot(object, int)
     def toggleIndicatorColour(self, colour, i):
-        iw = next((x for x in self._indicators if x._row == i + 1))
-        if any(plot.hasPlot == True for plot in self._rows[i]):
+        iw = next((x for x in self._indicators if x._row == i))
+        if any(plot.hasPlot for plot in self._rows[i]):
             iw.toggleColourStrip(colour)
         else:
             iw.toggleColourStrip(None)
@@ -178,22 +230,25 @@ class MyPlotContent(QtWidgets.QWidget):
     def indicatorToggled(self, indicator):
         row = indicator._row
         col = indicator._col
-        if col == 0:
-            mpwList = [pw for pw in self._plots if pw.pos[1] == row - 1]
-        elif row == 0:
-            mpwList = [pw for pw in self._plots if pw.pos[0] == col - 1]
+        indicator_type = indicator.indicator_type
+        if indicator_type == 'unit':
+            plot_widgets = [pw for pw in self._plots if pw.pos[1] == row]
+        elif indicator_type == 'session':
+            plot_widgets = [pw for pw in self._plots if pw.pos[0] == col]
+        else:
+            plot_widgets = []
 
-        for pw in mpwList:
+        for pw in plot_widgets:
             if not indicator.selected:
-                if row == 0:
+                if indicator_type == 'session':
                     pw.enable("col")
-                elif col == 0:
+                elif indicator_type == 'unit':
                     pw.enable("row")
             else:
                 pw.disable()
-                if row == 0:
+                if indicator_type == 'session':
                     pw.colInhibited = True
-                elif col == 0:
+                elif indicator_type == 'unit':
                     pw.rowInhibited = True
         self.indicatorToggle.emit()
 

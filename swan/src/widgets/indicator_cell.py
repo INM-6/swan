@@ -17,16 +17,28 @@ class IndicatorWidget(QtGui.QWidget):
 
     selectIndicator = QtCore.pyqtSignal(object)
 
-    def __init__(self, text, row=0, col=0, width=200, height=150, const_dim=60, *args, **kwargs):
+    def __init__(self, text, indicator_type, position, width=200, height=150, const_dim=60, *args, **kwargs):
         QtGui.QWidget.__init__(self, *args, **kwargs)
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.indicator_type = indicator_type
+
+        if self.indicator_type == 'pivot':
+            self._row = -1
+            self._col = -1
+        elif self.indicator_type == 'unit':
+            self._row = position
+            self._col = -1
+        elif self.indicator_type == 'session':
+            self._row = -1
+            self._col = position
+        else:
+            raise ValueError("Invalid indicator type requested!")
+
+        self._pos = (self._col, self._row)
 
         self._defSize = (width, height)
         self._constDim = const_dim
-        self._row = row
-        self._col = col
-        self._pos = (self._col, self._row)
         self.selected = True
         self.responsive = True
 
@@ -86,11 +98,11 @@ class IndicatorWidget(QtGui.QWidget):
         oldw = float(self.size().width())
         oldh = float(self.size().height())
 
-        if self._row == 0 and self._col > 0:
+        if self.indicator_type == 'session':
             neww = int(oldw + oldw * (width / 100.0))
             if neww > 0:
                 self.setFixedSize(neww, oldh)
-        elif self._col == 0 and self._row > 0:
+        elif self.indicator_type == 'unit':
             newh = int(oldh + oldh * (height / 100.0))
             if newh > 0:
                 self.setFixedSize(oldw, newh)
@@ -98,11 +110,11 @@ class IndicatorWidget(QtGui.QWidget):
         self.setFontSize()
 
     def setSize(self):
-        if self._row == 0 and self._col == 0:
+        if self.indicator_type == 'pivot':
             self.setFixedSize(self._constDim, self._constDim)
-        elif self._row == 0 and self._col > 0:
+        elif self.indicator_type == 'session':
             self.setFixedSize(self._defSize[0], self._constDim)
-        elif self._col == 0 and self._row > 0:
+        elif self.indicator_type == 'unit':
             self.setFixedSize(self._constDim, self._defSize[1])
 
     def setBackground(self, color):
@@ -111,12 +123,12 @@ class IndicatorWidget(QtGui.QWidget):
         self.setPalette(palette)
 
     def setFontSize(self):
-        if self._row == 0 and self._col == 0:
+        if self.indicator_type == 'pivot':
             self.dispFont.setPointSize(0.13 * min(self.size().height(), self.size().width()))
             self.dispFont.setBold(True)
-        elif self._row > 0:
+        elif self.indicator_type == 'unit':
             self.dispFont.setPointSize(0.19 * min(self.size().height(), self.size().width()))
-        elif self._col > 0:
+        elif self.indicator_type == 'session':
             self.dispFont.setPointSize(0.18 * min(self.size().height(), self.size().width()))
         self.dispText.setFont(self.dispFont)
 

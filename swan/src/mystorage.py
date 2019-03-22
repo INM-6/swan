@@ -477,14 +477,14 @@ class MyStorage(Storage, QtCore.QObject):
             c += 1
         return tips
         
-    def recalculate(self, mapping = 0):
+    def recalculate(self, mapping = 0, parent=None):
         """
         Recalculates the mapping and sets it.
         
         """
         vum = self.get_map()
         data = self.get_data()
-        vum.calculate_mapping(data, self, automaticMapping = mapping)
+        vum.calculate_mapping(data, self, automaticMapping = mapping, parent=parent)
         #self.change_map()
     
     def revert(self):

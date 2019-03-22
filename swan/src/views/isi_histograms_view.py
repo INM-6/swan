@@ -38,9 +38,15 @@ class pgWidgetISI(PyQtWidget2d):
         self._hists = []
         self.datas = {}
 
-        self.binMax = 100
-        self.binStep = 5
+        self.binMax = 500
+        self.binStep = 2
         self.stepMode = False
+
+        self.bm_max = 5000
+        self.bm_min = 0
+
+        self.bs_max = 100
+        self.bs_min = 0
 
         self.isiOptions = Ui_isiOptions(self)
 
@@ -63,7 +69,7 @@ class pgWidgetISI(PyQtWidget2d):
             binMax = int(binMax)
             binStep = float(binStep)
 
-            if binMax > 0 and binMax <= 500 and binStep > 0 and binStep <= 500:
+            if self.bm_min < binMax <= self.bm_max and self.bs_min < binStep <= self.bs_max:
                 self.binMax = binMax
                 self.binStep = binStep
 
@@ -84,7 +90,7 @@ class pgWidgetISI(PyQtWidget2d):
         """
         binMax = self.binMax
 
-        if (binMax + 1) <= 500:
+        if (binMax + 1) <= self.bm_max:
             self.binMax += 1
             self.isiOptions.binMaxEdit.setText(str(self.binMax))
             self.update()
@@ -98,7 +104,7 @@ class pgWidgetISI(PyQtWidget2d):
         
         """
         binMax = self.binMax
-        if (binMax - 1) > 0 and (binMax - 1) > self.binStep:
+        if (binMax - 1) > self.bm_min and (binMax - 1) > self.binStep:
             self.binMax -= 1
             self.isiOptions.binMaxEdit.setText(str(self.binMax))
             self.update()
@@ -112,7 +118,7 @@ class pgWidgetISI(PyQtWidget2d):
         
         """
         binStep = self.binStep
-        if (binStep + 1) <= 500:
+        if (binStep + 1) <= self.bs_max:
             self.binStep += 1
             self.isiOptions.binStepEdit.setText(str(self.binStep))
             self.update()
@@ -126,7 +132,7 @@ class pgWidgetISI(PyQtWidget2d):
         
         """
         binStep = self.binStep
-        if (binStep - 1) > 0:
+        if (binStep - 1) > self.bs_min:
             self.binStep -= 1
             self.isiOptions.binStepEdit.setText(str(self.binStep))
             self.update()
@@ -141,13 +147,14 @@ class pgWidgetISI(PyQtWidget2d):
         binMax = value
         try:
             binMax = float(binMax)
-            if binMax > 0 and binMax <= 500:
+            if self.bm_min < binMax <= self.bm_max:
                 self.binMax = binMax
                 self.isiOptions.errorLabel.setText("")
             else:
                 self.isiOptions.errorLabel.setText("Value outside acceptable limits!")
 
-        except:
+        except Exception as e:
+            print(e)
             self.isiOptions.errorLabel.setText("Invalid input!")
 
     def binStepChanged(self, value):
@@ -160,7 +167,7 @@ class pgWidgetISI(PyQtWidget2d):
         binStep = value
         try:
             binStep = float(binStep)
-            if binStep > 0 and binStep <= 500:
+            if self.bs_min < binStep <= self.bs_max:
                 self.binStep = binStep
                 self.isiOptions.errorLabel.setText("")
             else:
