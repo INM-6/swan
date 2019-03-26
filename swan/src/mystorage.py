@@ -37,7 +37,7 @@ class Task(QtCore.QThread):
             The channel that has to be loaded.
                 
     """
-    
+
     def __init__(self, data, files, channel):
         """
         **Properties**
@@ -54,7 +54,7 @@ class Task(QtCore.QThread):
         self.data = data
         self.files = files
         self.channel = channel
-    
+
     def run(self):
         """
         Runs the loading routine of 
@@ -62,7 +62,7 @@ class Task(QtCore.QThread):
         
         """
         self.data.load(self.files, self.channel)
-        
+
 
 class MyStorage(Storage, QtCore.QObject):
     """
@@ -84,7 +84,7 @@ class MyStorage(Storage, QtCore.QObject):
     Progress signal that indicates how far the given task has progressed.
     
     """
-    
+
     def __init__(self, program_dir, cache_dir):
         """
         **Properties**
@@ -107,20 +107,19 @@ class MyStorage(Storage, QtCore.QObject):
         """
         super(MyStorage, self).__init__()
         super(QtCore.QObject, self).__init__()
-        
-        #properties{
+
+        # properties{
         self._project = None
         self._PNAME = "swan"
         self._program_dir = program_dir
         self._cache_dir = cache_dir
         self._copy_i = 1
         self._loading = False
-        #}
-        
+        # }
+
         self.store("channel", 1)
         self.store("lastchannel", 1)
-        
-    
+
     def set_cache_dir(self, cache_dir):
         """
         Lets you change the cache directory.
@@ -136,7 +135,7 @@ class MyStorage(Storage, QtCore.QObject):
             self.get_data().cdir = cache_dir
         except:
             pass
-        
+
     def load_project(self, prodir, proname, channel, files=None):
         """
         Creates or loads a new project.
@@ -163,20 +162,20 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         loadFiles = files is None
-        
-        #return if there is nothing to load
+
+        # return if there is nothing to load
         if not loadFiles and len(files) == 0:
             return False
-        
-        #if something goes wrong, you can back to the old project
+
+        # if something goes wrong, you can back to the old project
         tmp = self._project
-        
+
         self.set_project(prodir)
-        
+
         if not loadFiles:
-            #checking if standard name is already existing
-            #if so, the name will be changed 
-            
+            # checking if standard name is already existing
+            # if so, the name will be changed
+
             while True:
                 try:
                     self._project.add_file(self.get_pro_name(proname))
@@ -185,54 +184,54 @@ class MyStorage(Storage, QtCore.QObject):
                     istr = str(self._copy_i)
                     l = len(istr)
                     if proname.endswith(")"):
-                        proname = (splitext(proname)[0])[:-2-l] + "(" + istr + ")"
+                        proname = (splitext(proname)[0])[:-2 - l] + "(" + istr + ")"
                     else:
                         proname = (splitext(proname)[0]) + "(" + istr + ")"
                     self._copy_i += 1
-            
+
             self._project.add_file(self.get_vum_name(proname))
         else:
             self._project.add_file(self.get_pro_name(proname), None, False)
             self._project.add_file(self.get_vum_name(proname), None, False)
-        
+
         try:
-            #reading the file
+            # reading the file
             if loadFiles:
                 files = self.read_file()
             self.store("files", files)
-            
-            #free the old data object
+
+            # free the old data object
             try:
                 dataToDelete = self.get_data()
                 dataToDelete.delete_IOs()
             except:
                 pass
-            
-            #creating the important NeoData object
+
+            # creating the important NeoData object
             neodata = NeoData(self._cache_dir)
             neodata.progress.connect(self.setProgress)
             self.store("data", neodata)
-            
+
             self.set_channel(channel)
-            
-            #create or load the dict for the virtual unit mappings
-            #create or load a second one for backup
+
+            # create or load the dict for the virtual unit mappings
+            # create or load a second one for backup
             try:
                 vum_all = self.load_map()
                 vum_all2 = self.load_map()
             except IOError:
                 vum_all = {}
                 vum_all2 = {}
-            self.store("vum_all", vum_all)  
+            self.store("vum_all", vum_all)
             self.store("vum_all2", vum_all2)
-            
+
             self.save_file()
-                
+
             return True
         except IOError:
             self._project = tmp
             return False
-        
+
     def save_project(self):
         """
         Saves the project and the map.
@@ -241,7 +240,7 @@ class MyStorage(Storage, QtCore.QObject):
         if self.has_project():
             self.save_file()
             self.save_map()
-    
+
     def save_project_as(self, filename):
         """
         Saves the project and the map but it changes the name of both of them.
@@ -265,7 +264,7 @@ class MyStorage(Storage, QtCore.QObject):
         self._project.add_file(fname)
         self._project.add_file(vumname)
         self.save_project()
-                
+
     def set_project(self, prodir):
         """
         Creates and sets a new project.
@@ -278,7 +277,7 @@ class MyStorage(Storage, QtCore.QObject):
         """
         p = Project(self._PNAME, prodir, False)
         self._project = p
-        
+
     def set_channel(self, channel):
         """
         Sets the new channel and the last channel.
@@ -292,7 +291,7 @@ class MyStorage(Storage, QtCore.QObject):
         last = self.get("channel")
         self.store("channel", channel)
         self.store("lastchannel", last)
-    
+
     def get_project_path(self):
         """
         Wrapper for getting the absolute path to the project file.
@@ -302,7 +301,7 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         return self._project.get_file_path(self._project.get_file_list()[0])
-    
+
     def get_map_path(self):
         """
         Wrapper for getting the absolute path to the map file.
@@ -320,7 +319,7 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         return self._project is not None
-    
+
     def get_pro_name(self, proname):
         """
         **Arguments**
@@ -338,7 +337,7 @@ class MyStorage(Storage, QtCore.QObject):
         else:
             proname = proname + ".txt"
             return proname
-    
+
     def get_vum_name(self, proname):
         """
         **Arguments**
@@ -355,7 +354,7 @@ class MyStorage(Storage, QtCore.QObject):
         proname = splitext(proname)[0]
         vumname = proname + "_vum.vum"
         return vumname
-    
+
     def get_channel(self):
         """
         Wraps the channel getter.
@@ -365,7 +364,7 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         return self.get("channel")
-    
+
     def get_last_channel(self):
         """
         Wraps the lastchannel getter.
@@ -375,7 +374,7 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         return self.get("lastchannel")
-    
+
     def get_files(self, as_string=False, only_basenames=False):
         """
         Wraps the files getter.
@@ -396,7 +395,7 @@ class MyStorage(Storage, QtCore.QObject):
         if as_string:
             return "\n".join(files)
         return files
-    
+
     def get_map(self):
         """
         Wraps the map getter.
@@ -406,7 +405,7 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         return self.get("vum")
-    
+
     def get_data(self):
         """
         Wraps the data getter.
@@ -436,14 +435,14 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         channel = self.get_channel()
-        name = "vum"+str(channel)
+        name = "vum" + str(channel)
         try:
             vum_all2 = self.get("vum_all2")
             vum = vum_all2[name]
             return vum
         except KeyError:
             return None
-        
+
     def get_tooltips(self):
         """
         Creates tool tips for the overview.
@@ -467,7 +466,7 @@ class MyStorage(Storage, QtCore.QObject):
                 else:
                     spike_nums[c].append(0)
             c += 1
-            
+
         c = 0
         for f, l, n in zip(files, vum.mapping, spike_nums):
             tips.append([])
@@ -476,17 +475,17 @@ class MyStorage(Storage, QtCore.QObject):
                 tips[c].append(tooltip)
             c += 1
         return tips
-        
-    def recalculate(self, mapping = 0, parent=None):
+
+    def recalculate(self, mapping=0, parent=None):
         """
         Recalculates the mapping and sets it.
         
         """
         vum = self.get_map()
         data = self.get_data()
-        vum.calculate_mapping(data, self, automaticMapping = mapping, parent=parent)
-        #self.change_map()
-    
+        vum.calculate_mapping(data, self, automaticMapping=mapping, parent=parent)
+        # self.change_map()
+
     def revert(self):
         """
         Reverts the current mapping to the last saved one.
@@ -500,7 +499,7 @@ class MyStorage(Storage, QtCore.QObject):
             vumap.set_map(data.total_units_per_block, vum)
         else:
             vumap.set_initial_map(data)
-        
+
     def swap(self, m, n1, n2):
         """
         Swaps the mapping of two entries in 
@@ -518,11 +517,11 @@ class MyStorage(Storage, QtCore.QObject):
         """
         self.get_map().swap(m, n1, n2)
         self.change_map()
-    
+
     def changeVisibility(self, i, j, visible):
         vmap = self.get_map()
         vmap.set_visible(i, j, visible)
-    
+
     def load_channel(self, channel):
         """
         Loads a channel.
@@ -539,31 +538,31 @@ class MyStorage(Storage, QtCore.QObject):
         self.set_channel(channel)
         data = self.get("data")
         files = self.get("files")
-        
-        #loading with a thread
+
+        # loading with a thread
         t = Task(data, files, channel)
         t.start()
         while t.isRunning():
             self._loading = t.isRunning()
             QtGui.QApplication.processEvents()
-        self._loading = False
-        
+        self._loading = t.isRunning()
+
         vum_all = self.get("vum_all")
         name = "vum" + str(channel)
-        
+
         vumap = VirtualUnitMap()
-        
-        #load a mapping or set the default one
+
+        # load a mapping or set the default one
         try:
             vum = vum_all[name]
             vumap.set_map(data.total_units_per_block, vum)
         except KeyError:
             vumap.set_initial_map(data)
-            
+
         self.store("vum", vumap)
-                
+
         return sum(data.total_units_per_block), len(vumap.mapping)
-            
+
     def read_file(self):
         """
         Reads the project file and returns the lines without the
@@ -584,7 +583,7 @@ class MyStorage(Storage, QtCore.QObject):
             return files
         except:
             raise IOError("Could not read project file")
-        
+
     def save_file(self):
         """
         Writes the file paths of the loaded sessions to a file.
@@ -593,7 +592,7 @@ class MyStorage(Storage, QtCore.QObject):
         files = self.get("files")
         data = "\n".join(files)
         Storage.write(self.get_project_path(), data)
-    
+
     def save_map(self):
         """
         Saves the dictionary containing all virtual unit mappings.
@@ -602,8 +601,8 @@ class MyStorage(Storage, QtCore.QObject):
         self.change_map()
         vum_all = self.get("vum_all")
         Storage.write(self.get_map_path(), vum_all, "pickle")
-        self.store("vum_all2", self.load_map()) 
-            
+        self.store("vum_all2", self.load_map())
+
     def load_map(self):
         """
         Loads the dictionary containing all virtual unit mappings.
@@ -617,7 +616,7 @@ class MyStorage(Storage, QtCore.QObject):
             return vum
         except:
             raise IOError("Could not read VUMap")
-    
+
     def check_map(self, vum, files):
         """
         Checks if the map is correct.
@@ -637,7 +636,7 @@ class MyStorage(Storage, QtCore.QObject):
         if not vum["files"] == files:
             return False
         return True
-    
+
     def change_map(self):
         """
         Changes the current loaded map without saving it.
@@ -654,7 +653,7 @@ class MyStorage(Storage, QtCore.QObject):
         for filename, vus in zip(files, vum.mapping):
             for i in range(len(vus)):
                 d[i].append((basename(filename), vus[i]))
-        
+
         name = "vum" + str(channel)
         vum_all[name] = d
         vum_all["files"] = files
