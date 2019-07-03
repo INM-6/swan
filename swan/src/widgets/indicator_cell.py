@@ -10,78 +10,79 @@ from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 from pyqtgraph import mkColor
 
 
-class IndicatorWidget(QtGui.QWidget):
+class IndicatorWidget(QtWidgets.QWidget):
     """
     A class based on QWidget used to indicate the row/column.
     """
 
-    selectIndicator = QtCore.pyqtSignal(object)
+    select_indicator = QtCore.pyqtSignal(object)
 
     def __init__(self, text, indicator_type, position, width=200, height=150, const_dim=60, *args, **kwargs):
-        QtGui.QWidget.__init__(self, *args, **kwargs)
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
         self.indicator_type = indicator_type
 
         if self.indicator_type == 'pivot':
-            self._row = -1
-            self._col = -1
+            self.row = -1
+            self.col = -1
         elif self.indicator_type == 'unit':
-            self._row = position
-            self._col = -1
+            self.row = position
+            self.col = -1
         elif self.indicator_type == 'session':
-            self._row = -1
-            self._col = position
+            self.row = -1
+            self.col = position
         else:
             raise ValueError("Invalid indicator type requested!")
 
-        self._pos = (self._col, self._row)
+        self.pos = (self.col, self.row)
 
-        self._defSize = (width, height)
-        self._constDim = const_dim
+        self.default_size = (width, height)
+        self.constant_dimension = const_dim
         self.selected = True
         self.responsive = True
+        self.in_focus = False
 
-        gridLayout = QtGui.QGridLayout(self)
-        gridLayout.setObjectName("indicatorGridLayout")
-        self.setLayout(gridLayout)
+        grid_layout = QtWidgets.QGridLayout(self)
+        grid_layout.setObjectName("indicatorGridLayout")
+        self.setLayout(grid_layout)
 
-        self.dispText = QtWidgets.QLabel()
-        self.dispText.setObjectName("dispText")
-        self.dispText.setText(text)
-        self.dispText.setIndent(0)
-        self.dispText.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.dispText.setScaledContents(False)
-        self.dispText.setWordWrap(True)
+        self.display_text = QtWidgets.QLabel()
+        self.display_text.setObjectName("dispText")
+        self.display_text.setText(text)
+        self.display_text.setIndent(0)
+        self.display_text.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        self.display_text.setScaledContents(False)
+        self.display_text.setWordWrap(True)
 
-        gridLayout.addWidget(self.dispText, 0, 0)
+        grid_layout.addWidget(self.display_text, 0, 0)
 
-        self.colourStrip = QtGui.QLabel()
-        self.colourStrip.setObjectName("colourStrip")
-        self.colourStrip.setAutoFillBackground(True)
-        self.colourStrip.setIndent(0)
-        self.colourStrip.setMargin(0)
-        self.colourStrip.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.colour_strip = QtWidgets.QLabel()
+        self.colour_strip.setObjectName("colourStrip")
+        self.colour_strip.setAutoFillBackground(True)
+        self.colour_strip.setIndent(0)
+        self.colour_strip.setMargin(0)
+        self.colour_strip.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        gridLayout.addWidget(self.colourStrip, 0, 1)
-        self.colourStrip.hide()
+        grid_layout.addWidget(self.colour_strip, 0, 1)
+        self.colour_strip.hide()
 
-        gridLayout.setColumnStretch(0, 1)
-        gridLayout.setColumnStretch(1, 0)
-        gridLayout.setSpacing(0)
-        gridLayout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setColumnStretch(0, 1)
+        grid_layout.setColumnStretch(1, 0)
+        grid_layout.setSpacing(0)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.setSize()
+        self.set_size()
 
-        self.dispFont = self.dispText.font()
-        self.setFontSize()
+        self.display_font = self.display_text.font()
+        self.set_font_size()
 
-        self.bgs = {"deselected": mkColor(0.25), "selected": mkColor('k'), "inFocus": mkColor(0.1)}
-        self._bg = self.bgs["selected"]
+        self.backgrounds = {"deselected": mkColor(0.25), "selected": mkColor('k'), "inFocus": mkColor(0.1)}
+        self.default_background = self.backgrounds["selected"]
 
         self.setAutoFillBackground(True)
 
-        self.setBackground(self._bg)
+        self.set_background(self.default_background)
 
     def change_size(self, width, height):
         """
@@ -107,39 +108,39 @@ class IndicatorWidget(QtGui.QWidget):
             if newh > 0:
                 self.setFixedSize(oldw, newh)
 
-        self.setFontSize()
+        self.set_font_size()
 
-    def setSize(self):
+    def set_size(self):
         if self.indicator_type == 'pivot':
-            self.setFixedSize(self._constDim, self._constDim)
+            self.setFixedSize(self.constant_dimension, self.constant_dimension)
         elif self.indicator_type == 'session':
-            self.setFixedSize(self._defSize[0], self._constDim)
+            self.setFixedSize(self.default_size[0], self.constant_dimension)
         elif self.indicator_type == 'unit':
-            self.setFixedSize(self._constDim, self._defSize[1])
+            self.setFixedSize(self.constant_dimension, self.default_size[1])
 
-    def setBackground(self, color):
+    def set_background(self, color):
         palette = self.palette()
         palette.setColor(self.backgroundRole(), color)
         self.setPalette(palette)
 
-    def setFontSize(self):
+    def set_font_size(self):
         if self.indicator_type == 'pivot':
-            self.dispFont.setPointSize(0.13 * min(self.size().height(), self.size().width()))
-            self.dispFont.setBold(True)
+            self.display_font.setPointSize(0.13 * min(self.size().height(), self.size().width()))
+            self.display_font.setBold(True)
         elif self.indicator_type == 'unit':
-            self.dispFont.setPointSize(0.19 * min(self.size().height(), self.size().width()))
+            self.display_font.setPointSize(0.19 * min(self.size().height(), self.size().width()))
         elif self.indicator_type == 'session':
-            self.dispFont.setPointSize(0.18 * min(self.size().height(), self.size().width()))
-        self.dispText.setFont(self.dispFont)
+            self.display_font.setPointSize(0.18 * min(self.size().height(), self.size().width()))
+        self.display_text.setFont(self.display_font)
 
-    def toggleColourStrip(self, colour):
+    def toggle_colour_strip(self, colour):
         if colour is not None:
-            palette = self.colourStrip.palette()
+            palette = self.colour_strip.palette()
             palette.setColor(self.backgroundRole(), colour)
-            self.colourStrip.setPalette(palette)
-            self.colourStrip.show()
+            self.colour_strip.setPalette(palette)
+            self.colour_strip.show()
         else:
-            self.colourStrip.hide()
+            self.colour_strip.hide()
 
     ### Mouse Interactions ###
 
@@ -156,14 +157,14 @@ class IndicatorWidget(QtGui.QWidget):
         
         """
         if event.button() == QtCore.Qt.LeftButton and self.responsive:
-            self.selectIndicator.emit(self)
+            self.select_indicator.emit(self)
             self.selected = not self.selected
             if self.selected:
-                self._bg = self.bgs["selected"]
+                self.default_background = self.backgrounds["selected"]
             elif not self.selected:
-                self._bg = self.bgs["deselected"]
+                self.default_background = self.backgrounds["deselected"]
 
-            self.setBackground(self._bg)
+            self.set_background(self.default_background)
             event.accept()
         else:
             event.ignore()
@@ -204,8 +205,8 @@ class IndicatorWidget(QtGui.QWidget):
         
         """
         if self.responsive:
-            self.inFocus = True
-            self.setBackground(self.bgs["inFocus"])
+            self.in_focus = True
+            self.set_background(self.backgrounds["inFocus"])
             event.accept()
 
     def leaveEvent(self, event):
@@ -220,6 +221,6 @@ class IndicatorWidget(QtGui.QWidget):
         
         """
         if self.responsive:
-            self.inFocus = False
-            self.setBackground(self._bg)
+            self.in_focus = False
+            self.set_background(self.default_background)
             event.accept()

@@ -12,47 +12,47 @@ from sklearn.decomposition import PCA
 from itertools import chain
 
 
-class pgWidgetPCA(PyQtWidget3d):
+class PgWidgetPCA(PyQtWidget3d):
 
     def __init__(self, parent=None):
 
         PyQtWidget3d.__init__(self, parent=parent)
 
         layers = ["units", "sessions"]
-        self.toolbar.setupRadioButtons(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
-        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
-        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolbar.setup_radio_buttons(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
+        self.toolbar.collapsible_widget.set_content_layout(self.toolbar.grid_layout)
+        self.toolbar.main_grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.setup_axes(glOptions='opaque')
+        self.setup_axes(gl_options='opaque')
         self.positions = []
         self.means = []
 
-        self.pgCanvas.setClickable(True)
+        self.pg_canvas.set_clickable(True)
 
         self.max_distance = 0
         self.wave_length = 0  # Initial dummy value, later updated from data
 
-    def addScatterPlot(self, plotItem=None, gl_options='opaque'):
-        self.addScatterPlotItem(plotItem=plotItem, gl_options=gl_options)
+    def add_scatter_plot(self, plot_item=None, gl_options='opaque'):
+        self.add_scatter_plot_item(plot_item=plot_item, gl_options=gl_options)
 
     def clear_plot(self):
         self.reset_plot()
         self.positions = []
         self.means = []
 
-    def connectMeans(self):
-        self.pgCanvas.setMeans(self.means)
-        for plot in self.pgCanvas.means:
-            plot.sigClicked.connect(self.getItem)
+    def connect_means(self):
+        self.pg_canvas.set_means(self.means)
+        for plot in self.pg_canvas.means:
+            plot.sig_clicked.connect(self.get_item)
 
     def do_plot(self, vum, data):
-        self.saveCameraPosition()
+        self.save_camera_position()
         self.clear_plot()
 
-        if self.toolbar.layers.isChecked():
+        if self.toolbar.activate_button.current_state:
 
-            layers = self.toolbar.getCheckedLayers()
+            layers = self.toolbar.get_checked_layers()
 
             max_distance = 0
 
@@ -101,16 +101,16 @@ class pgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[session_index])):
                                         if active[session_index][unit_index]:
-                                            col = vum.get_color(unit_index, False, None, True)
+                                            col = vum.get_colour(unit_index, False, None, True)
                                             self.positions.append(
-                                                self.createScatterPlotItem(pos=pca_session[c], size=1, color=col,
-                                                                           unit_id=unit_index, session=session_index,
-                                                                           pxMode=True))
+                                                self.create_scatter_plot_item(pos=pca_session[c], size=1, color=col,
+                                                                              unit_id=unit_index, session=session_index,
+                                                                              px_mode=True))
                                             self.means.append(
-                                                self.createScatterPlotItem(pos=pca_session[c].mean(axis=0), size=15,
-                                                                           color=col, unit_id=unit_index,
-                                                                           session=session_index, pxMode=True,
-                                                                           clickable=True))
+                                                self.create_scatter_plot_item(pos=pca_session[c].mean(axis=0), size=15,
+                                                                              color=col, unit_id=unit_index,
+                                                                              session=session_index, px_mode=True,
+                                                                              clickable=True))
                                             c += 1
 
                                     del session
@@ -129,30 +129,19 @@ class pgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[dom])):
                                         if active[dom][unit_index]:
-                                            col = vum.get_color(unit_index, False, None, True)
+                                            col = vum.get_colour(unit_index, False, None, True)
                                             self.positions.append(
-                                                self.createScatterPlotItem(pos=dom_ch_pca[c], size=1, color=col,
-                                                                           unit_id=unit_index, session=session_index,
-                                                                           pxMode=True))
+                                                self.create_scatter_plot_item(pos=dom_ch_pca[c], size=1, color=col,
+                                                                              unit_id=unit_index, session=session_index,
+                                                                              px_mode=True))
                                             self.means.append(
-                                                self.createScatterPlotItem(pos=dom_ch_pca[c].mean(axis=0), size=15,
-                                                                           color=col, unit_id=unit_index,
-                                                                           session=session_index, pxMode=True,
-                                                                           clickable=True))
+                                                self.create_scatter_plot_item(pos=dom_ch_pca[c].mean(axis=0), size=15,
+                                                                              color=col, unit_id=unit_index,
+                                                                              session=session_index, px_mode=True,
+                                                                              clickable=True))
                                             c += 1
                                 except ValueError:
                                     pass
-
-                    #                if layer == "sessions":
-                    #                    for i in range(len(data.blocks)):
-                    #                        if i != dom:
-                    #                            session = []
-                    #                            for j in range(len(active[i])):
-                    #                                runit = vum.get_realunit(i, j, data)
-                    #                                if active[i][j] != 0 and vum.visible[j] and "noise"  not in runit.description.split() and "unclassified" not in runit.description.split():
-                    #                                    session.append(data.get_data("all", runit))
-                    #
-                    #                            merged_session, len_vec = self.merge_session(session)
 
                     del dom
                     del dom_session
@@ -161,17 +150,17 @@ class pgWidgetPCA(PyQtWidget3d):
 
             if len(self.positions) == len(self.means):
                 for item in self.positions:
-                    self.addScatterPlot(item, gl_options='translucent')
+                    self.add_scatter_plot(item, gl_options='translucent')
                 for mean in self.means:
-                    self.addScatterPlot(mean, gl_options='opaque')
-                self.connectMeans()
+                    self.add_scatter_plot(mean, gl_options='opaque')
+                self.connect_means()
             else:
                 print("Something is wrong!")
                 print("Length of positions list: {}".format(len(self.positions)))
                 print("Length of means list: {}".format(len(self.means)))
 
-            if self.cameraPosition is not None:
-                self.restoreCameraPosition()
+            if self.camera_position is not None:
+                self.restore_camera_position()
 
     def merge_session(self, session):
         total_length = 0

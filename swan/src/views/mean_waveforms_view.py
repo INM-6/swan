@@ -13,7 +13,7 @@ from numpy import arange
 from quantities import V
 
 
-class pgWidget2d(PyQtWidget2d):
+class PgWidget2d(PyQtWidget2d):
     """
     A class with only one plot that shows simple 2d data.
     
@@ -30,30 +30,28 @@ class pgWidget2d(PyQtWidget2d):
         PyQtWidget2d.__init__(self)
 
         layers = ["average", "standard deviation"]
-        self.toolbar.setupCheckboxes(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
-        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
-        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolbar.setup_checkboxes(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
+        self.toolbar.collapsible_widget.set_content_layout(self.toolbar.grid_layout)
+        self.toolbar.main_grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self._plotItem = self.pgCanvas.getPlotItem()
-        self._plotItem.enableAutoRange()
+        self.plot_item = self.pg_canvas.getPlotItem()
+        self.plot_item.enableAutoRange()
         self._means = []
         self._stds = []
 
-        self._fillbetweenAlpha = 50
+        self.fill_alpha = 50
 
-        self.showGrid()
+        self.show_grid()
 
-    #### general methods ####
+    def create_curve(self, x, y, color, clickable=True):
+        return self.create_curve_item(x=x, y=y, color=color, name=None, clickable=clickable)
 
-    def createCurve(self, x, y, color, clickable=True):
-        return self.createCurveItem(x=x, y=y, color=color, name=None, clickable=clickable)
+    def create_filled_curve(self, y1, y2, color):
+        color_with_alpha = color + (self.fill_alpha,)
+        return self.create_filled_curve_item(y1=y1, y2=y2, color=color_with_alpha)
 
-    def createFilledCurve(self, y1, y2, color):
-        colorWithAlpha = color + (self._fillbetweenAlpha,)
-        return self.createFilledCurveItem(y1=y1, y2=y2, color=colorWithAlpha)
-
-    def plotMean(self, x, y, color, unit_id, session, clickable=False):
+    def plot_mean(self, x, y, color, unit_id, session, clickable=False):
         """
         Plot mean waveforms to the plot.
         
@@ -71,9 +69,9 @@ class pgWidget2d(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._means.append(self.makePlot(x=x, y=y, color=color, unit_id=unit_id, session=session, clickable=clickable))
+        self._means.append(self.make_plot(x=x, y=y, color=color, unit_id=unit_id, session=session, clickable=clickable))
 
-    def plotStd(self, xs, ys, color):
+    def plot_std(self, xs, ys, color):
         """
         Plots data to the plot.
         
@@ -85,9 +83,9 @@ class pgWidget2d(PyQtWidget2d):
                 The color of the line.
         
         """
-        curve1 = self.createCurve(x=xs, y=ys[0], color=color, clickable=False)
-        curve2 = self.createCurve(x=xs, y=ys[1], color=color, clickable=False)
-        self._stds.append(self.createFilledCurve(y1=curve1, y2=curve2, color=color))
+        curve1 = self.create_curve(x=xs, y=ys[0], color=color, clickable=False)
+        curve2 = self.create_curve(x=xs, y=ys[1], color=color, clickable=False)
+        self._stds.append(self.create_filled_curve(y1=curve1, y2=curve2, color=color))
 
     def do_plot(self, vum, data):
         """
@@ -104,9 +102,9 @@ class pgWidget2d(PyQtWidget2d):
         
         """
         self.clear_plots()
-        if self.toolbar.layers.isChecked():
+        if self.toolbar.activate_button.current_state:
 
-            layers = self.toolbar.getCheckedLayers()
+            layers = self.toolbar.get_checked_layers()
             active = vum.get_active()
 
             for session in range(len(active)):
@@ -116,39 +114,39 @@ class pgWidget2d(PyQtWidget2d):
                             if layer == "standard deviation":
                                 runit = vum.get_realunit(session, unit_id, data)
                                 datas = data.get_data(layer, runit)
-                                col = vum.get_color(unit_id, False, layer, False)
+                                col = vum.get_colour(unit_id, False, layer, False)
                                 xs = arange(data.get_wave_length()) * 1 / data.sampling_rate.magnitude
                                 ys = datas.rescale(V)
-                                self.plotStd(xs=xs, ys=ys, color=col)
+                                self.plot_std(xs=xs, ys=ys, color=col)
 
                             elif layer == "average":
                                 runit = vum.get_realunit(session, unit_id, data)
                                 datas = data.get_data(layer, runit)
-                                col = vum.get_color(unit_id, False, layer, False)
+                                col = vum.get_colour(unit_id, False, layer, False)
                                 x = arange(data.get_wave_length()) * 1 / data.sampling_rate.magnitude
                                 y = datas.rescale(V)
-                                self.plotMean(x=x, y=y, color=col, unit_id=unit_id, session=session, clickable=True)
+                                self.plot_mean(x=x, y=y, color=col, unit_id=unit_id, session=session, clickable=True)
 
                             else:
                                 raise Exception("Invalid layer requested!")
 
-            self.setXLabel("Time", "s")
-            self.setYLabel("Voltage", "V")
-            self.setPlotTitle("Mean Spike Waveforms")
+            self.set_x_label("Time", "s")
+            self.set_y_label("Voltage", "V")
+            self.set_plot_title("Mean Spike Waveforms")
 
             if self._stds:
                 for std in self._stds:
-                    self._plotItem.addItem(std)
-            self.connectPlots()
+                    self.plot_item.addItem(std)
+            self.connect_plots()
 
-    def connectPlots(self):
+    def connect_plots(self):
         for item in self._means:
             item.curve.setClickable(True, width=5)
-            item.sigClicked.connect(self.getItem)
+            item.sigClicked.connect(self.get_item)
 
     def clear_plots(self):
         self._means = []
         for item in self._stds:
-            self.pgCanvas.removeItem(item)
+            self.pg_canvas.removeItem(item)
         self._stds = []
-        self.clearAll()
+        self.clear_all()

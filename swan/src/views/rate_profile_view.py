@@ -14,15 +14,14 @@ import quantities as pq
 from neo import SpikeTrain
 from elephant.statistics import instantaneous_rate
 from elephant.kernels import GaussianKernel
-from time import time
-from PyQt5 import QtCore, QtGui
+from pyqtgraph.Qt import QtWidgets, QtCore
 
 # swan-specific imports
 from swan.src.widgets.mypgwidget import PyQtWidget2d
-from swan.gui.rpOptions_ui import Ui_rpOptions
+from swan.gui.rpOptions_ui import RpOptionsUi
 
 
-class pgWidgetRateProfile(PyQtWidget2d):
+class PgWidgetRateProfile(PyQtWidget2d):
     """
     A class with only one plot that shows simple 2d data.
     
@@ -36,33 +35,31 @@ class pgWidgetRateProfile(PyQtWidget2d):
                 The 2d plot for this widget.
         
         """
-        PyQtWidget2d.__init__(self)
+        PyQtWidget2d.__init__(self, *args, **kwargs)
 
         layers = ["individual", "pooled"]
-        self.toolbar.setupRadioButtons(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.setup_radio_buttons(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
 
-        self._plotItem = self.pgCanvas.getPlotItem()
-        self._plotItem.enableAutoRange()
-        self._profiles = []
+        self.plot_item = self.pg_canvas.getPlotItem()
+        self.plot_item.enableAutoRange()
+        self.rate_profiles = []
         self.datas = {}
 
-        self.tPre = -150
-        self.tPost = 350
-        self.samplingPeriod = 10
-        self.kernelWidth = 60.0
-        self.triggerEvent = ""
+        self.time_pre = -150
+        self.time_post = 350
+        self.sampling_period = 10
+        self.kernel_width = 60.0
+        self.trigger_event = ""
         self.border_correction_multiplier = 1
 
         self.events = {}
 
-        self.rpOptions = Ui_rpOptions(self)
+        self.rate_profile_settings = RpOptionsUi(self)
 
-        self.showGrid()
+        self.show_grid()
 
-    #### general methods ####
-
-    def onEnter(self):
+    def on_enter(self):
         """
         This method is called if you press ENTER on one of the line
         edit widgets.
@@ -70,120 +67,126 @@ class pgWidgetRateProfile(PyQtWidget2d):
         Redraws everything.
         
         """
-        tPre = self.rpOptions.timePre.text()
-        tPost = self.rpOptions.timePost.text()
-        samplingPeriod = self.rpOptions.samplingPeriod.text()
-        kernelWidth = self.rpOptions.kernelWidth.text()
+        time_pre = self.rate_profile_settings.timePre.text()
+        time_post = self.rate_profile_settings.timePost.text()
+        sampling_period = self.rate_profile_settings.samplingPeriod.text()
+        kernel_width = self.rate_profile_settings.kernelWidth.text()
 
         try:
-            tPre = float(tPre)
-            tPost = float(tPost)
-            samplingPeriod = float(samplingPeriod)
-            kernelWidth = float(kernelWidth)
+            time_pre = float(time_pre)
+            time_post = float(time_post)
+            sampling_period = float(sampling_period)
+            kernel_width = float(kernel_width)
 
-            if -1 > tPre > -5000.0 \
-                    and 1 < tPost < 5000.0 \
-                    and 1.0 < samplingPeriod < 5000.0 \
-                    and 10.0 < kernelWidth < 500.0:
+            if -1 > time_pre > -5000.0 \
+                    and 1 < time_post < 5000.0 \
+                    and 1.0 < sampling_period < 5000.0 \
+                    and 10.0 < kernel_width < 500.0:
 
-                self.tPre = tPre
-                self.tPost = tPost
-                self.samplingPeriod = samplingPeriod
-                self.kernelWidth = kernelWidth
+                self.time_pre = time_pre
+                self.time_post = time_post
+                self.sampling_period = sampling_period
+                self.kernel_width = kernel_width
                 self.update_plot()
-                self.rpOptions.errorLabel.setText("")
+                self.rate_profile_settings.errorLabel.setText("")
             else:
-                self.rpOptions.errorLabel.setText("Values outside acceptable limits!")
-        except:
-            self.rpOptions.errorLabel.setText("Invalid inputs!")
+                self.rate_profile_settings.errorLabel.setText("Values outside acceptable limits!")
+        except Exception as e:
+            print(e)
+            self.rate_profile_settings.errorLabel.setText("Invalid inputs!")
 
-    def onTPreChanged(self, value):
+    def on_time_pre_changed(self, value):
         """
         This method is called if you edit the T-Pre option.
         
         Checks if the T-Pre is correct.
         
         """
-        tPre = value
+        time_pre = value
         try:
-            tPre = float(tPre)
-            if -1 > tPre > -5000.0:
-                self.tPre = tPre
-                self.rpOptions.errorLabel.setText("")
+            time_pre = float(time_pre)
+            if -1 > time_pre > -5000.0:
+                self.time_pre = time_pre
+                self.rate_profile_settings.errorLabel.setText("")
             else:
-                self.rpOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.rate_profile_settings.errorLabel.setText("Value outside acceptable limits!")
 
-        except:
-            self.rpOptions.errorLabel.setText("Invalid input!")
+        except Exception as e:
+            print(e)
+            self.rate_profile_settings.errorLabel.setText("Invalid input!")
 
-    def onTPostChanged(self, value):
+    def on_time_post_changed(self, value):
         """
         This method is called if you edit the T-Post option.
         
         Checks if the T-Post is correct.
         
         """
-        tPost = value
+        t_post = value
         try:
-            tPost = float(tPost)
-            if tPost > 1 and tPost < 5000.0:
-                self.tPost = tPost
-                self.rpOptions.errorLabel.setText("")
+            t_post = float(t_post)
+            if 1 < t_post < 5000.0:
+                self.time_post = t_post
+                self.rate_profile_settings.errorLabel.setText("")
             else:
-                self.rpOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.rate_profile_settings.errorLabel.setText("Value outside acceptable limits!")
 
-        except:
-            self.rpOptions.errorLabel.setText("Invalid input!")
+        except Exception as e:
+            print(e)
+            self.rate_profile_settings.errorLabel.setText("Invalid input!")
 
-    def onSamplingPeriodChanged(self, value):
+    def on_sampling_period_changed(self, value):
         """
         This method is called if you edit the sampling period option.
         
         Checks if the sampling period is correct.
         
         """
-        samplingPeriod = value
+        sampling_period = value
         try:
-            samplingPeriod = float(samplingPeriod)
-            if samplingPeriod > 1.0 and samplingPeriod < 5000.0:
-                self.samplingPeriod = samplingPeriod
-                self.rpOptions.errorLabel.setText("")
+            sampling_period = float(sampling_period)
+            if 1.0 < sampling_period < 5000.0:
+                self.sampling_period = sampling_period
+                self.rate_profile_settings.errorLabel.setText("")
             else:
-                self.rpOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.rate_profile_settings.errorLabel.setText("Value outside acceptable limits!")
 
-        except:
-            self.rpOptions.errorLabel.setText("Invalid input!")
+        except Exception as e:
+            print(e)
+            self.rate_profile_settings.errorLabel.setText("Invalid input!")
 
-    def onKernelWidthChanged(self, value):
+    def on_kernel_width_changed(self, value):
         """
         This method is called if you edit the kernel width option.
         
         Checks if the sampling period is correct.
         
         """
-        kernelWidth = value
+        kernel_width = value
         try:
-            kernelWidth = float(kernelWidth)
-            if kernelWidth > 10.0 and kernelWidth < 500.0:
-                self.kernelWidth = kernelWidth
-                self.rpOptions.errorLabel.setText("")
+            kernel_width = float(kernel_width)
+            if 10.0 < kernel_width < 500.0:
+                self.kernel_width = kernel_width
+                self.rate_profile_settings.errorLabel.setText("")
             else:
-                self.rpOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.rate_profile_settings.errorLabel.setText("Value outside acceptable limits!")
 
-        except:
-            self.rpOptions.errorLabel.setText("Invalid input!")
+        except Exception as e:
+            print(e)
+            self.rate_profile_settings.errorLabel.setText("Invalid input!")
 
-    def create_raster_psth(self, spiketrain, trigger, timerange, border_correction=0.0):
-        '''
+    @staticmethod
+    def create_raster_psth(spiketrain, trigger, timerange, border_correction=0.0):
+        """
         It calculates a list of concatenated spikes around stimulus onset and offset, for a later PSTH analysis.
 
         :param spiketrain: list with spike times
         :param trigger:    list with timings of the trigger
         :param timerange:  time range for the PSTHs
         :param border_correction: time window around edges to use for border correction
-    
+
         :return: raster_trig
-        '''
+        """
 
         if len(spiketrain) < 2:
             # raise(ValueError, "The spiketrain contains fewer than 2 spikes.")
@@ -194,11 +197,10 @@ class pgWidgetRateProfile(PyQtWidget2d):
 
         spiketrain = spiketrain * pq.ms
 
-        ## find period of activity (poa)
+        # find period of activity (poa)
         poa_start = spiketrain[0]
         poa_stop = spiketrain[-1]
 
-        ## choose saccades within the period of activity
         trig_unit = trigger[(trigger >= poa_start) & (trigger <= poa_stop)]
 
         if len(trig_unit) < 1:
@@ -239,15 +241,17 @@ class pgWidgetRateProfile(PyQtWidget2d):
             out["times"] = []
             return out
 
-        rate_estimate, PSTH_times = self.calc_rate_estimate(raster_trig, timerange, sampling_period=self.samplingPeriod,
-                                                            kernel_width=self.kernelWidth,
+        rate_estimate, psth_times = self.calc_rate_estimate(raster_trig, timerange,
+                                                            sampling_period=self.sampling_period,
+                                                            kernel_width=self.kernel_width,
                                                             border_correction=border_correction)
-        PSTH_trig = rate_estimate / float(len(array_raster_trig))
-        PSTH_trig = np.array(PSTH_trig)[:, 0]
+        psth_trig = rate_estimate / float(len(array_raster_trig))
+        psth_trig = np.array(psth_trig)[:, 0]
 
-        return PSTH_times, PSTH_trig
+        return psth_times, psth_trig
 
-    def calc_rate_estimate(self, spike_times, timerange, sampling_period,
+    @staticmethod
+    def calc_rate_estimate(spike_times, timerange, sampling_period,
                            kernel_width, border_correction):
         """
         :param spike_times: array of spike times
@@ -285,8 +289,8 @@ class pgWidgetRateProfile(PyQtWidget2d):
         :param minimum_spikes: Minimum spikes required in spiketrain (and around trigger) to calculate PSTH
         :param border_correction: Time (in milliseconds) to be used to correct for edge effects in PSTH
 
-        :return PSTH_times: Array of times (in seconds)
-        :return PSTH_trig: Array of values corresponding to PSTH_times (in Herz)
+        :return psth_times: Array of times (in seconds)
+        :return psth_trig: Array of values corresponding to psth_times (in Herz)
         """
 
         if len(spiketrain) < minimum_spikes:
@@ -294,7 +298,7 @@ class pgWidgetRateProfile(PyQtWidget2d):
             # print("The spiketrain contains fewer than 2 spikes. Returning empty list.")
             return [], []
 
-        ## choose saccades within the period of activity
+        # choose saccades within the period of activity
         trig_unit = trigger[(trigger >= spiketrain[0]) & (trigger <= spiketrain[-1])]
 
         if len(trig_unit) < 1:
@@ -317,19 +321,19 @@ class pgWidgetRateProfile(PyQtWidget2d):
         if len(raster_trig) <= minimum_spikes:
             return [], []
 
-        rate_estimate, PSTH_times = self.calc_rate_estimate(raster_trig, timerange,
-                                                            sampling_period=self.samplingPeriod,
-                                                            kernel_width=self.kernelWidth,
+        rate_estimate, psth_times = self.calc_rate_estimate(raster_trig, timerange,
+                                                            sampling_period=self.sampling_period,
+                                                            kernel_width=self.kernel_width,
                                                             border_correction=border_correction)
-        if rate_estimate.size == PSTH_times.size == 0:
+        if rate_estimate.size == psth_times.size == 0:
             return [], []
         else:
-            PSTH_trig = rate_estimate / float(len(raster_trig))
-            PSTH_trig = np.array(PSTH_trig)[:, 0]
+            psth_trig = rate_estimate / float(len(raster_trig))
+            psth_trig = np.array(psth_trig)[:, 0]
 
-            return PSTH_times, PSTH_trig
+            return psth_times, psth_trig
 
-    def plotProfile(self, x, y, color, unit_id, session, clickable=False):
+    def plot_profile(self, x, y, color, unit_id, session, clickable=False):
         """
         Plot the rate profile onto the plot widget and also append it to self._profiles.
 
@@ -341,9 +345,9 @@ class pgWidgetRateProfile(PyQtWidget2d):
         :param clickable: toggle response to left mouse-clicks.
         :return:
         """
-        self._profiles.append(self.makePlot(x=x, y=y, color=color,
-                                            unit_id=unit_id, session=session,
-                                            clickable=clickable))
+        self.rate_profiles.append(self.make_plot(x=x, y=y, color=color,
+                                                 unit_id=unit_id, session=session,
+                                                 clickable=clickable))
 
     def do_plot(self, vum, data):
         """
@@ -360,13 +364,14 @@ class pgWidgetRateProfile(PyQtWidget2d):
         
         """
         self.datas = {}
-        if self.toolbar.layers.isChecked():
 
-            layer = self.toolbar.getCheckedLayers()[0]
+        if self.toolbar.activate_button.current_state:
+
+            layer = self.toolbar.get_checked_layers()[0]
             active = vum.get_active()
             self.events = data.get_events_dict()
 
-            self.populateEventList()
+            self.populate_event_list()
 
             if layer == "individual":
                 clickable = True
@@ -375,16 +380,16 @@ class pgWidgetRateProfile(PyQtWidget2d):
                         if active[session][global_unit_id]:
                             unit = vum.get_realunit(session, global_unit_id, data)
                             spiketrain = data.get_data("spiketrain", unit)
-                            col = vum.get_color(global_unit_id, False, layer, False)
+                            col = vum.get_colour(global_unit_id, False, layer, False)
                             self.datas[(session, global_unit_id)] = [spiketrain, col, clickable]
 
-                if self.triggerEvent in self.events.keys():
+                if self.trigger_event in self.events.keys():
                     paramaters = {
-                        'trigger_event': self.triggerEvent,
+                        'trigger_event': self.trigger_event,
                         'bcm': self.border_correction_multiplier,
-                        'kernel_width': self.kernelWidth,
-                        't_pre': self.tPre,
-                        't_post': self.tPost
+                        'kernel_width': self.kernel_width,
+                        't_pre': self.time_pre,
+                        't_post': self.time_post
                     }
                     profiles = dict()
 
@@ -392,35 +397,37 @@ class pgWidgetRateProfile(PyQtWidget2d):
                     worker.start()
                     while worker.isRunning():
                         self._processing = worker.isRunning()
-                        self.rpOptions.errorLabel.setText('Processing...')
-                        QtGui.QApplication.processEvents()
+                        self.rate_profile_settings.errorLabel.setText('Processing...')
+                        QtWidgets.QApplication.processEvents()
                     self._processing = worker.isRunning()
-                    self.rpOptions.errorLabel.setText('')
+                    self.rate_profile_settings.errorLabel.setText('')
 
                     self.clear_()
                     for key in profiles:
-                        self.plotProfile(x=profiles[key][0], y=profiles[key][1],
-                                         color=self.datas[key][1],
-                                         unit_id=key[1],
-                                         session=key[0],
-                                         clickable=self.datas[key][2])
+                        self.plot_profile(x=profiles[key][0], y=profiles[key][1],
+                                          color=self.datas[key][1],
+                                          unit_id=key[1],
+                                          session=key[0],
+                                          clickable=self.datas[key][2])
 
-                    self.createVerticalLine(xval=0)
-                    self.setXLabel("Time", "s")
-                    self.setYLabel("Frequency", "Hz")
-                    self.setPlotTitle("Rate Profiles around trigger {}".format(self.triggerEvent))
-                    self.connectPlots()
+                    self.create_vertical_line(xval=0)
+                    self.set_x_label("Time", "s")
+                    self.set_y_label("Frequency", "Hz")
+                    self.set_plot_title("Rate Profiles around trigger {}".format(self.trigger_event))
+                    self.connect_plots()
 
             elif layer == "pooled":
                 raise ValueError("Layer not supported.")
+        else:
+            self.clear_()
 
     def update_plot(self):
         paramaters = {
-            'trigger_event': self.triggerEvent,
+            'trigger_event': self.trigger_event,
             'bcm': self.border_correction_multiplier,
-            'kernel_width': self.kernelWidth,
-            't_pre': self.tPre,
-            't_post': self.tPost
+            'kernel_width': self.kernel_width,
+            't_pre': self.time_pre,
+            't_post': self.time_post
         }
         profiles = dict()
 
@@ -428,47 +435,47 @@ class pgWidgetRateProfile(PyQtWidget2d):
         worker.start()
         while worker.isRunning():
             self._processing = worker.isRunning()
-            self.rpOptions.errorLabel.setText('Processing...')
-            QtGui.QApplication.processEvents()
+            self.rate_profile_settings.errorLabel.setText('Processing...')
+            QtWidgets.QApplication.processEvents()
         self._processing = worker.isRunning()
-        self.rpOptions.errorLabel.setText('')
+        self.rate_profile_settings.errorLabel.setText('')
 
         self.clear_()
         for key in profiles:
-            self.plotProfile(x=profiles[key][0], y=profiles[key][1],
-                             color=self.datas[key][1],
-                             unit_id=key[1],
-                             session=key[0],
-                             clickable=self.datas[key][2])
-        self.createVerticalLine(xval=0)
-        self.setXLabel("Time", "s")
-        self.setYLabel("Frequency", "Hz")
-        self.setPlotTitle("Rate Profiles around trigger {}".format(self.triggerEvent))
-        self.connectPlots()
+            self.plot_profile(x=profiles[key][0], y=profiles[key][1],
+                              color=self.datas[key][1],
+                              unit_id=key[1],
+                              session=key[0],
+                              clickable=self.datas[key][2])
+        self.create_vertical_line(xval=0)
+        self.set_x_label("Time", "s")
+        self.set_y_label("Frequency", "Hz")
+        self.set_plot_title("Rate Profiles around trigger {}".format(self.trigger_event))
+        self.connect_plots()
 
-    def connectPlots(self):
-        for item in self._profiles:
+    def connect_plots(self):
+        for item in self.rate_profiles:
             item.curve.setClickable(True, width=5)
-            item.sigClicked.connect(self.getItem)
+            item.sigClicked.connect(self.get_item)
 
     def clear_(self):
 
-        self._profiles = []
-        self.clearAll()
+        self.rate_profiles = []
+        self.clear_all()
 
-    def changeTriggerEvent(self, text):
+    def change_trigger_event(self, text):
 
         if text == "":
             self.clear_()
         else:
-            self.triggerEvent = text
+            self.trigger_event = text
             self.update_plot()
 
-    def populateEventList(self):
+    def populate_event_list(self):
 
-        eventDict = self.events
-        self.rpOptions.eventDropDown.clear()
-        self.rpOptions.eventDropDown.addItems([""] + sorted(eventDict.keys()))
+        event_dict = self.events
+        self.rate_profile_settings.eventDropDown.clear()
+        self.rate_profile_settings.eventDropDown.addItems([""] + sorted(event_dict.keys()))
 
 
 class RateProfileWorker(QtCore.QThread):

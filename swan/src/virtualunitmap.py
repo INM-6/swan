@@ -42,7 +42,7 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.maximum_units = 0
+        self.total_units = 0
         self.colors = [(31, 119, 180),
                        (255, 127, 14),
                        (44, 160, 44),
@@ -63,9 +63,7 @@ class VirtualUnitMap(object):
                        (247, 182, 210),
                        (199, 199, 199),
                        (219, 219, 141)]
-        self.coln = len(self.colors)
-
-    #### general methods ####    
+        self.number_of_colors = len(self.colors)
 
     def set_initial_map(self, data):
         """
@@ -78,30 +76,30 @@ class VirtualUnitMap(object):
         
         """
         maximum_units = sum(data.total_units_per_block)
-        self.maximum_units = maximum_units
-        vmap = []
+        self.total_units = maximum_units
+        mapping = []
         for session in range(len(data.blocks)):
-            vmap.append([])
+            mapping.append([])
             count = 1
             for global_unit_id in range(maximum_units):
                 try:
                     unit_description = data.blocks[session].channel_indexes[0].units[global_unit_id].description.split()
 
                     if "unclassified" in unit_description or "noise" in unit_description:
-                        vmap[session].append(0)
+                        mapping[session].append(0)
                     else:
-                        vmap[session].append(count)
+                        mapping[session].append(count)
                         count += 1
                 except IndexError:
-                    vmap[session].append(0)
+                    mapping[session].append(0)
 
-        self.mapping = vmap
-        self.visible = [[True for unit in session] for session in vmap]
+        self.mapping = mapping
+        self.visible = [[True for unit in session] for session in mapping]
         self.update_active()
 
     def set_map_from_dataframe(self, dataframe):
         if not dataframe.empty:
-            vmap = np.zeros((max(dataframe.session), self.maximum_units))
+            vmap = np.zeros((max(dataframe.session), self.total_units))
             for session_id in range(max(dataframe.session)):
                 session_frame = dataframe.loc[dataframe.session == session_id]
                 for global_unit_id, real_unit_id in zip(session_frame.label, session_frame.unit):
@@ -111,7 +109,7 @@ class VirtualUnitMap(object):
             self.visible = [[True for unit in session] for session in vmap]
             self.update_active()
 
-    def set_map(self, nums, vum):
+    def set_map(self, total_units_per_block, virtual_unit_map):
         """
         Sets the mapping given from the VUMap.
         
@@ -123,19 +121,19 @@ class VirtualUnitMap(object):
                 A dictionary containing the mappings and other information.
         
         """
-        maximum_units = sum(nums)
-        self.maximum_units = maximum_units
+        total_units = sum(total_units_per_block)
+        self.total_units = total_units
 
-        total_sessions = len(nums)
+        total_sessions = len(total_units_per_block)
 
-        for i in range(total_sessions):
+        for session in range(total_sessions):
             self.mapping.append([])
 
-        for l in vum.values():
+        for l in virtual_unit_map.values():
             if type(l) == list:
-                for i in range(total_sessions):
-                    unit = l[i][1]
-                    self.mapping[i].append(unit)
+                for session in range(total_sessions):
+                    unit = l[session][1]
+                    self.mapping[session].append(unit)
 
         self.visible = [[True for j in range(len(self.mapping[i]))] for i in range(len(self.mapping))]
         self.update_active()
@@ -157,13 +155,13 @@ class VirtualUnitMap(object):
                 The real unit.
         
         """
-        vunit = self.mapping[session_index][unit_index]
+        virtual_unit = self.mapping[session_index][unit_index]
         if "unclassified" not in data.blocks[session_index].channel_indexes[0].units[0].description.split():
-            runit = data.blocks[session_index].channel_indexes[0].units[vunit - 1]
+            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit - 1]
         else:
-            runit = data.blocks[session_index].channel_indexes[0].units[vunit]
-        # runit = data.blocks[session_index].channel_indexes[0].units[vunit]
-        return runit
+            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
+        # real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
+        return real_unit
 
     def swap(self, session_index, first_unit_index, second_unit_index):
         """
@@ -186,7 +184,7 @@ class VirtualUnitMap(object):
         # self.mapping[session_index][first_unit_index] = second_unit
         self.update_active()
 
-    def set_visible(self, i, j, visible=True):
+    def set_visible(self, session_id, global_unit_id, visible=True):
         """
         Sets a unit row as visible or not.
         
@@ -201,7 +199,7 @@ class VirtualUnitMap(object):
                 Default: True.
         
         """
-        self.visible[i][j] = visible
+        self.visible[session_id][global_unit_id] = visible
         self.update_active()
 
     def update_active(self):
@@ -252,7 +250,7 @@ class VirtualUnitMap(object):
     def get_color_list(self):
         return self.colors
 
-    def get_color(self, i, mpl=False, layer=None, pqt=False):
+    def get_colour(self, global_unit_id, mpl=False, layer=None, pqt=False):
         """
         Returns the color for the given unit row.
         
@@ -273,17 +271,21 @@ class VirtualUnitMap(object):
                 The rgb color.
     
         """
-        i = i % self.coln
+        global_unit_id = global_unit_id % self.number_of_colors
         if mpl:
-            col = (self.colors[i][0] / 255., self.colors[i][1] / 255., self.colors[i][2] / 255.)
+            col = (self.colors[global_unit_id][0] / 255.,
+                   self.colors[global_unit_id][1] / 255.,
+                   self.colors[global_unit_id][2] / 255.)
             if layer == "standard deviation":
                 col = (col[0] / 2., col[1] / 2., col[2] / 2.)
             elif layer == "session":
                 col = (col[0] / 2., col[1] / 2., col[2] / 2.)
         elif pqt:
-            col = [self.colors[i][0] / 255., self.colors[i][1] / 255., self.colors[i][2] / 255., 0.9]
+            col = [self.colors[global_unit_id][0] / 255.,
+                   self.colors[global_unit_id][1] / 255.,
+                   self.colors[global_unit_id][2] / 255., 0.9]
         else:
-            col = self.colors[i]
+            col = self.colors[global_unit_id]
         return col
 
     def swan_implementation(self, data, storage):
@@ -418,7 +420,6 @@ class VirtualUnitMap(object):
                                 self.swap(k, min_arg, j)
                                 # mapping = backup_mapping.copy()
                                 swaps += 1
-                                # print("Swapped {} with {} on day {}\nDistance: {}\n".format(j, min_arg, k, history[j][k]))
                             else:
                                 # If the unit has been swapped earlier, swap only if
                                 # the new distance is less than the old distance
@@ -429,7 +430,6 @@ class VirtualUnitMap(object):
                                     self.swap(k, min_arg, j)
                                     # mapping = backup_mapping.copy()
                                     swaps += 1
-                                    # print("Swapped {} with {} on day {}\nDistance: {}\nPrev Dist: {}, Curr Dist: {}\n".format(j, min_arg, k, history[j][k], prev_dist, curr_dist))
                         elif distances[min_arg][k] > dataset_reject_threshold:
                             # If the distance between the two waveforms is greater than
                             # the threshold, move the unit to the first available free
@@ -459,7 +459,7 @@ class VirtualUnitMap(object):
         storage.change_map()
         print("Total swaps: {}\n".format(swaps))
 
-    def calculate_mapping(self, data, storage, automaticMapping=0, parent=None):
+    def calculate_mapping(self, data, storage, automatic_mapping=0, parent=None):
         """
         Calculates a mapping for the units based on features like distance.
         
@@ -475,13 +475,13 @@ class VirtualUnitMap(object):
                 The class which handles the data and the project files.
         
         """
-        if automaticMapping == 0:
+        if automatic_mapping == 0:
             print("New Implementation")
             # self.swan_implementation(data=data, storage=storage)
             algorithm = SwanImplementation(neodata=data, parent=parent)
             self.set_map_from_dataframe(algorithm.result)
 
-        elif automaticMapping == 1:
+        elif automatic_mapping == 1:
             print("Old Implementation")
             self.calculate_mapping_bu(data=data, storage=storage)
 
@@ -671,4 +671,4 @@ class VirtualUnitMap(object):
         self.mapping = []
         self.visible = []
         self.active = []
-        self.maximum_units = 0
+        self.total_units = 0

@@ -10,25 +10,27 @@ from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 
-class myGLWidget(gl.GLViewWidget):
-    
-    unitClicked = QtCore.pyqtSignal(object)
-    
-    """ Override GLViewWidget with enhanced behavior
+
+class MyGLwidget(gl.GLViewWidget):
+    unit_clicked = QtCore.pyqtSignal(object)
+
+    """ 
+    Override GLViewWidget with enhanced behavior
 
     """
+
     def __init__(self, app=None):
 
         gl.GLViewWidget.__init__(self, parent=app)
         self.clickable = False
-        self._downpos = []
+        self._mouse_click_pos = []
         self.means = []
         self.candidates = []
-    
-    def setMeans(self, means):
+
+    def set_means(self, means):
         self.means = means
-        
-    def setClickable(self, choice):
+
+    def set_clickable(self, choice):
         self.clickable = choice
 
     def mousePressEvent(self, ev):
@@ -36,7 +38,7 @@ class myGLWidget(gl.GLViewWidget):
 
         """
         gl.GLViewWidget.mousePressEvent(self, ev)
-        self._downpos = self.mousePos
+        self._mouse_click_pos = self.mousePos
 
     def mouseReleaseEvent(self, ev):
         """ Allow for single click to move and right click for context menu.
@@ -44,54 +46,56 @@ class myGLWidget(gl.GLViewWidget):
         Also emits a sigUpdate to refresh listeners.
         """
         gl.GLViewWidget.mouseReleaseEvent(self, ev)
-        if self._downpos == ev.pos() and self.clickable:
+        if self._mouse_click_pos == ev.pos() and self.clickable:
             if ev.button() == 1:
-                self.mPosition()
+                self.mouse_position()
         self._prev_zoom_pos = None
         self._prev_pan_pos = None
 
-    def mPosition(self):
-        #This function is called by a mouse event
-        ## Get mouse coordinates saved when the mouse is clicked( incase dragging)
-        mx = self._downpos.x()
-        my = self._downpos.y()
-        self.candidates = [] #Initiate a list for storing indices of picked points
-        #Get height and width of 2D Viewport space
+    def mouse_position(self):
+        # This function is called by a mouse event
+
+        # Get mouse coordinates saved when the mouse is clicked( incase dragging)
+        mouse_x = self._mouse_click_pos.x()
+        mouse_y = self._mouse_click_pos.y()
+        self.candidates = []  # Initiate a list for storing indices of picked points
+        # Get height and width of 2D Viewport space
         view_w = self.width()
         view_h = self.height()
-        #Convert pixel values to normalized coordinates
-        x = 2.0 * mx / view_w - 1.0
-        y = 1.0 - (2.0 * my / view_h)
+        # Convert pixel values to normalized coordinates
+        x = 2.0 * mouse_x / view_w - 1.0
+        y = 1.0 - (2.0 * mouse_y / view_h)
         # Convert projection and view matrix to numpy types and inverse them
-        PMi = self.projectionMatrix().inverted()[0]
-        VMi = self.viewMatrix().inverted()[0]
-        #Move to clip coordinates by chosing z= -1 and w 1 (Dont understand this part)
-        ray_clip = QtGui.QVector4D(x, y, -1.0, 1.0) # get transpose for matrix multiplication
+        inverted_projection_matrix = self.projectionMatrix().inverted()[0]
+        inverted_view_matrix = self.viewMatrix().inverted()[0]
+        # Move to clip coordinates by chosing z= -1 and w 1 (Dont understand this part)
+        ray_clip = QtGui.QVector4D(x, y, -1.0, 1.0)  # get transpose for matrix multiplication
         # Convert to eye space by view matrix
-        ray_eye = PMi * ray_clip
+        ray_eye = inverted_projection_matrix * ray_clip
         ray_eye.setZ(-1)
         ray_eye.setW(0)
-        #Convert to world coordinates
-        ray_world = VMi * ray_eye
-        ray_world = QtGui.QVector3D(ray_world.x(), ray_world.y(), ray_world.z()) # get transpose for matrix multiplication
+        # Convert to world coordinates
+        ray_world = inverted_view_matrix * ray_eye
+        ray_world = QtGui.QVector3D(ray_world.x(), ray_world.y(),
+                                    ray_world.z())  # get transpose for matrix multiplication
         ray_world.normalize()
         # Now I 'll use the ray intersection with spheres. I assume every point is a sphere with a radius
-        #Please see http://antongerdelan.net/opengl/raycasting.html scroll down to spehere intersection
-        O = np.matrix(self.cameraPosition())  # camera position should be starting point of the ray
-        ray_world = np.matrix([ray_world.x(), ray_world.y(), ray_world.z()])
+        # Please see http://antongerdelan.net/opengl/raycasting.html scroll down to spehere intersection
+        camera_position = np.array(self.cameraPosition())  # camera position should be starting point of the ray
+        ray_world = np.array([ray_world.x(), ray_world.y(), ray_world.z()])
         overlaps = []
-        for mean in self.means: # Iterate over all means
-            OC = O - np.array(mean.pos)
-            b = np.inner(ray_world, OC)
+        for mean in self.means:  # Iterate over all means
+            distance_to_mean = camera_position - np.array(mean.pos)
+            b = np.inner(ray_world, distance_to_mean)
             b = b.item(0)
-            c = np.inner(OC, OC)
-            c = c.item(0) - (mean.size)**2
+            c = np.inner(distance_to_mean, distance_to_mean)
+            c = c.item(0) - mean.size ** 2
             bsqr = np.square(b)
             overlap = bsqr - c
-            if overlap >= 0: # means intersection
+            if overlap >= 0:  # means intersection
                 self.candidates.append(mean)
                 overlaps.append(overlap)
-        
+
         if overlaps:
             winner = self.candidates[np.argmin(overlaps)]
-            self.unitClicked.emit(winner)
+            self.unit_clicked.emit(winner)

@@ -10,10 +10,10 @@ It is extended by a 2d plot and the plotting methods.
 """
 from swan.src.widgets.mypgwidget import PyQtWidget2d
 import numpy as np
-from swan.gui.isiOptions_ui import Ui_isiOptions
+from swan.gui.isiOptions_ui import IsiOptionsUi
 
 
-class pgWidgetISI(PyQtWidget2d):
+class PgWidgetISI(PyQtWidget2d):
     """
     A class with only one plot that shows simple 2d data.
     
@@ -27,20 +27,20 @@ class pgWidgetISI(PyQtWidget2d):
                 The 2d plot for this widget.
         
         """
-        PyQtWidget2d.__init__(self)
+        PyQtWidget2d.__init__(self, *args, **kwargs)
 
         layers = ["individual", "pooled"]
-        self.toolbar.setupRadioButtons(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
+        self.toolbar.setup_radio_buttons(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
 
-        self._plotItem = self.pgCanvas.getPlotItem()
-        self._plotItem.enableAutoRange()
-        self._hists = []
+        self.plot_item = self.pg_canvas.getPlotItem()
+        self.plot_item.enableAutoRange()
+        self.histograms = []
         self.datas = {}
 
-        self.binMax = 500
-        self.binStep = 2
-        self.stepMode = False
+        self.bin_max = 500
+        self.bin_step = 2
+        self.step_mode = False
 
         self.bm_max = 5000
         self.bm_min = 0
@@ -48,13 +48,11 @@ class pgWidgetISI(PyQtWidget2d):
         self.bs_max = 100
         self.bs_min = 0
 
-        self.isiOptions = Ui_isiOptions(self)
+        self.isi_options = IsiOptionsUi(self)
 
-        self.showGrid()
+        self.show_grid()
 
-    #### general methods ####
-
-    def onEnter(self):
+    def on_enter(self):
         """
         This method is called if you press ENTER on one of the line
         edit widgets.
@@ -62,25 +60,26 @@ class pgWidgetISI(PyQtWidget2d):
         Redraws everything.
         
         """
-        binMax = self.isiOptions.binMaxEdit.text()
-        binStep = self.isiOptions.binStepEdit.text()
+        bin_max = self.isi_options.binMaxEdit.text()
+        bin_step = self.isi_options.binStepEdit.text()
 
         try:
-            binMax = int(binMax)
-            binStep = float(binStep)
+            bin_max = int(bin_max)
+            bin_step = float(bin_step)
 
-            if self.bm_min < binMax <= self.bm_max and self.bs_min < binStep <= self.bs_max:
-                self.binMax = binMax
-                self.binStep = binStep
+            if self.bm_min < bin_max <= self.bm_max and self.bs_min < bin_step <= self.bs_max:
+                self.bin_max = bin_max
+                self.bin_step = bin_step
 
                 self.update()
-                self.isiOptions.errorLabel.setText("")
+                self.isi_options.error_label.setText("")
             else:
-                self.isiOptions.errorLabel.setText("Values outside acceptable limits")
-        except:
-            self.isiOptions.errorLabel.setText("Invalid inputs!")
+                self.isi_options.error_label.setText("Values outside acceptable limits")
+        except Exception as e:
+            print(e)
+            self.isi_options.error_label.setText("Invalid inputs!")
 
-    def onMaxPlus(self):
+    def on_max_plus(self):
         """
         This method is called if you click on the plus button
         for the bin max optio8n.
@@ -88,14 +87,14 @@ class pgWidgetISI(PyQtWidget2d):
         Increments the bin max option.
         
         """
-        binMax = self.binMax
+        bin_max = self.bin_max
 
-        if (binMax + 1) <= self.bm_max:
-            self.binMax += 1
-            self.isiOptions.binMaxEdit.setText(str(self.binMax))
+        if (bin_max + 1) <= self.bm_max:
+            self.bin_max += 1
+            self.isi_options.binMaxEdit.setText(str(self.bin_max))
             self.update()
 
-    def onMaxMinus(self):
+    def on_max_minus(self):
         """
         This method is called if you click on the minus button
         for the bin max option.
@@ -103,13 +102,13 @@ class pgWidgetISI(PyQtWidget2d):
         Decrements the bin max option.
         
         """
-        binMax = self.binMax
-        if (binMax - 1) > self.bm_min and (binMax - 1) > self.binStep:
-            self.binMax -= 1
-            self.isiOptions.binMaxEdit.setText(str(self.binMax))
+        bin_max = self.bin_max
+        if (bin_max - 1) > self.bm_min and (bin_max - 1) > self.bin_step:
+            self.bin_max -= 1
+            self.isi_options.binMaxEdit.setText(str(self.bin_max))
             self.update()
 
-    def onStepPlus(self):
+    def on_step_plus(self):
         """
         This method is called if you click on the plus button
         for the bin step option.
@@ -117,13 +116,13 @@ class pgWidgetISI(PyQtWidget2d):
         Increments the bin step option.
         
         """
-        binStep = self.binStep
-        if (binStep + 1) <= self.bs_max:
-            self.binStep += 1
-            self.isiOptions.binStepEdit.setText(str(self.binStep))
+        bin_step = self.bin_step
+        if (bin_step + 1) <= self.bs_max:
+            self.bin_step += 1
+            self.isi_options.binStepEdit.setText(str(self.bin_step))
             self.update()
 
-    def onStepMinus(self):
+    def on_step_minus(self):
         """
         This method is called if you click on the minus button
         for the bin step option.
@@ -131,61 +130,62 @@ class pgWidgetISI(PyQtWidget2d):
         Decrements the bin step option.
         
         """
-        binStep = self.binStep
-        if (binStep - 1) > self.bs_min:
-            self.binStep -= 1
-            self.isiOptions.binStepEdit.setText(str(self.binStep))
+        bin_step = self.bin_step
+        if (bin_step - 1) > self.bs_min:
+            self.bin_step -= 1
+            self.isi_options.binStepEdit.setText(str(self.bin_step))
             self.update()
 
-    def binMaxChanged(self, value):
+    def bin_max_changed(self, value):
         """
         This method is called if you edit the bin max option.
         
         Checks if the bin max is correct.
         
         """
-        binMax = value
+        bin_max = value
         try:
-            binMax = float(binMax)
-            if self.bm_min < binMax <= self.bm_max:
-                self.binMax = binMax
-                self.isiOptions.errorLabel.setText("")
+            bin_max = float(bin_max)
+            if self.bm_min < bin_max <= self.bm_max:
+                self.bin_max = bin_max
+                self.isi_options.error_label.setText("")
             else:
-                self.isiOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.isi_options.error_label.setText("Value outside acceptable limits!")
 
         except Exception as e:
             print(e)
-            self.isiOptions.errorLabel.setText("Invalid input!")
+            self.isi_options.error_label.setText("Invalid input!")
 
-    def binStepChanged(self, value):
+    def bin_step_changed(self, value):
         """
         This method is called if you edit the bin step option.
         
         Checks if the bin step is correct.
         
         """
-        binStep = value
+        bin_step = value
         try:
-            binStep = float(binStep)
-            if self.bs_min < binStep <= self.bs_max:
-                self.binStep = binStep
-                self.isiOptions.errorLabel.setText("")
+            bin_step = float(bin_step)
+            if self.bs_min < bin_step <= self.bs_max:
+                self.bin_step = bin_step
+                self.isi_options.error_label.setText("")
             else:
-                self.isiOptions.errorLabel.setText("Value outside acceptable limits!")
+                self.isi_options.error_label.setText("Value outside acceptable limits!")
 
-        except:
-            self.isiOptions.errorLabel.setText("Invalid input!")
+        except Exception as e:
+            print(e)
+            self.isi_options.error_label.setText("Invalid input!")
 
-    def stepModeChanged(self):
+    def step_mode_changed(self):
 
-        currentStepMode = self.stepMode
-        newStepMode = self.isiOptions.histStyleCheckbox.isChecked()
+        current_step_mode = self.step_mode
+        new_step_mode = self.isi_options.histStyleCheckbox.isChecked()
 
-        if currentStepMode != newStepMode:
-            self.stepMode = newStepMode
+        if current_step_mode != new_step_mode:
+            self.step_mode = new_step_mode
             self.update()
 
-    def plotHist(self, x, y, color, unit_id, session, clickable=False):
+    def plot_histogram(self, x, y, color, unit_id, session, clickable=False):
         """
         Plot mean waveforms to the plot.
         
@@ -203,8 +203,8 @@ class pgWidgetISI(PyQtWidget2d):
                 Whether the item should respond to mouseclicks.
         
         """
-        self._hists.append(self.makePlot(x=x, y=y, color=color, unit_id=unit_id, session=session, clickable=clickable,
-                                         stepMode=self.stepMode))
+        self.histograms.append(self.make_plot(x=x, y=y, color=color, unit_id=unit_id, session=session,
+                                              clickable=clickable, stepMode=self.step_mode))
 
     def do_plot(self, vum, data):
         """
@@ -222,9 +222,9 @@ class pgWidgetISI(PyQtWidget2d):
         """
         self.clear_()
         self.datas = {}
-        if self.toolbar.layers.isChecked():
+        if self.toolbar.activate_button.current_state:
 
-            layer = self.toolbar.getCheckedLayers()[0]
+            layer = self.toolbar.get_checked_layers()[0]
 
             active = vum.get_active()
 
@@ -239,45 +239,46 @@ class pgWidgetISI(PyQtWidget2d):
                             runit = vum.get_realunit(session, unit_id, data)
                             d = data.get_data("sessions", runit)
                             intervals[unit_id].extend(d)
-                            col = vum.get_color(unit_id, False, layer, False)
+                            col = vum.get_colour(unit_id, False, layer, False)
                             self.datas[unit_id] = [np.sort(intervals[unit_id]), col, unit_id, session, clickable]
 
                 if intervals:
                     for key in self.datas.keys():
-                        y = np.histogram(self.datas[key][0], bins=np.arange(0., self.binMax / 1000., self.binStep / 1000.))
+                        y = np.histogram(self.datas[key][0],
+                                         bins=np.arange(0., self.bin_max / 1000., self.bin_step / 1000.))
                         tmp = y[1]
-                        if self.stepMode:
+                        if self.step_mode:
                             tmp = tmp[:]
                         else:
                             tmp = tmp[:-1]
-                        self.plotHist(x=tmp, y=y[0] / (1.0 * len(self.datas[key][0])), color=self.datas[key][1],
-                                      unit_id=self.datas[key][2], session=self.datas[key][3],
-                                      clickable=self.datas[key][4])
-                self.setXLabel("Inter-spike Interval", "s")
-                self.setYLabel("Normalized Percentage of Interval Counts")
-                self.setPlotTitle("Inter-spike Interval Histograms")
+                        self.plot_histogram(x=tmp, y=y[0] / (1.0 * len(self.datas[key][0])), color=self.datas[key][1],
+                                            unit_id=self.datas[key][2], session=self.datas[key][3],
+                                            clickable=self.datas[key][4])
+                self.set_x_label("Inter-spike Interval", "s")
+                self.set_y_label("Normalized Percentage of Interval Counts")
+                self.set_plot_title("Inter-spike Interval Histograms")
             elif layer == "individual":
                 for session in range(len(active)):
                     for unit_id in range(len(active[session])):
                         if active[session][unit_id]:
                             runit = vum.get_realunit(session, unit_id, data)
                             datas = data.get_data("units", runit)
-                            col = vum.get_color(unit_id, False, layer, False)
+                            col = vum.get_colour(unit_id, False, layer, False)
                             clickable = True
                             self.datas["{}{}".format(session, unit_id)] = [datas, col, unit_id, session, clickable]
                             for d in datas:
-                                y = np.histogram(d, bins=np.arange(0., self.binMax / 1000., self.binStep / 1000.))
+                                y = np.histogram(d, bins=np.arange(0., self.bin_max / 1000., self.bin_step / 1000.))
                                 tmp = y[1]
-                                if self.stepMode:
+                                if self.step_mode:
                                     tmp = tmp[:]
                                 else:
                                     tmp = tmp[:-1]
-                                self.plotHist(x=tmp, y=y[0] / (1.0 * len(d)), color=col, unit_id=unit_id,
-                                              session=session, clickable=clickable)
-                self.setXLabel("Inter-spike Interval", "s")
-                self.setYLabel("Normalized Percentage of Interval Counts")
-                self.setPlotTitle("Inter-spike Interval Histograms")
-            self.connectPlots()
+                                self.plot_histogram(x=tmp, y=y[0] / (1.0 * len(d)), color=col, unit_id=unit_id,
+                                                    session=session, clickable=clickable)
+                self.set_x_label("Inter-spike Interval", "s")
+                self.set_y_label("Normalized Percentage of Interval Counts")
+                self.set_plot_title("Inter-spike Interval Histograms")
+            self.connect_plots()
 
     def update(self):
         self.clear_()
@@ -289,31 +290,32 @@ class pgWidgetISI(PyQtWidget2d):
             session = datas[3]
             clickable = datas[4]
             for d in data:
-                y = np.histogram(d, bins=np.arange(0., self.binMax / 1000., self.binStep / 1000.))
+                y = np.histogram(d, bins=np.arange(0., self.bin_max / 1000., self.bin_step / 1000.))
                 tmp = y[1]
-                if self.stepMode:
+                if self.step_mode:
                     tmp = tmp[:]
                 else:
                     tmp = tmp[:-1]
-                self.plotHist(x=tmp, y=y[0] / (1.0 * len(d)), color=col, unit_id=unit_id, session=session, clickable=clickable)
-                self.setXLabel("Inter-spike Interval", "s")
-                self.setYLabel("Normalized Percentage of Interval Counts")
-                self.setPlotTitle("Inter-spike Interval Histograms")
-        self.connectPlots()
+                self.plot_histogram(x=tmp, y=y[0] / (1.0 * len(d)), color=col,
+                                    unit_id=unit_id, session=session, clickable=clickable)
+                self.set_x_label("Inter-spike Interval", "s")
+                self.set_y_label("Normalized Percentage of Interval Counts")
+                self.set_plot_title("Inter-spike Interval Histograms")
+        self.connect_plots()
 
-    def connectPlots(self):
-        for item in self._hists:
+    def connect_plots(self):
+        for item in self.histograms:
             item.curve.setClickable(True, width=5)
-            item.sigClicked.connect(self.getItem)
+            item.sigClicked.connect(self.get_item)
 
     def clear_(self):
-        self._hists = []
-        self.clearAll()
+        self.histograms = []
+        self.clear_all()
 
-    def incrementBins(self, step=1):
+    def increment_bins(self, step=1):
         self.bins += step
         self.update()
 
-    def decrementBins(self, step=1):
+    def decrement_bins(self, step=1):
         self.bins -= step
         self.update()

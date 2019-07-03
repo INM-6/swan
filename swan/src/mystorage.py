@@ -452,23 +452,23 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         tips = []
-        vum = self.get_map()
-        files = self.get_files()
+        virtual_unit_map = self.get_map()
+        file_list = self.get_files()
         data = self.get_data()
         spike_nums = []
         c = 0
-        for i in range(len(vum.mapping)):
+        for i in range(len(virtual_unit_map.mapping)):
             spike_nums.append([])
-            for j in range(len(vum.mapping[i])):
-                if vum.mapping[i][j] != 0:
-                    runit = vum.get_realunit(i, j, data)
+            for j in range(len(virtual_unit_map.mapping[i])):
+                if virtual_unit_map.mapping[i][j] != 0:
+                    runit = virtual_unit_map.get_realunit(i, j, data)
                     spike_nums[c].append(data.get_data("n_spikes", runit))
                 else:
                     spike_nums[c].append(0)
             c += 1
 
         c = 0
-        for f, l, n in zip(files, vum.mapping, spike_nums):
+        for f, l, n in zip(file_list, virtual_unit_map.mapping, spike_nums):
             tips.append([])
             for u, v in zip(l, n):
                 tooltip = "File: {}\nUnit: {}\nWaveforms: {}".format(basename(f), u, v)
@@ -483,8 +483,8 @@ class MyStorage(Storage, QtCore.QObject):
         """
         vum = self.get_map()
         data = self.get_data()
-        vum.calculate_mapping(data, self, automaticMapping=mapping, parent=parent)
-        # self.change_map()
+        vum.calculate_mapping(data, self, automatic_mapping=mapping, parent=parent)
+        self.change_map()
 
     def revert(self):
         """
@@ -648,7 +648,7 @@ class MyStorage(Storage, QtCore.QObject):
         vum = self.get("vum")
         d = {"channel": channel}
 
-        for i in range(vum.maximum_units):
+        for i in range(vum.total_units):
             d[i] = []
         for filename, vus in zip(files, vum.mapping):
             for i in range(len(vus)):

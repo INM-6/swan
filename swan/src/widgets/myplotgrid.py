@@ -15,7 +15,6 @@ from swan.gui.myplotgrid_ui import Ui_Form
 from swan.src.widgets.myplotwidget import MyPlotWidget
 from swan.src.widgets.indicator_cell import IndicatorWidget
 from numpy.random import choice
-from quantities import uV
 
 
 class MyPlotGrid(QtWidgets.QWidget):
@@ -23,18 +22,18 @@ class MyPlotGrid(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
 
-        self.mainGridLayout = QtGui.QGridLayout()
+        self.main_grid_layout = QtWidgets.QGridLayout()
 
-        self.scrollArea = QtGui.QScrollArea(self)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll_area = QtWidgets.QScrollArea(self)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
 
         self.child = MyPlotContent(self)
-        self.scrollArea.setWidget(self.child)
-        self.mainGridLayout.addWidget(self.scrollArea, 0, 0)
+        self.scroll_area.setWidget(self.child)
+        self.main_grid_layout.addWidget(self.scroll_area)
 
-        self.setLayout(self.mainGridLayout)
+        self.setLayout(self.main_grid_layout)
 
 
 class MyPlotContent(QtWidgets.QWidget):
@@ -46,9 +45,9 @@ class MyPlotContent(QtWidgets.QWidget):
     
     """
 
-    plotSelected = QtCore.pyqtSignal(object, bool)
-    indicatorToggle = QtCore.pyqtSignal()
-    visibilityToggle = QtCore.pyqtSignal(int, int, bool)
+    plot_selected = QtCore.pyqtSignal(object, bool)
+    indicator_toggle = QtCore.pyqtSignal()
+    visibility_toggle = QtCore.pyqtSignal(int, int, bool)
 
     def __init__(self, *args, **kwargs):
         """
@@ -86,11 +85,11 @@ class MyPlotContent(QtWidgets.QWidget):
         self._second_select = None
         self._width = 120
         self._height = 90
-        self._constDim = 60
+        self._constant_dimension = 65
 
-        self._plotGray = QtGui.QColor(180, 180, 180, 85)
+        self._plot_gray = QtGui.QColor(180, 180, 180, 85)
 
-        self._sampleWaveformNumber = 500
+        self.sample_waveform_number = 500
 
         self.ui.gridLayout.setColumnStretch(1000, 1000)
         self.ui.gridLayout.setRowStretch(1000, 1000)
@@ -119,33 +118,33 @@ class MyPlotContent(QtWidgets.QWidget):
         pivot_indicator = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units",
                                           indicator_type='pivot', position=None,
                                           width=self._width, height=self._height,
-                                          const_dim=self._constDim)
+                                          const_dim=self._constant_dimension)
         pivot_indicator.responsive = False
         self.ui.gridLayout.addWidget(pivot_indicator, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for global_unit_id in range(rows):
             iw = IndicatorWidget(
-                str(global_unit_id), indicator_type='unit', position=global_unit_id,
-                width=self._width, height=self._height, const_dim=self._constDim
+                str(global_unit_id+1), indicator_type='unit', position=global_unit_id,
+                width=self._width, height=self._height, const_dim=self._constant_dimension
             )
             self._indicators.append(iw)
-            iw.selectIndicator.connect(self.indicatorToggled)
+            iw.select_indicator.connect(self.indicator_toggled)
             self.ui.gridLayout.addWidget(iw, global_unit_id + 1, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for session_id in range(cols):
             if dates is not None:
                 iw = IndicatorWidget(
-                    str(session_id) + " (" + str(dates[session_id].strftime("%d.%m.%y")) + ")",
+                    str(session_id+1) + " (" + str(dates[session_id].strftime("%d.%m.%y")) + ")",
                     indicator_type='session', position=session_id,
-                    width=self._width, height=self._height, const_dim=self._constDim
+                    width=self._width, height=self._height, const_dim=self._constant_dimension
                 )
             else:
                 iw = IndicatorWidget(
                     str(session_id), indicator_type='session', position=session_id,
-                    width=self._width, height=self._height, const_dim=self._constDim
+                    width=self._width, height=self._height, const_dim=self._constant_dimension
                 )
             self._indicators.append(iw)
-            iw.selectIndicator.connect(self.indicatorToggled)
+            iw.select_indicator.connect(self.indicator_toggled)
             self.ui.gridLayout.addWidget(iw, 0, session_id + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for unit_id in range(rows):
@@ -161,75 +160,27 @@ class MyPlotContent(QtWidgets.QWidget):
                 self._rows[unit_id].append(plot_widget)
                 self._cols[session_id].append(plot_widget)
 
-                plot_widget.selectPlot.connect(self.select_plot)
-                plot_widget.colourStripToggle.connect(self.toggleIndicatorColour)
-                plot_widget.visibilityToggle.connect(self.togglePlotVisibility)
+                plot_widget.select_plot.connect(self.select_plot)
+                plot_widget.colour_strip_toggle.connect(self.toggle_indicator_colour)
+                plot_widget.visibility_toggle.connect(self.toggle_plot_visibility)
 
                 self.ui.gridLayout.addWidget(plot_widget, unit_id + 1, session_id + 1,
                                              QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
-        # for unit_id in range(rows + 1):
-        #     if unit_id == 0:
-        #         for session in range(cols + 1):
-        #             if session == 0:
-        #                 iw = IndicatorWidget("Sessions (dd.mm.yy)\n\u2192\n\n\u2193 Units", row=unit_id, col=session,
-        #                                      width=self._width, height=self._height, const_dim=self._constDim)
-        #                 iw.responsive = False
-        #                 self._indicators.append(iw)
-        #                 self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        #             else:
-        #                 if dates is not None:
-        #                     iw = IndicatorWidget(
-        #                         str(session) + " (" + str(dates[session - 1].strftime("%d.%m.%y")) + ")",
-        #                         row=unit_id, col=session, width=self._width, height=self._height,
-        #                         const_dim=self._constDim
-        #                     )
-        #                 else:
-        #                     iw = IndicatorWidget(
-        #                         str(session), row=unit_id, col=session, width=self._width,
-        #                         height=self._height, const_dim=self._constDim
-        #                     )
-        #                 self._indicators.append(iw)
-        #                 iw.selectIndicator.connect(self.indicatorToggled)
-        #                 self.ui.gridLayout.addWidget(iw, unit_id, session, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        #     else:
-        #         iw = IndicatorWidget(
-        #             str(unit_id-1), row=unit_id-1, col=0,
-        #             width=self._width, height=self._height,
-        #             const_dim=self._constDim
-        #         )
-        #         self._indicators.append(iw)
-        #         iw.selectIndicator.connect(self.indicatorToggled)
-        #         self.ui.gridLayout.addWidget(iw, unit_id, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
-        #
-        # for unit_id in range(rows):
-        #     self._rows[unit_id] = []
-        #     for session in range(cols):
-        #         if session not in self._cols:
-        #             self._cols[session] = []
-        #         mpw = MyPlotWidget(width=self._width, height=self._height, parent=self)
-        #         self._plots.append(mpw)
-        #         mpw.pos = (session, unit_id)
-        #         mpw.selectPlot.connect(self.select_plot)
-        #         mpw.colourStripToggle.connect(self.toggleIndicatorColour)
-        #         mpw.visibilityToggle.connect(self.togglePlotVisibility)
-        #         self._rows[unit_id].append(mpw)
-        #         self._cols[session].append(mpw)
-        #         self.ui.gridLayout.addWidget(mpw, unit_id + 1, session + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
         return self._plots
 
     @QtCore.pyqtSlot(object, int)
-    def toggleIndicatorColour(self, colour, i):
-        iw = next((x for x in self._indicators if x._row == i))
-        if any(plot.hasPlot for plot in self._rows[i]):
-            iw.toggleColourStrip(colour)
+    def toggle_indicator_colour(self, colour, i):
+        iw = next((x for x in self._indicators if x.row == i))
+        if any(plot.has_plot for plot in self._rows[i]):
+            iw.toggle_colour_strip(colour)
         else:
-            iw.toggleColourStrip(None)
+            iw.toggle_colour_strip(None)
 
     @QtCore.pyqtSlot(object)
-    def indicatorToggled(self, indicator):
-        row = indicator._row
-        col = indicator._col
+    def indicator_toggled(self, indicator):
+        row = indicator.row
+        col = indicator.col
         indicator_type = indicator.indicator_type
         if indicator_type == 'unit':
             plot_widgets = [pw for pw in self._plots if pw.pos[1] == row]
@@ -247,13 +198,13 @@ class MyPlotContent(QtWidgets.QWidget):
             else:
                 pw.disable()
                 if indicator_type == 'session':
-                    pw.colInhibited = True
+                    pw.inhibited_by_col = True
                 elif indicator_type == 'unit':
-                    pw.rowInhibited = True
-        self.indicatorToggle.emit()
+                    pw.inhibited_by_row = True
+        self.indicator_toggle.emit()
 
-    def togglePlotVisibility(self, i, j, visible):
-        self.visibilityToggle.emit(i, j, visible)
+    def toggle_plot_visibility(self, session_id, unit_id, visible):
+        self.visibility_toggle.emit(session_id, unit_id, visible)
 
     def delete_plots(self):
         """
@@ -277,7 +228,7 @@ class MyPlotContent(QtWidgets.QWidget):
             i.colourStrip.hide()
             if not i.selected:
                 i._bg = i.bgs["selected"]
-                i.setBackground(i._bg)
+                i.set_background(i._bg)
                 i.selected = True
 
     def do_plot(self, vum, data):
@@ -296,32 +247,32 @@ class MyPlotContent(QtWidgets.QWidget):
         for session in range(len(active)):
             for global_unit_id in range(len(active[session])):
                 plot_widget = self.find_plot(global_unit_id, session)
-                if plot_widget.toBeUpdated:
+                if plot_widget.to_be_updated:
                     plot_widget.clear_()
-                    pen_color = vum.get_color(global_unit_id, False, "average", False)
-                    plot_widget._defPenColour = pen_color
+                    pen_colour = vum.get_colour(global_unit_id, False, "average", False)
+                    plot_widget.default_pen_colour = pen_colour
                     if active[session][global_unit_id]:
                         unit = vum.get_realunit(session, global_unit_id, data)
                         mean_waveform = data.get_data("average", unit)
                         all_waveforms = data.get_data("all", unit)
                         try:
                             plot_widget.plot_many(all_waveforms[choice(all_waveforms.shape[0],
-                                                                       size=self._sampleWaveformNumber,
+                                                                       size=self.sample_waveform_number,
                                                                        replace=False)],
-                                                  self._plotGray)
+                                                  self._plot_gray)
                         except ValueError:
-                            plot_widget.plot_many(all_waveforms, self._plotGray)
-                        plot_widget.plot(mean_waveform.magnitude, pen_color)
+                            plot_widget.plot_many(all_waveforms, self._plot_gray)
+                        plot_widget.plot(mean_waveform.magnitude, pen_colour)
                         plot_widget.hasPlot = True
-                        plot_widget.toggleColourStrip(pen_color)
-                        plot_widget.plotWidget.setXRange(0., data.get_wave_length(), padding=None, update=True)
+                        plot_widget.toggle_colour_strip(pen_colour)
+                        plot_widget.plot_widget.setXRange(0., data.get_wave_length(), padding=None, update=True)
                     else:
-                        plot_widget.toggleColourStrip(pen_color)
-                    plot_widget.toBeUpdated = False
+                        plot_widget.toggle_colour_strip(pen_colour)
+                    plot_widget.to_be_updated = False
 
-    def setAllForUpdate(self):
+    def set_all_for_update(self):
         for plot in self._plots:
-            plot.toBeUpdated = True
+            plot.to_be_updated = True
 
     def find_plot(self, global_unit_id, session_id):
         """
@@ -341,7 +292,7 @@ class MyPlotContent(QtWidgets.QWidget):
         return self._rows[global_unit_id][session_id]
 
     @QtCore.pyqtSlot(object)
-    def highlightPlot(self, item):
+    def highlight_plot(self, item):
         if item.opts['clickable']:
             unit_id = item.opts['unit_id']
             session = item.opts['session']
@@ -371,32 +322,32 @@ class MyPlotContent(QtWidgets.QWidget):
                 plot.change_background(select)
                 plot.selected = select
                 self._second_select = plot
-                self.plotSelected.emit(plot, select)
+                self.plot_selected.emit(plot, select)
 
             elif not self._selected:
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
                 self._second_select = None
-                self.plotSelected.emit(plot, select)
+                self.plot_selected.emit(plot, select)
 
             elif self._second_select is not None and self._selected[0].pos[0] == plot.pos[0]:
                 self._selected.remove(self._second_select)
                 self._second_select.change_background(not select)
                 self._second_select.selected = not select
-                self.plotSelected.emit(self._second_select, not select)
+                self.plot_selected.emit(self._second_select, not select)
                 self._second_select = plot
 
                 self._selected.append(plot)
                 plot.change_background(select)
                 plot.selected = select
-                self.plotSelected.emit(plot, select)
+                self.plot_selected.emit(plot, select)
 
         elif plot in self._selected:
             self._selected.remove(plot)
             plot.change_background(select)
             plot.selected = select
-            self.plotSelected.emit(plot, select)
+            self.plot_selected.emit(plot, select)
 
     def reset_selection(self):
         """
@@ -488,7 +439,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._yrange = (min0, max0)
         for plot in self._plots:
-            plot.plotWidget.setYRange(min0, max0, padding=None, update=True)
+            plot.plot_widget.setYRange(min0, max0, padding=None, update=True)
 
     def set_xranges(self, min0, max0):
         """
@@ -504,7 +455,7 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         self._xrange = (min0, max0)
         for plot in self._plots:
-            plot.plotWidget.setXRange(min0, max0, padding=None, update=True)
+            plot.plot_widget.setXRange(min0, max0, padding=None, update=True)
 
     def set_tooltips(self, tooltips):
         """
@@ -517,7 +468,7 @@ class MyPlotContent(QtWidgets.QWidget):
                 a list of string containing the tool tips for that column.
         
         """
-        for col in self._cols:
+        for col in self._cols.keys():
             tips = tooltips[col]
             plots = self._cols[col]
             for t, plot in zip(tips, plots):

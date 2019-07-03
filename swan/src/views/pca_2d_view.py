@@ -30,33 +30,33 @@ class pgWidgetPCA2d(PyQtWidget2d):
         PyQtWidget2d.__init__(self)
 
         layers = ["units", "sessions"]
-        self.toolbar.setupRadioButtons(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
-        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
-        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolbar.setup_radio_buttons(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
+        self.toolbar.collapsible_widget.set_content_layout(self.toolbar.grid_layout)
+        self.toolbar.main_grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self._plotItem = self.pgCanvas.getPlotItem()
+        self._plotItem = self.pg_canvas.getPlotItem()
         self._plotItem.enableAutoRange()
 
         self._means = []
         self._positions = []
 
-        self.showGrid()
+        self.show_grid()
 
     #### general methods ####
 
     def plotMean(self, x, y, size, color, name, pxMode=True):
         x = [x]
         y = [y]
-        self._means.append(self.createScatterPlotItem(x=x, y=y, size=size, color=color, name=name, pxMode=pxMode))
+        self._means.append(self.create_scatter_plot_item(x=x, y=y, size=size, color=color, name=name, pxMode=pxMode))
 
     def plotPoints(self, pos, size, color, name, pxMode=True):
         pos = array(pos)
         x = pos[:, 0]
         y = pos[:, 1]
         self._positions.append(
-            self.createScatterPlotItem(x=x, y=y, size=size, color=color, name=name, pxMode=pxMode, autoDownsample=True,
-                                       antialias=True))
+            self.create_scatter_plot_item(x=x, y=y, size=size, color=color, name=name, pxMode=pxMode, autoDownsample=True,
+                                          antialias=True))
 
     def do_plot(self, vum, data):
         """
@@ -76,7 +76,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
 
         if self.toolbar.layers.isChecked():
 
-            layers = self.toolbar.getCheckedLayers()
+            layers = self.toolbar.get_checked_layers()
 
             self.wave_length = data.get_wave_length()
 
@@ -119,7 +119,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                     c = 0
                                     for u in range(len(active[i])):
                                         if active[i][u]:
-                                            col = vum.get_color(u, False, layer, False)
+                                            col = vum.get_colour(u, False, layer, False)
                                             self.plotPoints(pos=pca_channel[c], size=1, color=col, name="".format(i, u))
                                             self.plotMean(x=mn(pca_channel[c][:, 0], axis=0),
                                                           y=mn(pca_channel[c][:, 1], axis=0), size=15, color=col,
@@ -137,7 +137,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                 c = 0
                                 for u in range(len(active[dom])):
                                     if active[dom][u]:
-                                        col = vum.get_color(u, False, layer, False)
+                                        col = vum.get_colour(u, False, layer, False)
                                         self.plotPoints(pos=dom_ch_pca[c], size=1, color=col, name="".format(i, u))
                                         self.plotMean(x=mn(dom_ch_pca[c][:, 0], axis=0),
                                                       y=mn(dom_ch_pca[c][:, 1], axis=0), size=15, color=col,
@@ -195,12 +195,12 @@ class pgWidgetPCA2d(PyQtWidget2d):
 
     def connectPlots(self):
         for item in self._means:
-            item.curve.setClickable(True, width=5)
-            item.sigClicked.connect(self.getItem)
+            item.curve.set_clickable(True, width=5)
+            item.sigClicked.connect(self.get_item)
 
     def clear_plots(self):
         self._means = []
         for item in self._positions:
-            self.pgCanvas.removeItem(item)
+            self.pg_canvas.removeItem(item)
         self._positions = []
-        self.clearAll()
+        self.clear_all()

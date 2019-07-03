@@ -12,7 +12,7 @@ from swan.src.widgets.mypgwidget import PyQtWidget3d
 import numpy as np
 
 
-class pgWidget3d(PyQtWidget3d):
+class PgWidget3d(PyQtWidget3d):
     """
     A class with only one plot that shows 3d data.
     
@@ -43,27 +43,25 @@ class pgWidget3d(PyQtWidget3d):
         PyQtWidget3d.__init__(self, parent=parent)
 
         layers = ["average", "standard deviation"]
-        self.toolbar.setupCheckboxes(layers)
-        self.toolbar.doLayer.connect(self.triggerRefresh)
-        self.toolbar.colWidg.setContentLayout(self.toolbar.gridLayout)
-        self.toolbar.mainGridLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolbar.setup_checkboxes(layers)
+        self.toolbar.doLayer.connect(self.trigger_refresh)
+        self.toolbar.collapsible_widget.set_content_layout(self.toolbar.grid_layout)
+        self.toolbar.main_grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self._axesSize = 5000.
-        self._axesSpacing = 100.
-        self._xScaleFactor = 300.
-        self._yScaleFactor = 20.
-        self._zScaleFactor = 1.
-        self._plotSpacing = 50.
-        self._xOffset = -2000.
-        self._yOffset = -3000.
-
-    #### general methods ####    
+        self.axes_size = 5000.
+        self.axes_spacing = 100.
+        self.x_scale_factor = 300.
+        self.y_scale_factor = 20.
+        self.z_scale_factor = 1.
+        self.plot_spacing = 50.
+        self.x_offset = -2000.
+        self.y_offset = -3000.
 
     def reset_plot(self):
-        self.pgCanvas.items = []
-        self.setup_axes(size=self._axesSize, spacing=self._axesSpacing, axes='x', setCamera=True)
+        self.pg_canvas.items = []
+        self.setup_axes(size=self.axes_size, spacing=self.axes_spacing, axes='x', set_camera=True)
 
-    def createSurfacePlot(self, z, color, x=None, y=None, shader='shaded'):
+    def create_surface_plot(self, z, color, x=None, y=None, shader='shaded'):
         """
         Plots data to the plot.
         
@@ -79,12 +77,12 @@ class pgWidget3d(PyQtWidget3d):
                 The color of the lines.
         
         """
-        return self.createSurfacePlotItem(x=x, y=y, z=z, color=color, shader=shader)
+        return self.create_surface_plot_item(x=x, y=y, z=z, color=color, shader=shader)
 
-    def addSurfacePlot(self, surfaceItem):
-        surfaceItem.scale(self._xScaleFactor, self._yScaleFactor, self._zScaleFactor)
-        surfaceItem.translate(self._xOffset, self._yOffset, 0., local=False)
-        self.addSurfacePlotItem(surfaceItem)
+    def add_surface_plot(self, surface_item):
+        surface_item.scale(self.x_scale_factor, self.y_scale_factor, self.z_scale_factor)
+        surface_item.translate(self.x_offset, self.y_offset, 0., local=False)
+        self.add_surface_plot_item(surface_item)
 
     def do_plot(self, vum, data):
         """
@@ -100,12 +98,12 @@ class pgWidget3d(PyQtWidget3d):
                 The layers that are visible.
         
         """
-        self.saveCameraPosition()
+        self.save_camera_position()
         self.reset_plot()
 
-        if self.toolbar.layers.isChecked():
+        if self.toolbar.activate_button.current_state:
 
-            layers = self.toolbar.getCheckedLayers()
+            layers = self.toolbar.get_checked_layers()
 
             plots = []
 
@@ -116,7 +114,7 @@ class pgWidget3d(PyQtWidget3d):
                 if layer == "average":
                     for unit_index in range(len(active)):
                         if any(active[unit_index]):
-                            col = vum.get_color(unit_index, False, layer, True)
+                            col = vum.get_colour(unit_index, False, layer, True)
                             zs = []
                             for session_index in range(len(active[unit_index])):
                                 if active[unit_index][session_index]:
@@ -125,30 +123,30 @@ class pgWidget3d(PyQtWidget3d):
                                     zs.append(datas)
                             zs = np.array(zs)
                             x = np.array(range(zs.shape[0]))
-                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (unit_index + 1)
+                            y = np.array(range(zs.shape[-1])) + self.plot_spacing * (unit_index + 1)
                             if len(zs) > 1:
-                                plot = self.createSurfacePlot(x=x, y=y, z=zs, color=col)
+                                plot = self.create_surface_plot(x=x, y=y, z=zs, color=col)
                                 plots.append(plot)
                             else:
                                 continue
                 elif layer == "standard deviation":
                     for unit_index in range(len(active)):
                         if any(active[unit_index]):
-                            col = vum.get_color(unit_index, False, layer, True)
+                            col = vum.get_colour(unit_index, False, layer, True)
                             zs = []
-                            l = 0
+                            length = 0
                             for session_index in range(len(active[unit_index])):
                                 if active[unit_index][session_index]:
                                     runit = vum.get_realunit(session_index, unit_index, data)
                                     datas = data.get_data(layer, runit).magnitude
-                                    l = len(datas)
+                                    length = len(datas)
                                     zs.append(datas)
                             zs = np.array(zs)
                             x = np.array(range(zs.shape[0]))
-                            y = np.array(range(zs.shape[-1])) + self._plotSpacing * (unit_index + 1)
-                            if l > 1:
-                                for k in range(l):
-                                    plot = self.createSurfacePlot(x=x, y=y, z=zs[:, k, :], color=col)
+                            y = np.array(range(zs.shape[-1])) + self.plot_spacing * (unit_index + 1)
+                            if length > 1:
+                                for k in range(length):
+                                    plot = self.create_surface_plot(x=x, y=y, z=zs[:, k, :], color=col)
                                     plots.append(plot)
                             else:
                                 continue
@@ -158,6 +156,6 @@ class pgWidget3d(PyQtWidget3d):
 
             if plots:
                 for plot in plots:
-                    self.addSurfacePlot(plot)
+                    self.add_surface_plot(plot)
 
-            self.restoreCameraPosition()
+            self.restore_camera_position()

@@ -13,7 +13,6 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget, mkColor, mkPen, arrayToQPath
 import numpy as np
-from copy import deepcopy
 
 
 class MyPlotWidget(QtWidgets.QWidget):
@@ -26,84 +25,65 @@ class MyPlotWidget(QtWidgets.QWidget):
     
     """
 
-    selectPlot = QtCore.pyqtSignal("PyQt_PyObject", bool)
-    colourStripToggle = QtCore.pyqtSignal(object, int)
-    visibilityToggle = QtCore.pyqtSignal(int, int, bool)
+    select_plot = QtCore.pyqtSignal("PyQt_PyObject", bool)
+    colour_strip_toggle = QtCore.pyqtSignal(object, int)
+    visibility_toggle = QtCore.pyqtSignal(int, int, bool)
     """
     Signal to emit if this plot is selected by clicking on it.
     
     """
 
     def __init__(self, width=200, height=150, *args, **kwargs):
-        """
-        **Properties**
-        
-            *_plotitem* (:class:`pyqtgraph.PlotItem`):
-                Just a shortcut to the PlotItem.
-            *selected* (boolean):
-                Whether or not this widget is selected.
-            *inFocus* (boolean):
-                Whether or not this widget has a mouse hovering it.
-            *_std* (tuple of integer):
-                The default size of this widget.
-            *bgs* (dictionary):
-                A dictionary containing the different backgrounds 
-                this widget can have.
-            *_bg* (:class:`PyQt5.QtGui.QColor`):
-                The current background color of this widget.
-        
-        """
-        QtWidgets.QWidget.__init__(self)
-        self.centralLayout = QtGui.QGridLayout()
-        self.plotWidget = PlotWidget(*args, **kwargs)
+
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)
+        self.central_layout = QtWidgets.QGridLayout()
+        self.plot_widget = PlotWidget(*args, **kwargs)
 
         self.setup()
 
         # attributes and properties
-        self._plotitem = self.plotWidget.getPlotItem()
-        self._plotitem.disableAutoRange()
+        self.plot_item = self.plot_widget.getPlotItem()
+        self.plot_item.disableAutoRange()
 
         self.selected = False
-        self.inFocus = False
+        self.in_focus = False
         self.disabled = False
-        self.rowInhibited = False
-        self.colInhibited = False
-        self.toBeUpdated = True
-        self.hasPlot = False
-        self._std = (width, height)
+        self.inhibited_by_row = False
+        self.inhibited_by_col = False
+        self.to_be_updated = True
+        self.has_plot = False
+        self.default_size = (width, height)
         self.pos = (0, 0)
-        self.defPens = []
-        self._dataItems = []
+        self.default_pens = []
+        self.data_items = []
 
         # setting the palette
-        self._defPenColour = None
-        self.bgs = {"normal": mkColor('k'),
-                    "selected": mkColor(0.2),
-                    "disabled": mkColor(0.25),
-                    "inFocus": mkColor(0.1)}
-        self._bg = self.bgs["normal"]
+        self.default_pen_colour = None
+        self.backgrounds = {"normal": mkColor('k'),
+                            "selected": mkColor(0.2),
+                            "disabled": mkColor(0.25),
+                            "in_focus": mkColor(0.1)}
+        self.background = self.backgrounds["normal"]
         self.disPen = mkColor('k')
 
-        self.setFixedSize(self._std[0], self._std[1])
-
-    #### general methods ####
+        self.setFixedSize(self.default_size[0], self.default_size[1])
 
     def setup(self):
 
-        self.centralLayout.setSpacing(0)
-        self.centralLayout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.centralLayout)
+        self.central_layout.setSpacing(0)
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.central_layout)
 
-        self.plotWidget.setMenuEnabled(False)
-        self.plotWidget.setAntialiasing(False)
-        self.plotWidget.hideButtons()
-        self.plotWidget.setMouseEnabled(False, False)
-        self.plotWidget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-        self.plotWidget.setMouseTracking(True)
-        self.plotWidget.hideAxis("bottom")
-        self.plotWidget.hideAxis("left")
+        self.plot_widget.setMenuEnabled(False)
+        self.plot_widget.setAntialiasing(False)
+        self.plot_widget.hideButtons()
+        self.plot_widget.setMouseEnabled(False, False)
+        self.plot_widget.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        self.plot_widget.setMouseTracking(True)
+        self.plot_widget.hideAxis("bottom")
+        self.plot_widget.hideAxis("left")
 
-        self.centralLayout.addWidget(self.plotWidget)
+        self.central_layout.addWidget(self.plot_widget)
 
     def plot(self, y, color='w'):
         """
@@ -118,9 +98,9 @@ class MyPlotWidget(QtWidgets.QWidget):
                 Default: w for white.
         
         """
-        plot = self._plotitem.plot(y, pen=mkPen(mkColor(color), width=2), antialias=False)
-        self.defPens.append(mkColor(color))
-        self._dataItems.append(plot)
+        plot = self.plot_item.plot(y, pen=mkPen(mkColor(color), width=2), antialias=False)
+        self.default_pens.append(mkColor(color))
+        self.data_items.append(plot)
 
     def plot_many(self, ys, color='w'):
         """
@@ -136,7 +116,7 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         lines = MultiLine(ys, color)
-        self._plotitem.addItem(lines)
+        self.plot_item.addItem(lines)
 
     def change_size(self, width, height):
         """
@@ -168,21 +148,21 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         if change:
-            self._bg = self.bgs["selected"]
-            self.plotWidget.setBackground(self.bgs["selected"])
+            self.background = self.backgrounds["selected"]
+            self.plot_widget.setBackground(self.backgrounds["selected"])
         else:
-            self._bg = self.bgs["normal"]
-            self.plotWidget.setBackground(self.bgs["normal"])
+            self.background = self.backgrounds["normal"]
+            self.plot_widget.setBackground(self.backgrounds["normal"])
 
     def clear_(self):
         """
         Clears the :class:`pyqtgraph.PlotItem`.
         
         """
-        self._plotitem.clear()
-        self._dataItems.clear()
-        self.defPens.clear()
-        self.hasPlot = False
+        self.plot_item.clear()
+        self.data_items.clear()
+        self.default_pens.clear()
+        self.has_plot = False
 
     def set_tooltip(self, tooltip):
         """
@@ -195,42 +175,46 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         self.setToolTip(tooltip)
-        QtGui.QToolTip.setFont(QtGui.QFont('Arial', 9))
+        QtWidgets.QToolTip.setFont(QtGui.QFont('Arial', 9))
 
-    def toggleColourStrip(self, col):
+    def toggle_colour_strip(self, col):
         colour = mkColor(col)
-        self.colourStripToggle.emit(colour, self.pos[1])
+        self.colour_strip_toggle.emit(colour, self.pos[1])
+
+    def set_for_update(self):
+        self.to_be_updated = True
+
+    def set_as_updated(self):
+        self.to_be_updated = False
 
     def disable(self):
         if self.selected:
-            self.selectPlot.emit(self, not self.selected)
+            self.select_plot.emit(self, not self.selected)
         self.disabled = True
-        self.visibilityToggle.emit(self.pos[0], self.pos[1], False)
-        self.plotWidget.setBackground(self.bgs["disabled"])
-        for dataItem in self._dataItems:
-            dataItem.setPen(self.disPen)
+        self.visibility_toggle.emit(self.pos[0], self.pos[1], False)
+        self.plot_widget.setBackground(self.backgrounds["disabled"])
+        for data_item in self.data_items:
+            data_item.setPen(self.disPen)
 
     def enable(self, which):
         if which == "row":
-            self.rowInhibited = False
+            self.inhibited_by_row = False
         elif which == "col":
-            self.colInhibited = False
+            self.inhibited_by_col = False
         elif which == "all":
-            self.rowInhibited = False
-            self.colInhibited = False
+            self.inhibited_by_row = False
+            self.inhibited_by_col = False
 
-        if not self.rowInhibited and not self.colInhibited:
+        if not self.inhibited_by_row and not self.inhibited_by_col:
             self.disabled = False
-            self.visibilityToggle.emit(self.pos[0], self.pos[1], True)
-            self.plotWidget.setBackground(self.bgs["normal"])
-            for dataItem in self._dataItems:
-                dataItem.setPen(mkColor(self._defPenColour), width=2)
+            self.visibility_toggle.emit(self.pos[0], self.pos[1], True)
+            self.plot_widget.setBackground(self.backgrounds["normal"])
+            for dataItem in self.data_items:
+                dataItem.setPen(mkColor(self.default_pen_colour), width=2)
 
     def close(self):
-        self.plotWidget.close()
+        self.plot_widget.close()
         self.setParent(None)
-
-    #### mouse interaction ####
 
     def mousePressEvent(self, event):
         """
@@ -245,8 +229,8 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         if event.button() == QtCore.Qt.LeftButton and not self.disabled:
-            self.selectPlot.emit(self, not self.selected)
-            PlotWidget.mousePressEvent(self.plotWidget, event)
+            self.select_plot.emit(self, not self.selected)
+            PlotWidget.mousePressEvent(self.plot_widget, event)
             event.accept()
         else:
             event.ignore()
@@ -287,8 +271,8 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         if not self.disabled:
-            self.inFocus = True
-            self.plotWidget.setBackground(self.bgs["inFocus"])
+            self.in_focus = True
+            self.plot_widget.setBackground(self.backgrounds["in_focus"])
             event.accept()
         else:
             event.ignore()
@@ -305,8 +289,8 @@ class MyPlotWidget(QtWidgets.QWidget):
         
         """
         if not self.disabled:
-            self.inFocus = False
-            self.plotWidget.setBackground(self._bg)
+            self.in_focus = False
+            self.plot_widget.setBackground(self.background)
             event.accept()
         else:
             event.ignore()
