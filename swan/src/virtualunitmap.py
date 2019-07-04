@@ -99,8 +99,9 @@ class VirtualUnitMap(object):
 
     def set_map_from_dataframe(self, dataframe):
         if not dataframe.empty:
-            vmap = np.zeros((max(dataframe.session), self.total_units))
-            for session_id in range(max(dataframe.session)):
+            vmap = np.zeros((max(dataframe.session)+1, self.total_units))
+            print("Vmap template size: {}".format(np.shape(vmap)))
+            for session_id in range(vmap.shape[0]):
                 session_frame = dataframe.loc[dataframe.session == session_id]
                 for global_unit_id, real_unit_id in zip(session_frame.label, session_frame.unit):
                     vmap[session_id][global_unit_id] = real_unit_id

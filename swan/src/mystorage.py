@@ -15,6 +15,7 @@ The data loading is called in the :class:`Task` which is a thread.
 from os import remove
 from os.path import splitext, basename, exists, split, join
 from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
 
 # swan-specific imports
 from swan.stg.storage import Storage
@@ -457,11 +458,11 @@ class MyStorage(Storage, QtCore.QObject):
         data = self.get_data()
         spike_nums = []
         c = 0
-        for i in range(len(virtual_unit_map.mapping)):
+        for session_id in range(len(virtual_unit_map.mapping)):
             spike_nums.append([])
-            for j in range(len(virtual_unit_map.mapping[i])):
-                if virtual_unit_map.mapping[i][j] != 0:
-                    runit = virtual_unit_map.get_realunit(i, j, data)
+            for unit_id in range(len(virtual_unit_map.mapping[session_id])):
+                if virtual_unit_map.mapping[session_id][unit_id] != 0:
+                    runit = virtual_unit_map.get_realunit(session_id, unit_id, data)
                     spike_nums[c].append(data.get_data("n_spikes", runit))
                 else:
                     spike_nums[c].append(0)
@@ -482,8 +483,10 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         vum = self.get_map()
+        print("VUM before recalculation: {}".format(np.shape(vum.mapping)))
         data = self.get_data()
         vum.calculate_mapping(data, self, automatic_mapping=mapping, parent=parent)
+        print("VUM after recalculation: {}".format(np.shape(vum.mapping)))
         self.change_map()
 
     def revert(self):

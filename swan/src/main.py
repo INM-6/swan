@@ -86,7 +86,7 @@ class MemoryTask(QtWidgets.QProgressBar):
         Gets the memory usage and shows it.
         
         """
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
         usage = psutil.Process(os.getpid()).memory_info().rss
         usage = int(usage / 2 ** 20)
         self.bar.showMessage("Memory used: {0} MB".format(usage), 0)
@@ -294,7 +294,7 @@ class Main(QtWidgets.QMainWindow):
             filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(parent=None,
                                                                        caption="Choose saved project file",
                                                                        directory=self._prodir, options=dialog_options
-                                                                       )
+                                                                      )
             if filename:
                 (prodir, proname) = split(filename)
 
@@ -342,8 +342,12 @@ class Main(QtWidgets.QMainWindow):
         
         """
         if self.check_project():
-            filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(None, "Choose a name for the savefiles",
-                                                                       self._prodir)
+            dialog_options = QtWidgets.QFileDialog.Options()
+            dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+            filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(parent=None,
+                                                                       caption="Choose a name for the savefiles",
+                                                                       directory=self._prodir,
+                                                                       options=dialog_options)
             if filename:
                 self._my_storage.save_project_as(filename)
                 self.update_project()
@@ -359,7 +363,12 @@ class Main(QtWidgets.QMainWindow):
         Delegates the loading to :func:`load_connector_map`.
         
         """
-        filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(None, "Choose a file", self._prodir)
+        dialog_options = QtWidgets.QFileDialog.Options()
+        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(parent=None,
+                                                                   caption="Load the connector file",
+                                                                   directory=self._prodir,
+                                                                   options=dialog_options)
         try:
             self.load_connector_map(filename)
         except ValueError:
@@ -373,7 +382,12 @@ class Main(QtWidgets.QMainWindow):
         Exports the virtual unit mappings to a csv file.
 
         """
-        filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(None, "Choose a savename", self._prodir)
+        dialog_options = QtWidgets.QFileDialog.Options()
+        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(parent=None,
+                                                                   caption="Choose a savename",
+                                                                   directory=self._prodir,
+                                                                   options=dialog_options)
         if filename:
             try:
                 if filename.endswith(".csv"):
@@ -390,7 +404,12 @@ class Main(QtWidgets.QMainWindow):
         Exports the virtual unit mappings to an odML file.
 
         """
-        filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(None, "Choose a savename", self._prodir)
+        dialog_options = QtWidgets.QFileDialog.Options()
+        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(parent=None,
+                                                                   caption="Choose a savename",
+                                                                   directory=self._prodir,
+                                                                   options=dialog_options)
         if filename:
             try:
                 if filename.endswith(".odml"):
@@ -469,7 +488,7 @@ class Main(QtWidgets.QMainWindow):
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                     defaultButton=QtWidgets.QMessageBox.No)
 
-            if answer == QtGui.QMessageBox.Yes:
+            if answer == QtWidgets.QMessageBox.Yes:
                 self._my_storage.revert()
                 self.reset_current_dirty()
                 self.plots.set_all_for_update()
@@ -666,7 +685,7 @@ class Main(QtWidgets.QMainWindow):
             self.memorytask.stop_timer()
             self.set_status("Loading... This may take a while...", 0)
 
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+            QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
 
             # checking if the last channel's mapping was dirty
             if self._current_dirty:
@@ -687,9 +706,6 @@ class Main(QtWidgets.QMainWindow):
             else:
                 min0, max0 = [-100, 100]
             self.plots.set_yranges(min0, max0)
-
-            # vum = self._mystorage.get_map()
-            # vum.calculate_mapping(data, self._mystorage, automatic_mapping)
 
             self.plot_all()
 
@@ -868,7 +884,7 @@ class Main(QtWidgets.QMainWindow):
          
         """
         if not self._my_storage.has_project():
-            QtGui.QMessageBox.warning(self, "Error", "No project loaded.")
+            QtWidgets.QMessageBox.warning(self, "Error", "No project loaded.")
             return False
         else:
             return True
