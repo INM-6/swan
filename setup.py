@@ -26,7 +26,6 @@ install_requirements = ['numpy',
                         'matplotlib',
                         'scikit-learn',
                         'psutil',
-                        'neo',
                         'scipy',
                         'pandas']
 
