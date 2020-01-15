@@ -99,7 +99,7 @@ class VirtualUnitMap(object):
 
     def set_map_from_dataframe(self, dataframe):
         if not dataframe.empty:
-            vmap = np.zeros((max(dataframe.session)+1, self.total_units))
+            vmap = np.zeros_like(np.array(self.mapping))
             print("Vmap template size: {}".format(np.shape(vmap)))
             for session_id in range(vmap.shape[0]):
                 session_frame = dataframe.loc[dataframe.session == session_id]

@@ -46,12 +46,17 @@ class PgWidgetRateProfile(PyQtWidget2d):
         self.rate_profiles = []
         self.datas = {}
 
-        self.time_pre = -150
-        self.time_post = 350
-        self.sampling_period = 10
+        self.time_pre = -1000
+        self.time_post = 1500
+        self.sampling_period = 5
         self.kernel_width = 60.0
         self.trigger_event = ""
         self.border_correction_multiplier = 1
+
+        self.time_pre_min, self.time_pre_max = -5000.0, -1.0
+        self.time_post_min, self.time_post_max = 1.0, 5000.0
+        self.sampling_period_min, self.sampling_period_max = 1.0, 5000.0
+        self.kernel_width_min, self.kernel_width_max = 1.0, 500.0
 
         self.events = {}
 
@@ -78,10 +83,10 @@ class PgWidgetRateProfile(PyQtWidget2d):
             sampling_period = float(sampling_period)
             kernel_width = float(kernel_width)
 
-            if -1 > time_pre > -5000.0 \
-                    and 1 < time_post < 5000.0 \
-                    and 1.0 < sampling_period < 5000.0 \
-                    and 10.0 < kernel_width < 500.0:
+            if self.time_pre_max > time_pre > self.time_pre_min \
+                    and self.time_post_min < time_post < self.time_post_max \
+                    and self.sampling_period_min < sampling_period < self.sampling_period_max \
+                    and self.kernel_width_min < kernel_width < self.kernel_width_max:
 
                 self.time_pre = time_pre
                 self.time_post = time_post
@@ -105,7 +110,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
         time_pre = value
         try:
             time_pre = float(time_pre)
-            if -1 > time_pre > -5000.0:
+            if self.time_pre_max > time_pre > self.time_pre_min:
                 self.time_pre = time_pre
                 self.rate_profile_settings.errorLabel.setText("")
             else:
@@ -125,7 +130,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
         t_post = value
         try:
             t_post = float(t_post)
-            if 1 < t_post < 5000.0:
+            if self.time_post_min < t_post < self.time_post_max:
                 self.time_post = t_post
                 self.rate_profile_settings.errorLabel.setText("")
             else:
@@ -145,7 +150,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
         sampling_period = value
         try:
             sampling_period = float(sampling_period)
-            if 1.0 < sampling_period < 5000.0:
+            if self.sampling_period_min < sampling_period < self.sampling_period_max:
                 self.sampling_period = sampling_period
                 self.rate_profile_settings.errorLabel.setText("")
             else:
@@ -165,7 +170,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
         kernel_width = value
         try:
             kernel_width = float(kernel_width)
-            if 10.0 < kernel_width < 500.0:
+            if self.kernel_width_min < kernel_width < self.kernel_width_max:
                 self.kernel_width = kernel_width
                 self.rate_profile_settings.errorLabel.setText("")
             else:
@@ -306,17 +311,17 @@ class PgWidgetRateProfile(PyQtWidget2d):
             return [], []
 
         # extract spike times around saccade and fixation
-        raster_trig = []  # spikes around trig
+        raster_trig_list = []  # spikes around trig
         for i_trig, t_trig in enumerate(trig_unit):
             mask_trig = (spiketrain >= (t_trig + timerange[0] - border_correction)) & \
                         (spiketrain <= (t_trig + timerange[1] + border_correction))
             spikes = spiketrain[mask_trig] - t_trig
-            raster_trig.append(spikes)
+            raster_trig_list.append(spikes)
 
-        if len(raster_trig) < 1:
+        if len(raster_trig_list) < 1:
             return [], []
 
-        raster_trig = np.sort(np.hstack(raster_trig))
+        raster_trig = np.sort(np.hstack(raster_trig_list))
 
         if len(raster_trig) <= minimum_spikes:
             return [], []
@@ -328,7 +333,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
         if rate_estimate.size == psth_times.size == 0:
             return [], []
         else:
-            psth_trig = rate_estimate / float(len(raster_trig))
+            psth_trig = rate_estimate / float(len(raster_trig_list))
             psth_trig = np.array(psth_trig)[:, 0]
 
             return psth_times, psth_trig
