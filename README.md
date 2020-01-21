@@ -18,7 +18,7 @@ The tool is currently used to analyze [reach-to-grasp datasets](https://web.gin.
     - [Loading a saved project](#Loading-a-saved-project)
     - [Interface](#Interface)
     - [Selecting units](#Selecting-units)
-    - [Swapping units](#Swapping units)
+    - [Swapping units](#Swapping-units)
     - [Autmatic algorithm](#Automatic-algorithms)
     - [Exporting results](#Exporting-results)
 - [Contributing](#Contributing)
