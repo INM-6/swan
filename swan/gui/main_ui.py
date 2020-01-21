@@ -53,38 +53,23 @@ class MainUI(object):
                                       QtWidgets.QDockWidget.DockWidgetFloatable)
         self.plotGridDock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         self.plotGridDock.setWidget(self.plotGrid)
-        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
 
         self.dock_mean_waveforms_view = QtWidgets.QDockWidget("Mean Waveforms")
         self.dock_mean_waveforms_view.setObjectName(_from_utf_8("meanWaveformView"))
         self.dock_mean_waveforms_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
                                                   QtWidgets.QDockWidget.DockWidgetFloatable)
         self.dock_mean_waveforms_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_mean_waveforms_view, QtCore.Qt.Vertical)
 
         self.mean_waveforms_view = PgWidget2d()
         self.mean_waveforms_view.setObjectName(_from_utf_8("meanWaveformsView"))
 
         self.dock_mean_waveforms_view.setWidget(self.mean_waveforms_view)
 
-        self.dock_waveforms_3d_view = QtWidgets.QDockWidget("3D Waveforms")
-        self.dock_waveforms_3d_view.setObjectName(_from_utf_8("3dWaveformView"))
-        self.dock_waveforms_3d_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
-                                                QtWidgets.QDockWidget.DockWidgetFloatable)
-        self.dock_waveforms_3d_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_waveforms_3d_view, QtCore.Qt.Vertical)
-
-        self.waveforms_3d_view = PgWidget3d()
-        self.waveforms_3d_view.setObjectName(_from_utf_8("3dWaveformsView"))
-
-        self.dock_waveforms_3d_view.setWidget(self.waveforms_3d_view)
-
         self.dock_isi_histograms_view = QtWidgets.QDockWidget("ISI Histograms")
         self.dock_isi_histograms_view.setObjectName(_from_utf_8("ISIHView"))
         self.dock_isi_histograms_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
                                                   QtWidgets.QDockWidget.DockWidgetFloatable)
         self.dock_isi_histograms_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_isi_histograms_view, QtCore.Qt.Vertical)
 
         self.isi_histograms_view = PgWidgetISI()
         self.isi_histograms_view.setObjectName(_from_utf_8("IsihView"))
@@ -96,31 +81,17 @@ class MainUI(object):
         self.dock_pca_3d_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
                                           QtWidgets.QDockWidget.DockWidgetFloatable)
         self.dock_pca_3d_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_pca_3d_view, QtCore.Qt.Vertical)
 
         self.pca_3d_view = PgWidgetPCA()
         self.pca_3d_view.setObjectName(_from_utf_8("PcaView"))
 
         self.dock_pca_3d_view.setWidget(self.pca_3d_view)
 
-        # self.dock_raster_plots_view = QtWidgets.QDockWidget("Raster Plots")
-        # self.dock_raster_plots_view.setObjectName(_from_utf_8("RasterPlotView"))
-        # self.dock_raster_plots_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
-        #                                         QtWidgets.QDockWidget.DockWidgetFloatable)
-        # self.dock_raster_plots_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        # main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_raster_plots_view, QtCore.Qt.Vertical)
-        #
-        # self.raster_plots_view = pgWidgetPCA2d()
-        # self.raster_plots_view.setObjectName(_from_utf_8("RasterView"))
-        #
-        # self.dock_raster_plots_view.setWidget(self.raster_plots_view)
-
         self.dock_rate_profiles_view = QtWidgets.QDockWidget("Rate Profiles")
         self.dock_rate_profiles_view.setObjectName(_from_utf_8("RateProfiles"))
         self.dock_rate_profiles_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
                                                  QtWidgets.QDockWidget.DockWidgetFloatable)
         self.dock_rate_profiles_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
-        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_rate_profiles_view, QtCore.Qt.Vertical)
 
         self.rate_profiles_view = PgWidgetRateProfile()
         self.rate_profiles_view.setObjectName(_from_utf_8("RateProfileView"))
@@ -261,12 +232,14 @@ class MainUI(object):
         self.load_icons()
         self.retranslate_ui(main_application)
 
-        # main_application.tabifyDockWidget(self.dock_rate_profiles_view, self.dock_raster_plots_view)
-        # main_application.tabifyDockWidget(self.dock_raster_plots_view, self.dock_pca_3d_view)
-        main_application.tabifyDockWidget(self.dock_rate_profiles_view, self.dock_pca_3d_view)
-        main_application.tabifyDockWidget(self.dock_pca_3d_view, self.dock_isi_histograms_view)
-        main_application.tabifyDockWidget(self.dock_isi_histograms_view, self.dock_waveforms_3d_view)
-        main_application.tabifyDockWidget(self.dock_waveforms_3d_view, self.dock_mean_waveforms_view)
+        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_rate_profiles_view, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.dock_pca_3d_view, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_mean_waveforms_view, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_isi_histograms_view, QtCore.Qt.Vertical)
+
+        main_application.splitDockWidget(self.plotGridDock, self.dock_rate_profiles_view, QtCore.Qt.Horizontal)
+        main_application.splitDockWidget(self.dock_rate_profiles_view, self.dock_pca_3d_view, QtCore.Qt.Vertical)
 
         # self.action_quit.triggered.connect(main_application.close)
         QtCore.QMetaObject.connectSlotsByName(main_application)
@@ -289,7 +262,7 @@ class MainUI(object):
         self.action_load_project.setText(_translate("main_application", "&Load Project...", None))
         self.action_load_project.setIconText(_translate("main_application", "Load Project...", None))
         self.action_load_project.setToolTip(_translate("main_application", "Load project from file", None))
-        self.action_load_project.setShortcut(_translate("main_application", "Ctrl+L", None))
+        self.action_load_project.setShortcut(_translate("main_application", "Ctrl+O", None))
         self.action_save_project.setText(_translate("main_application", "&Save Project", None))
         self.action_save_project.setIconText(_translate("main_application", "Save Project", None))
         self.action_save_project.setToolTip(_translate("main_application", "Save project", None))
@@ -301,7 +274,7 @@ class MainUI(object):
         self.action_swap.setToolTip(_translate("main_application", "Swap two selected units", None))
         self.action_collapse.setText(_translate("main_application", "Collapse", None))
         self.action_collapse.setToolTip(_translate("main_application", "Collapse selected unit row(s)", None))
-        self.action_recalculate_mapping.setText(_translate("main_application", "Recalculate mapping", None))
+        self.action_recalculate_mapping.setText(_translate("main_application", "Recalculate mapping...", None))
         self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically",
                                                               None))
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))

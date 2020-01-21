@@ -202,8 +202,7 @@ class Main(QtWidgets.QMainWindow):
         self.views = [self.ui.mean_waveforms_view,
                       self.ui.isi_histograms_view,
                       self.ui.rate_profiles_view,
-                      self.ui.pca_3d_view,
-                      self.ui.waveforms_3d_view]
+                      self.ui.pca_3d_view]
 
         self.check_dirs()
 
