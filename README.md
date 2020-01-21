@@ -125,7 +125,7 @@ The interface of SWAN is organized into five dockable widgets, called _views_, e
 
 To determine which curve/point in the different views correspond to which unit in the Plot Grid, you can click on either the cell of the unit or on any of the curves (in the Mean Waveforms View, ISI Histograms View, Rate Profiles View) or the point corresponding to the mean waveform in the PCA View. This will highlight the curves/points corresponding to that unit across all views. Clicking again will remove the highlight. This can be used to highlight units across all views.
 
-[Selecting Unit](./doc/images/selecting_unit.gif)
+![Selecting Unit](./doc/images/selecting_unit.gif)
 
 ### Swapping units
 
@@ -133,7 +133,7 @@ The most fundamental functionality of SWAN lies in its ability to reassign GIDs 
 
 This process can be repeated until the desired mapping of the original units to the GIDs is achieved. The goal is to assign one GID to all units which putatively represent the same neuron.
 
-[Swapping Units](./doc/images/swapping_units.gif)
+![Swapping Units](./doc/images/swapping_units.gif)
 
 ### Automatic algorithms
 
