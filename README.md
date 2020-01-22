@@ -135,6 +135,14 @@ This process can be repeated until the desired mapping of the original units to 
 
 ![Swapping Units](./doc/images/swapping_units.gif)
 
+### Activating and deactivating rows and columns
+
+At some point while using SWAN, you might encounter the need to "turn off" certain global unit IDs (rows), or certain sessions (columns), so as to be able to visualize specific units better. This is possible by clicking the first cell in the row or column which needs to be deactivated. This will grey out that row/column, and all single units on that row or column will no longer be visible in any of the other views. To re-activate the row/column, click the first cell in the row/column again.
+
+Note: the PCA view uses the session with the largest number of units to calculate the principal components. By deactivating certain units, you might change the session chosen to calculate these principal components and the PCA view may not remain the same.
+
+![Row-Column Selection](./doc/images/row_column_selection.gif)
+
 ### Automatic algorithms
 
 Although manually swapping units is a simple and intuitive way of arriving at the final mapping of units to GIDs, it can get tedious and time consuming when a large number of sessions are loaded. We provide the possibility of automatizing this process with the help of algorithms. Two algorithms have been implemented, accessible by clicking `Edit -> Recalculate Mapping...`. A dialog appears giving a choice between the following two algorithms.
