@@ -29,7 +29,7 @@ class Export(object):
                 The dictionary containing all virtual unit maps.
 
         """
-        with open(filename + ".csv", "w") as cfile:
+        with open(filename, "w") as cfile:
             cwriter = csv.writer(cfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
             firstline = True
             keys = (key for key in vums if key != "files")
@@ -80,7 +80,7 @@ class Export(object):
                     v = t[1] if isinstance(t[1], int) else str(t[1])
                     prop = odml.Property(name=t[0], value=v)
                     vusec.append(prop)
-        odml.tools.xmlparser.XMLWriter(doc).write_file(filename + ".odml")
+        odml.tools.xmlparser.XMLWriter(doc).write_file(filename)
 
     @staticmethod
     def import_csv(filename):

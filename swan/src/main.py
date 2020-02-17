@@ -384,13 +384,13 @@ class Main(QtWidgets.QMainWindow):
         dialog_options = QtWidgets.QFileDialog.Options()
         dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
         filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(parent=None,
-                                                                   caption="Choose a savename",
+                                                                   caption="Save .csv file...",
                                                                    directory=self._prodir,
                                                                    options=dialog_options)
         if filename:
             try:
-                if filename.endswith(".csv"):
-                    filename = os.path.basename(filename)
+                if not filename.endswith(".csv"):
+                    filename += ".csv"
                 Export.export_csv(filename, self._my_storage.get_mappings())
             except IOError:
                 QtWidgets.QMessageBox.critical(None, "Export error", "The virtual unit maps could not be exported")
@@ -406,13 +406,13 @@ class Main(QtWidgets.QMainWindow):
         dialog_options = QtWidgets.QFileDialog.Options()
         dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
         filename, nonsense = QtWidgets.QFileDialog.getSaveFileName(parent=None,
-                                                                   caption="Choose a savename",
+                                                                   caption="Save .odml file...",
                                                                    directory=self._prodir,
                                                                    options=dialog_options)
         if filename:
             try:
-                if filename.endswith(".odml"):
-                    filename = os.path.basename(filename)
+                if not filename.endswith(".odml"):
+                    filename += ".odml"
                 Export.export_odml(filename, self._my_storage.get_mappings())
             except IOError:
                 QtWidgets.QMessageBox.critical(None, "Export error", "The virtual unit maps could not be exported")
