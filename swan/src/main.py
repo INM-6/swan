@@ -391,7 +391,7 @@ class Main(QtWidgets.QMainWindow):
             try:
                 if filename.endswith(".csv"):
                     filename = os.path.basename(filename)
-                Export.export_csv(filename, self._my_storage.load_map())
+                Export.export_csv(filename, self._my_storage.get_mappings())
             except IOError:
                 QtWidgets.QMessageBox.critical(None, "Export error", "The virtual unit maps could not be exported")
 
@@ -413,7 +413,7 @@ class Main(QtWidgets.QMainWindow):
             try:
                 if filename.endswith(".odml"):
                     filename = os.path.basename(filename)
-                Export.export_odml(filename, self._my_storage.load_map())
+                Export.export_odml(filename, self._my_storage.get_mappings())
             except IOError:
                 QtWidgets.QMessageBox.critical(None, "Export error", "The virtual unit maps could not be exported")
 
