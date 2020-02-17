@@ -1,4 +1,7 @@
 import time
+import threading
+import time
+from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 import elephant as el
@@ -7,7 +10,8 @@ from scipy.spatial.distance import cdist
 from datetime import datetime
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets, QtCore
+import pyqtgraph as pg
 
 from swan.src.widgets.mypgwidget import PyQtWidget2d
 
@@ -56,12 +60,70 @@ def isih(train, bin_max, bin_step):
     return hist
 
 
-def run_kmeans_solver(data, n_clusters, n_init=100):
+def run_kmeans_solver(data, n_clusters, n_init=10):
     solver = KMeans(n_clusters=n_clusters, n_init=n_init, n_jobs=-1)
     solver.fit(data)
     clusters = solver.cluster_centers_
     labels = solver.predict(data)
     return solver, clusters, labels
+
+
+def run_kmeans_solver_no_prediction(data, n_clusters, n_init=10):
+    solver = KMeans(n_clusters=n_clusters, n_init=n_init, n_jobs=-1)
+    solver.fit(data)
+    return solver, n_clusters
+
+
+def generate_feature_vectors(parent_class, feature_dictionary, additional_dictionary):
+    feature_vectors = []
+
+    for u, (waves, train, reduced_mean, mean) in \
+            enumerate(zip(parent_class.all_waveforms,
+                          parent_class.all_spiketrains,
+                          parent_class.reduced_means,
+                          parent_class.mean_waveforms)):
+        feature_vectors.append([])
+        if feature_dictionary['p2p amplitude']:
+            feature_vectors[u].extend(list(stats.describe(p2p_amplitude(waves)))[2:])
+        if feature_dictionary['asymmetry']:
+            feature_vectors[u].extend(list(stats.describe(asymmetry(waves)))[2:])
+        if feature_dictionary['square sum']:
+            feature_vectors[u].extend(list(stats.describe(square_sum(waves)))[2:])
+        if feature_dictionary['spike width']:
+            feature_vectors[u].extend(list(stats.describe(spike_width(waves)))[2:])
+        if feature_dictionary['cv2']:
+            feature_vectors[u].append((cv2(train)))
+        if feature_dictionary['lv']:
+            feature_vectors[u].append((lv(train)))
+        if feature_dictionary['firing rate']:
+            feature_vectors[u].append((fr(train)))
+        if feature_dictionary['mean']:
+            feature_vectors[u].extend(mean)
+        if feature_dictionary['reduced mean']:
+            feature_vectors[u].extend(reduced_mean)
+        if feature_dictionary['first derivative']:
+            feature_vectors[u].extend(diff(waves))
+        if feature_dictionary['second derivative']:
+            feature_vectors[u].extend(diffdiff(waves))
+        if feature_dictionary['described isi']:
+            feature_vectors[u].extend(list(stats.describe(isih(train,
+                                                               additional_dictionary['bin max'],
+                                                               additional_dictionary['bin step']
+                                                               )
+                                                          )
+                                           )[2:]
+                                      )
+        if feature_dictionary['isi']:
+            feature_vectors[u].extend(isih(train,
+                                           additional_dictionary['bin max'],
+                                           additional_dictionary['bin step']
+                                           )
+                                      )
+
+    feature_vectors = np.array(feature_vectors)
+    feature_vectors = (feature_vectors - feature_vectors.mean(axis=0, keepdims=True)) / feature_vectors.std(axis=0)
+
+    return np.nan_to_num(feature_vectors)
 
 
 def get_session_ids(blocks):
@@ -100,26 +162,26 @@ def get_mean_waveforms(blocks):
 
 
 def get_all_waveforms(blocks):
-    all_waveforms = []
+    waveforms = []
     for block in blocks:
         units = block.channel_indexes[0].units
         for unit in units:
             if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
                 waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
                 waves = waves - waves.mean(axis=1, keepdims=True)
-                all_waveforms.append(waves)
-    return all_waveforms
+                waveforms.append(waves)
+    return waveforms
 
 
 def get_all_spiketrains(blocks):
-    all_spiketrains = []
+    spiketrains = []
     for block in blocks:
         units = block.channel_indexes[0].units
         for unit in units:
             if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
                 train = unit.spiketrains[0].times.magnitude
-                all_spiketrains.append(train)
-    return all_spiketrains
+                spiketrains.append(train)
+    return spiketrains
 
 
 def get_time_stamps(blocks):
@@ -137,7 +199,13 @@ def get_time_stamps(blocks):
             cts += 1.
         corrected_time_stamps.append(cts)
 
-    return [ts - corrected_time_stamps[0] for ts in corrected_time_stamps]
+    time_stamps = [ts - corrected_time_stamps[0] for ts in corrected_time_stamps]
+
+    return time_stamps
+
+
+def spike_width(waves):
+    return np.argmax(waves[:, 10:], axis=1) - np.argmin(waves[:, 10:], axis=1)
 
 
 class SwanImplementation:
@@ -149,107 +217,102 @@ class SwanImplementation:
 
         self.feature_dict = {'mean': True,
 
-                             'reduced mean': False,
+                             'reduced mean': True,
 
                              'first derivative': True,
                              'second derivative': True,
 
-                             'waveform features': False,
+                             'p2p amplitude': True,
+                             'asymmetry': True,
+                             'square sum': True,
+                             'spike width': True,
 
-                             'spiketrain features': True,
+                             'cv2': True,
+                             'lv': True,
+                             'firing rate': True,
 
-                             'histogram': True,
-                             'described histogram': False,
+                             'isi': True,
+                             'described isi': True,
 
-                             'clusters': 6,
+                             'clusters': 2,
 
                              'time split': 10
                              }
 
-        QtGui.QApplication.restoreOverrideCursor()
-        self.feature_dict, okay = ParameterInputDialog(parent=self.parent).exec_()
-        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-
         self.additional_dict = {'reduced mean dims': 5,
                                 'bin max': 15000,
-                                'bin step': 60}
+                                'bin step': 60,
+                                'max_clusters': 20}
+
+        self.mean_waveforms = get_mean_waveforms(self.blocks)
+        self.all_waveforms = get_all_waveforms(self.blocks)
+        self.all_spiketrains = get_all_spiketrains(self.blocks)
+        self.timestamps = get_time_stamps(self.blocks)
+        self.unit_ids = get_real_unit_ids(self.blocks)
+        self.session_ids = get_session_ids(self.blocks)
+
+        self.pca = PCA(n_components=self.additional_dict['reduced mean dims'])
+        self.pca.fit(np.vstack(self.all_waveforms))
+        self.reduced_means = self.pca.transform(self.mean_waveforms)
+
+        QtWidgets.QApplication.restoreOverrideCursor()
+        self.feature_dict, solver, okay = ParameterInputDialog(parent=self.parent, algorithm=self).exec_()
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
         if okay:
-            self.mean_waveforms = get_mean_waveforms(self.blocks)
-            self.all_waveforms = get_all_waveforms(self.blocks)
-            self.all_spiketrains = get_all_spiketrains(self.blocks)
-            self.timestamps = get_time_stamps(self.blocks)
-            self.unit_ids = get_real_unit_ids(self.blocks)
-            self.session_ids = get_session_ids(self.blocks)
+            self.feature_vectors = generate_feature_vectors(self, self.feature_dict, self.additional_dict)
 
-            self.pca = PCA(n_components=self.additional_dict['reduced mean dims'])
-            self.pca.fit(np.array([np.array(l[0]) for l in self.all_waveforms]))
-            self.reduced_means = self.pca.transform(self.mean_waveforms)
+            if solver is not None:
+                self.solver = solver
 
-            self.feature_vectors = self.generate_feature_vectors()
-            # np.random.shuffle(self.feature_vectors.T)
+                clusters = self.solver.cluster_centers_
+                labels = self.solver.predict(self.feature_vectors)
+            else:
+                self.solver, clusters, labels = run_kmeans_solver(self.feature_vectors,
+                                                                  self.feature_dict['clusters'], n_init=100)
 
-            self.solver, self.clusters, self.labels = run_kmeans_solver(data=self.feature_vectors,
-                                                                        n_clusters=self.feature_dict['clusters'])
+            labels = self.remove_duplicates(self.feature_vectors, self.session_ids, self.unit_ids, labels, clusters)
 
-            self.remove_duplicates()
             if self.feature_dict['time split'] is not None:
-                self.time_splits(days=self.feature_dict['time split'])
+                labels = self.time_splits(days=self.feature_dict['time split'],
+                                          labels=labels, timestamps=self.timestamps)
 
-            self.result = self.generate_result_dataframe()
-
+            self.result = self.generate_result_dataframe(self.session_ids, self.unit_ids, labels)
         else:
             self.result = pd.DataFrame({})
 
-    def time_splits(self, days):
+    def time_splits(self, days, labels, timestamps):
         threshold = days * 86400.0
 
-        print("Threshold", threshold)
-
-        labels_dict = self.generate_labels_dictionary()
-
-        print("Labels dictionary", labels_dict)
+        labels_dict = self.generate_labels_dictionary(labels, timestamps)
 
         while self.has_time_conflicts(labels_dict, threshold):
             for label in sorted(labels_dict.keys()):
-                times = labels_dict[label]
-                if times.size > 1:
-                    time_diffs = times[1:] - times[:-1]
+                timestamps = labels_dict[label]
+                if timestamps.size > 1:
+                    time_diffs = timestamps[1:] - timestamps[:-1]
                     if np.any(time_diffs > threshold):
                         cuts = np.where(time_diffs > threshold)[0]
                         for cut in cuts:
                             max_label = max(labels_dict.keys())
-                            labels_dict[max_label + 1] = times[cut + 1:]
-                            labels_dict[label] = times[:cut + 1]
+                            labels_dict[max_label + 1] = timestamps[cut + 1:]
+                            labels_dict[label] = timestamps[:cut + 1]
                             break
                 else:
                     continue
-
-        print("Labels dict after processing", labels_dict)
-        self.recreate_labels_list(labels_dict)
+        return self.recreate_labels_list(labels_dict)
 
     @staticmethod
     def has_time_conflicts(dictionary, threshold):
-        for key in dictionary.keys():
-            values = dictionary[key]
-            if values.size > 1 and np.any((values[1:] - values[:-1]) > threshold):
+        for label in dictionary.keys():
+            timestamps = dictionary[label]
+            if timestamps.size > 1 and np.any((timestamps[1:] - timestamps[:-1]) > threshold):
                 return True
         else:
             return False
 
-    def generate_labels_dictionary(self):
-        labels = np.array(self.labels)
-        timestamps = np.array(self.timestamps)
-
-        print("Timestamps", timestamps)
-
-        labels_dict = {}
-        for label in np.unique(labels):
-            labels_dict[label] = timestamps[np.where(labels == label)[0]]
-
-        return labels_dict
-
-    def recreate_labels_list(self, dictionary):
+    @staticmethod
+    def recreate_labels_list(dictionary):
         outstamps, outlabels = [], []
         for key in dictionary.keys():
             vals = dictionary[key]
@@ -257,17 +320,13 @@ class SwanImplementation:
             outlabels.extend([key] * vals.size)
 
         outstamps, outlabels = np.array(outstamps), np.array(outlabels)
+        return outlabels[np.argsort(outstamps)].tolist()
 
-        print("Outstamps", outstamps)
-        print("Outlabels", outlabels)
-
-        self.labels = outlabels[np.argsort(outstamps)].tolist()
-
-    def remove_duplicates(self):
-        def get_duplicates(session_ids, unit_ids, unit_labels):
+    def remove_duplicates(self, feature_vectors, session_ids, unit_ids, labels, clusters):
+        def get_duplicates(sessions, units, unit_labels):
             df = pd.DataFrame({
-                'session': session_ids,
-                'unit': unit_ids,
+                'session': sessions,
+                'unit': units,
                 'label': unit_labels
             })
 
@@ -275,17 +334,14 @@ class SwanImplementation:
                 df[['session', 'label']].duplicated(keep=False)
             ]
 
-        feature_vectors = self.feature_vectors
-
-        duplicates = get_duplicates(self.session_ids, self.unit_ids, self.labels)
+        duplicates = get_duplicates(session_ids, unit_ids, labels)
 
         visited = []
 
         count = 1
         while not duplicates.empty:
-            print("Loop {count}".format(count=count))
-            clusters = self.clusters
-            labels = self.labels
+            clusters = clusters
+            labels = labels
 
             maximum_distances = self.compute_intracluster_maximum_distance(clusters=clusters,
                                                                            feature_vectors=feature_vectors,
@@ -293,10 +349,8 @@ class SwanImplementation:
             cross_distances = cdist(feature_vectors, clusters)
 
             for label in np.unique(duplicates.label):
-                print("Label (cluster): {label}".format(label=label))
                 cluster_df = duplicates.loc[duplicates.label == label]
                 for session in np.unique(cluster_df.session):
-                    print("Session: {s}".format(s=session))
                     session_duplicates = cluster_df.loc[cluster_df.session == session]
                     conflicting_unit_distances = cross_distances[session_duplicates.index, label]
 
@@ -307,9 +361,6 @@ class SwanImplementation:
 
                     other_distances = cross_distances[discard_unit_position]
                     differences = other_distances - maximum_distances
-                    print("Distance of unit to other clusters: {d}".format(d=other_distances))
-                    print("Intracluster maximum distances: {d}".format(d=maximum_distances))
-                    print("Differences: {d}".format(d=differences))
                     candidates = []
 
                     for d, difference in enumerate(differences):
@@ -320,106 +371,33 @@ class SwanImplementation:
                         else:
                             candidates.append(0.0)
 
-                    print("Candidates: {c}".format(c=candidates))
-
                     while np.any(np.array(candidates) < 0.0):
                         new_cluster_position = np.argmin(candidates)
+                        # noinspection PyTypeChecker
                         candidates[new_cluster_position] = 0.0
                         if (session, discard_unit_id, new_cluster_position) not in visited:
-                            self.assign_new_cluster(session_id=session,
-                                                    unit_id=discard_unit_id,
-                                                    new_cluster=new_cluster_position)
-                            print("New cluster assigned: {s}, {u}, {l}".format(s=session,
-                                                                               u=discard_unit_id,
-                                                                               l=new_cluster_position))
+                            labels = self.assign_new_cluster(sessions=session_ids,
+                                                             units=unit_ids,
+                                                             labels=labels,
+                                                             session_id=session,
+                                                             unit_id=discard_unit_id,
+                                                             new_cluster=new_cluster_position)
                             break
                     else:
-                        self.create_new_cluster(session_id=session,
-                                                unit_id=discard_unit_id)
-                        print("New cluster created: {s}, {u}".format(s=session,
-                                                                     u=discard_unit_id))
+                        labels = self.create_new_cluster(sessions=session_ids,
+                                                         units=unit_ids,
+                                                         labels=labels,
+                                                         session_id=session,
+                                                         unit_id=discard_unit_id)
 
-                    self.recompute()
+                    clusters = self.recompute(feature_vectors, labels)
                     break
                 break
 
-            duplicates = get_duplicates(self.session_ids, self.unit_ids, self.labels)
+            duplicates = get_duplicates(session_ids, unit_ids, labels)
             count += 1
-            print("")
 
-    def assign_new_cluster(self, session_id, unit_id, new_cluster):
-        pair_list = [(s, u) for s, u in zip(self.session_ids, self.unit_ids)]
-        position = [pos for pos, val in enumerate(pair_list) if val == (session_id, unit_id)]
-
-        self.labels[position] = new_cluster
-
-    def create_new_cluster(self, session_id, unit_id):
-        pair_list = [(s, u) for s, u in zip(self.session_ids, self.unit_ids)]
-        position = [pos for pos, val in enumerate(pair_list) if val == (session_id, unit_id)]
-
-        max_label = np.amax(self.labels)
-        self.labels[position] = max_label + 1
-
-    def recompute(self):
-        cluster_labels = np.unique(self.labels)
-        total_clusters = cluster_labels.size
-        label_list = self.labels
-
-        cluster_centers = np.zeros((total_clusters, self.feature_vectors.shape[1]))
-
-        for l, label in enumerate(cluster_labels):
-            vectors = self.feature_vectors[label_list == label]
-            cluster_centers[l] = vectors.mean(axis=0)
-
-        self.clusters = cluster_centers
-
-    def generate_result_dataframe(self):
-        dataframe = pd.DataFrame({'session': self.session_ids,
-                                  'unit': self.unit_ids,
-                                  'label': self.labels
-                                  })
-
-        return dataframe.sort_values(by=['session', 'unit'])
-
-    def generate_feature_vectors(self):
-        feature_vectors = []
-
-        for u, (waves, train, reduced_mean, mean) in \
-                enumerate(zip(self.all_waveforms, self.all_spiketrains, self.reduced_means, self.mean_waveforms)):
-            feature_vectors.append([])
-            if self.feature_dict['waveform features']:
-                for wave_method in [p2p_amplitude, asymmetry, square_sum]:
-                    feature_vectors[u].extend(list(stats.describe(wave_method(waves)))[2:])
-            if self.feature_dict['spiketrain features']:
-                for train_method in [cv2, lv, fr]:
-                    feature_vectors[u].append(train_method(train))
-            if self.feature_dict['mean']:
-                feature_vectors[u].extend(mean)
-            if self.feature_dict['reduced mean']:
-                feature_vectors[u].extend(reduced_mean)
-            if self.feature_dict['first derivative']:
-                feature_vectors[u].extend(diff(waves))
-            if self.feature_dict['second derivative']:
-                feature_vectors[u].extend(diffdiff(waves))
-            if self.feature_dict['described histogram']:
-                feature_vectors[u].extend(list(stats.describe(isih(train,
-                                                                   self.additional_dict['bin max'],
-                                                                   self.additional_dict['bin step']
-                                                                   )
-                                                              )
-                                               )[2:]
-                                          )
-            if self.feature_dict['histogram']:
-                feature_vectors[u].extend(isih(train,
-                                               self.additional_dict['bin max'],
-                                               self.additional_dict['bin step']
-                                               )
-                                          )
-
-        feature_vectors = np.array(feature_vectors)
-        feature_vectors = (feature_vectors - feature_vectors.mean(axis=0, keepdims=True)) / feature_vectors.std(axis=0)
-
-        return np.nan_to_num(feature_vectors)
+        return labels
 
     @staticmethod
     def compute_intracluster_maximum_distance(clusters, feature_vectors, labels):
@@ -435,66 +413,170 @@ class SwanImplementation:
 
         return np.array(maximum_distances)
 
+    @staticmethod
+    def assign_new_cluster(sessions, units, labels, session_id, unit_id, new_cluster):
+        pair_list = [(s, u) for s, u in zip(sessions, units)]
+        position = [pos for pos, val in enumerate(pair_list) if val == (session_id, unit_id)]
+
+        labels[position] = new_cluster
+
+        return labels
+
+    @staticmethod
+    def create_new_cluster(sessions, units, labels, session_id, unit_id):
+        pair_list = [(s, u) for s, u in zip(sessions, units)]
+        position = [pos for pos, val in enumerate(pair_list) if val == (session_id, unit_id)]
+
+        max_label = np.amax(labels)
+        labels[position] = max_label + 1
+
+        return labels
+
+    @staticmethod
+    def recompute(feature_vectors, labels):
+        cluster_labels = np.unique(labels)
+        total_clusters = cluster_labels.size
+        label_list = labels
+
+        cluster_centers = np.zeros((total_clusters, feature_vectors.shape[1]))
+
+        for l, label in enumerate(cluster_labels):
+            vectors = feature_vectors[label_list == label]
+            cluster_centers[l] = vectors.mean(axis=0)
+
+        return cluster_centers
+
+    @staticmethod
+    def generate_result_dataframe(session_ids, unit_ids, labels):
+        dataframe = pd.DataFrame({'session': session_ids,
+                                  'unit': unit_ids,
+                                  'label': labels
+                                  })
+
+        return dataframe.sort_values(by=['session', 'unit'])
+
+    @staticmethod
+    def generate_labels_dictionary(labels, timestamps):
+        labels = np.array(labels)
+        timestamps = np.array(timestamps)
+
+        labels_dict = {}
+        for label in np.unique(labels):
+            labels_dict[label] = timestamps[np.where(labels == label)[0]]
+
+        return labels_dict
+
 
 class ParameterInputDialog(QtWidgets.QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, algorithm=None):
         QtWidgets.QDialog.__init__(self, parent=parent)
 
-        self.main_layout = QtGui.QGridLayout()
+        self.setWindowTitle("Automatic algorithm: SWAN Implementation")
+        self.algorithm = algorithm
 
-        plot_height = 0
+        self.main_layout = QtWidgets.QGridLayout()
 
-        # self.plot = PyQtWidget2d(parent=self)
-        # radio_buttons = ['auto update', 'manual update']
-        # self.plot.toolbar.setupRadioButtons(radio_buttons)
-        # self.main_layout.addWidget(self.plot, 0, 0, plot_height, 3)
+        plot_height = 2
 
-        self.checkbox_text = ["Mean", "Reduced Mean", "First Derivative", "Second Derivative", "Waveform Features",
-                              "Spiketrain Features", "Inter-spike Interval Histogram", "Reduced ISI Histogram"]
-        self.key_names = ["mean", "reduced mean", "first derivative", "second derivative", "waveform features",
-                          "spiketrain features", "histogram", "described histogram"]
-        default_states = [True, False, True, True, False, True, True, False]
+        self.plot_box = QtWidgets.QGroupBox("Choose point corresponding to optimal number of clusters:")
+        self.plot_box_layout = QtWidgets.QHBoxLayout()
 
-        self.option_choice = QtGui.QGroupBox("Choose features for KMeans clustering")
-        self.option_layout = QtGui.QVBoxLayout()
+        self.elbow_curve_plot = PyQtWidget2d(parent=self)
+        self.elbow_curve_plot.set_x_label("Number of Clusters")
+        self.elbow_curve_plot.set_y_label("Sum of Squared Errors (SSE)")
+        self.elbow_curve_plot.show_grid()
+        self.plot_box_layout.addWidget(self.elbow_curve_plot)
+        self.elbow_curve_plot.toolbar.collapsible_widget.setParent(None)
+        self.elbow_curve_plot.toolbar.setParent(None)
 
-        horizontal_layout = QtGui.QHBoxLayout()
-        self.clusters = QtGui.QSpinBox()
-        self.clusters.setRange(0, 10)
-        clusters_label = QtGui.QLabel("Number of initial clusters:")
+        self.plot_box.setLayout(self.plot_box_layout)
+        self.main_layout.addWidget(self.plot_box, 0, 0, 2, 4)
+
+        self.checkboxes = {}
+        self.key_names = []
+
+        self.option_choice = QtWidgets.QGroupBox("Choose features for KMeans clustering")
+        self.option_layout = QtWidgets.QVBoxLayout()
+
+        horizontal_layout = QtWidgets.QHBoxLayout()
+        self.clusters = QtWidgets.QSpinBox()
+        self.clusters.setRange(0, self.algorithm.additional_dict['max_clusters'])
+        self.clusters.setValue(self.algorithm.feature_dict['clusters'])
+        clusters_label = QtWidgets.QLabel("Number of initial clusters:")
         horizontal_layout.addWidget(clusters_label)
         horizontal_layout.addWidget(self.clusters)
         self.option_layout.addLayout(horizontal_layout)
 
-        self.checkboxes = {}
-        for c, (text, key, val) in enumerate(zip(self.checkbox_text, self.key_names, default_states)):
-            checkbox = QtGui.QCheckBox(text)
-            state = QtCore.Qt.Checked if val else QtCore.Qt.Unchecked
-            checkbox.setCheckState(state)
-            self.option_layout.addWidget(checkbox)
-            self.checkboxes[key] = checkbox
+        self.mean_waveforms_choice = QtWidgets.QGroupBox("Mean Waveforms")
+        self.mean_waveforms_layout = QtWidgets.QHBoxLayout()
+
+        checkbox_text = ["Mean", "Reduced Mean", "First Derivative", "Second Derivative"]
+        key_names = ["mean", "reduced mean", "first derivative", "second derivative"]
+        default_states = [True, True, True, True]
+
+        self.add_checkbox_group(checkbox_text, key_names, default_states, self.mean_waveforms_layout)
+
+        self.mean_waveforms_choice.setLayout(self.mean_waveforms_layout)
+        self.option_layout.addWidget(self.mean_waveforms_choice)
+
+        self.waveform_features_choice = QtWidgets.QGroupBox("Waveform Features")
+        self.waveform_features_layout = QtWidgets.QHBoxLayout()
+
+        checkbox_text = ["Peak-to-peak Amplitude", "Waveform Asymmetry", "Square Sum", "Spike Width"]
+        key_names = ["p2p amplitude", "asymmetry", "square sum", "spike width"]
+        default_states = [True, True, True, True]
+
+        self.add_checkbox_group(checkbox_text, key_names, default_states, self.waveform_features_layout)
+
+        self.waveform_features_choice.setLayout(self.waveform_features_layout)
+        self.option_layout.addWidget(self.waveform_features_choice)
+
+        self.spiketrain_features_choice = QtWidgets.QGroupBox("Spiketrain Features")
+        self.spiketrain_features_layout = QtWidgets.QHBoxLayout()
+
+        checkbox_text = ["Coefficient of Variation (CV2)", "Local Coefficient of Variation (LV)", "Firing Rate"]
+        key_names = ["cv2", "lv", "firing rate"]
+        default_states = [True, True, True]
+
+        self.add_checkbox_group(checkbox_text, key_names, default_states, self.spiketrain_features_layout)
+
+        self.spiketrain_features_choice.setLayout(self.spiketrain_features_layout)
+        self.option_layout.addWidget(self.spiketrain_features_choice)
+
+        self.isi_histograms_choice = QtWidgets.QGroupBox("ISI Histograms")
+        self.isi_histograms_layout = QtWidgets.QHBoxLayout()
+
+        checkbox_text = ["Inter-spike Interval Histogram", "Described ISI Histogram"]
+        key_names = ["isi", "described isi"]
+        default_states = [True, True]
+
+        self.add_checkbox_group(checkbox_text, key_names, default_states, self.isi_histograms_layout)
+
+        self.isi_histograms_choice.setLayout(self.isi_histograms_layout)
+        self.option_layout.addWidget(self.isi_histograms_choice)
 
         self.option_choice.setLayout(self.option_layout)
 
-        self.main_layout.addWidget(self.option_choice, plot_height, 0, len(self.checkbox_text), 3)
+        self.main_layout.addWidget(self.option_choice, plot_height, 0, 4, 4)
 
-        offset_height = plot_height + len(self.checkbox_text)
+        offset_height = plot_height + 4
 
-        self.form_layout = QtGui.QFormLayout()
+        self.form_layout = QtWidgets.QFormLayout()
 
-        self.time_split_box = QtGui.QGroupBox("Cluster Curation: Time split")
+        self.time_split_box = QtWidgets.QGroupBox("Cluster Curation: Time split")
         self.time_split_box.setCheckable(True)
-        time_split_layout = QtGui.QVBoxLayout()
+        time_split_layout = QtWidgets.QVBoxLayout()
 
-        vertical_layout = QtGui.QVBoxLayout()
-        self.time_split_threshold = QtGui.QSpinBox()
+        vertical_layout = QtWidgets.QVBoxLayout()
+        self.time_split_threshold = QtWidgets.QSpinBox()
         self.time_split_threshold.setRange(0, 1000)
-        info_label = QtGui.QLabel("Split clusters if the contained units differ in "
-                                  "time more than a specified threshold.")
-        time_split_label = QtGui.QLabel("Time split threshold (in days):")
+        self.time_split_threshold.setValue(self.algorithm.feature_dict['time split'])
+        info_label = QtWidgets.QLabel("Split clusters if the contained units differ in "
+                                      "time more than a specified threshold.")
+        time_split_label = QtWidgets.QLabel("Time split threshold (in days):")
         vertical_layout.addWidget(info_label)
-        horizontal_layout = QtGui.QHBoxLayout()
+        horizontal_layout = QtWidgets.QHBoxLayout()
         horizontal_layout.addWidget(time_split_label)
         horizontal_layout.addWidget(self.time_split_threshold)
         vertical_layout.addLayout(horizontal_layout)
@@ -502,23 +584,27 @@ class ParameterInputDialog(QtWidgets.QDialog):
 
         self.time_split_box.setLayout(time_split_layout)
 
-        self.main_layout.addWidget(self.time_split_box, offset_height + 1, 0, 1, 3)
+        self.main_layout.addWidget(self.time_split_box, offset_height + 1, 0, 1, 4)
 
         self.main_layout.addLayout(self.form_layout, offset_height + 2, 0)
 
-        # self.update_plot_button = QtGui.QPushButton("Update Elbow Curve")
-        # self.main_layout.addWidget(self.update_plot_button, offset_height + 2, 2, 1, 1)
-        # self.update_plot_button.clicked.connect(self.update_plot)
-
-        self.confirm_button = QtGui.QPushButton("Calculate")
-        self.main_layout.addWidget(self.confirm_button, offset_height + 3, 2, 1, 1)
-        self.confirm_button.clicked.connect(self.on_confirm)
-
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
         self.main_layout.addWidget(self.cancel_button, offset_height + 3, 0, 1, 1)
         self.cancel_button.clicked.connect(self.on_cancel)
 
+        self.update_plot_button = QtWidgets.QPushButton("Update Plots")
+        self.main_layout.addWidget(self.update_plot_button, offset_height + 3, 2, 1, 1)
+        self.update_plot_button.clicked.connect(self.update_plots)
+
+        self.confirm_button = QtWidgets.QPushButton("Calculate")
+        self.main_layout.addWidget(self.confirm_button, offset_height + 3, 3, 1, 1)
+        self.confirm_button.clicked.connect(self.on_confirm)
+
         self.setLayout(self.main_layout)
+
+        self._solvers = None
+        self._clusters = None
+        self.chosen_solver = None
 
         self.values_dict = {}
         self.final_state = False
@@ -531,8 +617,53 @@ class ParameterInputDialog(QtWidgets.QDialog):
         self.final_state = False
         self.reject()
 
-    def update_plot(self):
-        pass
+    def update_plots(self):
+        size = 10
+        pen = pg.mkPen(color='b')
+        brush = pg.mkBrush((0, 255, 0, 128))
+        symbol = 'o'
+
+        solvers = []
+        clusters = []
+        inertias = []
+        sizes = []
+        pens = []
+        brushes = []
+        symbols = []
+
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        self.update_values_dict()
+        current_clusters_values = self.clusters.value()
+        feature_vectors = generate_feature_vectors(self.algorithm, self.values_dict, self.algorithm.additional_dict)
+
+        with Pool(processes=None) as pool:
+            results = pool.starmap_async(run_kmeans_solver_no_prediction,
+                                         [(feature_vectors, n_clusters, 100)
+                                          for n_clusters in range(2, feature_vectors.shape[0])])
+
+            for result in results.get():
+                solver, n_clusters = result[0], result[1]
+                solvers.append(solver)
+                clusters.append(n_clusters)
+                inertias.append(solver.inertia_)
+                sizes.append(size)
+                symbols.append(symbol)
+
+                if n_clusters == int(current_clusters_values):
+                    pens.append(pg.mkPen('r'))
+                    brushes.append(pg.mkBrush((255, 0, 0, 128)))
+                else:
+                    pens.append(pen)
+                    brushes.append(brush)
+
+        self._solvers = solvers
+        self._clusters = clusters
+
+        self.elbow_curve_plot.pg_canvas.plotItem.plot(clusters, inertias,
+                                                      pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DotLine),
+                                                      symbolPen=pens, symbolSize=sizes, symbol=symbols,
+                                                      symbolBrush=brushes, pxMode=True, clear=True)
+        QtWidgets.QApplication.restoreOverrideCursor()
 
     def update_values_dict(self):
         output_dict = {}
@@ -545,7 +676,18 @@ class ParameterInputDialog(QtWidgets.QDialog):
             output_dict["time split"] = None
         self.values_dict = output_dict
 
+    def add_checkbox_group(self, texts, keys, default_states, layout):
+        for c, (text, key, val) in enumerate(zip(texts, keys, default_states)):
+            checkbox = QtWidgets.QCheckBox(text)
+            state = QtCore.Qt.Checked if val else QtCore.Qt.Unchecked
+            checkbox.setCheckState(state)
+            layout.addWidget(checkbox)
+            self.key_names.append(key)
+            self.checkboxes[key] = checkbox
+
     def exec_(self):
         QtWidgets.QDialog.exec_(self)
         self.update_values_dict()
-        return self.values_dict, self.final_state
+        if self._solvers is not None:
+            self.chosen_solver = self._solvers[np.where(self._clusters == int(self.clusters.value()))]
+        return self.values_dict, self.chosen_solver, self.final_state
