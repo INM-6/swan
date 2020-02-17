@@ -30,14 +30,12 @@ class Export(object):
 
         """
         with open(filename + ".csv", "w") as cfile:
-            print("Exporting file: {0}".format(cfile))
             cwriter = csv.writer(cfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
             firstline = True
             keys = (key for key in vums if key != "files")
             files = vums["files"]
-            print("Looping...")
+
             for vum in keys:
-                print("\tVUM: {0}".format(vum))
                 if firstline:
                     cwriter.writerow([vum] + files)
                     firstline = False
@@ -45,9 +43,8 @@ class Export(object):
                     cwriter.writerow([vum])
                 vus = (key for key in vums[vum] if key != "channel")
                 for vu in vus:
-                    print("\t\tVU: {0}".format(vu))
                     vulist = [key[1] if isinstance(key[1], int) else "None" for key in vums[vum][vu]]
-                    cwriter.writerow([vu] + vulist)
+                    cwriter.writerow([vu+1] + vulist)
 
     @staticmethod
     def export_odml(filename, vums):
