@@ -1,19 +1,17 @@
 import time
-import threading
-import time
-from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 import elephant as el
+import pyqtgraph as pg
+
 from scipy import stats
+from multiprocessing import Pool
 from scipy.spatial.distance import cdist
-from datetime import datetime
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from PyQt5 import QtWidgets, QtCore
-import pyqtgraph as pg
 
-from swan.src.widgets.mypgwidget import PyQtWidget2d
+from swan.gui.parameter_input_dialog_gui import ParameterInputDialogUI
 
 
 def p2p_amplitude(waves):
@@ -210,6 +208,7 @@ def spike_width(waves):
 
 class SwanImplementation:
 
+    # noinspection PyArgumentList
     def __init__(self, neodata, parent=None):
 
         self.blocks = neodata.blocks
@@ -440,9 +439,9 @@ class SwanImplementation:
 
         cluster_centers = np.zeros((total_clusters, feature_vectors.shape[1]))
 
-        for l, label in enumerate(cluster_labels):
+        for idx, label in enumerate(cluster_labels):
             vectors = feature_vectors[label_list == label]
-            cluster_centers[l] = vectors.mean(axis=0)
+            cluster_centers[idx] = vectors.mean(axis=0)
 
         return cluster_centers
 
@@ -467,140 +466,17 @@ class SwanImplementation:
         return labels_dict
 
 
+# noinspection PyArgumentList
 class ParameterInputDialog(QtWidgets.QDialog):
 
     def __init__(self, parent=None, algorithm=None):
+        # noinspection PyArgumentList
         QtWidgets.QDialog.__init__(self, parent=parent)
 
         self.setWindowTitle("Automatic algorithm: SWAN Implementation")
         self.algorithm = algorithm
 
-        self.main_layout = QtWidgets.QGridLayout()
-
-        plot_height = 2
-
-        self.plot_box = QtWidgets.QGroupBox("Choose point corresponding to optimal number of clusters:")
-        self.plot_box_layout = QtWidgets.QHBoxLayout()
-
-        self.elbow_curve_plot = PyQtWidget2d(parent=self)
-        self.elbow_curve_plot.set_x_label("Number of Clusters")
-        self.elbow_curve_plot.set_y_label("Sum of Squared Errors (SSE)")
-        self.elbow_curve_plot.show_grid()
-        self.plot_box_layout.addWidget(self.elbow_curve_plot)
-        self.elbow_curve_plot.toolbar.collapsible_widget.setParent(None)
-        self.elbow_curve_plot.toolbar.setParent(None)
-
-        self.plot_box.setLayout(self.plot_box_layout)
-        self.main_layout.addWidget(self.plot_box, 0, 0, 2, 4)
-
-        self.checkboxes = {}
-        self.key_names = []
-
-        self.option_choice = QtWidgets.QGroupBox("Choose features for KMeans clustering")
-        self.option_layout = QtWidgets.QVBoxLayout()
-
-        horizontal_layout = QtWidgets.QHBoxLayout()
-        self.clusters = QtWidgets.QSpinBox()
-        self.clusters.setRange(0, self.algorithm.additional_dict['max_clusters'])
-        self.clusters.setValue(self.algorithm.feature_dict['clusters'])
-        clusters_label = QtWidgets.QLabel("Number of initial clusters:")
-        horizontal_layout.addWidget(clusters_label)
-        horizontal_layout.addWidget(self.clusters)
-        self.option_layout.addLayout(horizontal_layout)
-
-        self.mean_waveforms_choice = QtWidgets.QGroupBox("Mean Waveforms")
-        self.mean_waveforms_layout = QtWidgets.QHBoxLayout()
-
-        checkbox_text = ["Mean", "Reduced Mean", "First Derivative", "Second Derivative"]
-        key_names = ["mean", "reduced mean", "first derivative", "second derivative"]
-        default_states = [True, True, True, True]
-
-        self.add_checkbox_group(checkbox_text, key_names, default_states, self.mean_waveforms_layout)
-
-        self.mean_waveforms_choice.setLayout(self.mean_waveforms_layout)
-        self.option_layout.addWidget(self.mean_waveforms_choice)
-
-        self.waveform_features_choice = QtWidgets.QGroupBox("Waveform Features")
-        self.waveform_features_layout = QtWidgets.QHBoxLayout()
-
-        checkbox_text = ["Peak-to-peak Amplitude", "Waveform Asymmetry", "Square Sum", "Spike Width"]
-        key_names = ["p2p amplitude", "asymmetry", "square sum", "spike width"]
-        default_states = [True, True, True, True]
-
-        self.add_checkbox_group(checkbox_text, key_names, default_states, self.waveform_features_layout)
-
-        self.waveform_features_choice.setLayout(self.waveform_features_layout)
-        self.option_layout.addWidget(self.waveform_features_choice)
-
-        self.spiketrain_features_choice = QtWidgets.QGroupBox("Spiketrain Features")
-        self.spiketrain_features_layout = QtWidgets.QHBoxLayout()
-
-        checkbox_text = ["Coefficient of Variation (CV2)", "Local Coefficient of Variation (LV)", "Firing Rate"]
-        key_names = ["cv2", "lv", "firing rate"]
-        default_states = [True, True, True]
-
-        self.add_checkbox_group(checkbox_text, key_names, default_states, self.spiketrain_features_layout)
-
-        self.spiketrain_features_choice.setLayout(self.spiketrain_features_layout)
-        self.option_layout.addWidget(self.spiketrain_features_choice)
-
-        self.isi_histograms_choice = QtWidgets.QGroupBox("ISI Histograms")
-        self.isi_histograms_layout = QtWidgets.QHBoxLayout()
-
-        checkbox_text = ["Inter-spike Interval Histogram", "Described ISI Histogram"]
-        key_names = ["isi", "described isi"]
-        default_states = [True, True]
-
-        self.add_checkbox_group(checkbox_text, key_names, default_states, self.isi_histograms_layout)
-
-        self.isi_histograms_choice.setLayout(self.isi_histograms_layout)
-        self.option_layout.addWidget(self.isi_histograms_choice)
-
-        self.option_choice.setLayout(self.option_layout)
-
-        self.main_layout.addWidget(self.option_choice, plot_height, 0, 4, 4)
-
-        offset_height = plot_height + 4
-
-        self.form_layout = QtWidgets.QFormLayout()
-
-        self.time_split_box = QtWidgets.QGroupBox("Cluster Curation: Time split")
-        self.time_split_box.setCheckable(True)
-        time_split_layout = QtWidgets.QVBoxLayout()
-
-        vertical_layout = QtWidgets.QVBoxLayout()
-        self.time_split_threshold = QtWidgets.QSpinBox()
-        self.time_split_threshold.setRange(0, 1000)
-        self.time_split_threshold.setValue(self.algorithm.feature_dict['time split'])
-        info_label = QtWidgets.QLabel("Split clusters if the contained units differ in "
-                                      "time more than a specified threshold.")
-        time_split_label = QtWidgets.QLabel("Time split threshold (in days):")
-        vertical_layout.addWidget(info_label)
-        horizontal_layout = QtWidgets.QHBoxLayout()
-        horizontal_layout.addWidget(time_split_label)
-        horizontal_layout.addWidget(self.time_split_threshold)
-        vertical_layout.addLayout(horizontal_layout)
-        time_split_layout.addLayout(vertical_layout)
-
-        self.time_split_box.setLayout(time_split_layout)
-
-        self.main_layout.addWidget(self.time_split_box, offset_height + 1, 0, 1, 4)
-
-        self.main_layout.addLayout(self.form_layout, offset_height + 2, 0)
-
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
-        self.main_layout.addWidget(self.cancel_button, offset_height + 3, 0, 1, 1)
-        self.cancel_button.clicked.connect(self.on_cancel)
-
-        self.update_plot_button = QtWidgets.QPushButton("Update Plots")
-        self.main_layout.addWidget(self.update_plot_button, offset_height + 3, 2, 1, 1)
-        self.update_plot_button.clicked.connect(self.update_plots)
-
-        self.confirm_button = QtWidgets.QPushButton("Calculate")
-        self.main_layout.addWidget(self.confirm_button, offset_height + 3, 3, 1, 1)
-        self.confirm_button.clicked.connect(self.on_confirm)
-
-        self.setLayout(self.main_layout)
+        self.interface = ParameterInputDialogUI(self)
 
         self._solvers = None
         self._clusters = None
@@ -633,7 +509,7 @@ class ParameterInputDialog(QtWidgets.QDialog):
 
         QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.update_values_dict()
-        current_clusters_values = self.clusters.value()
+        current_clusters_values = self.interface.clusters.value()
         feature_vectors = generate_feature_vectors(self.algorithm, self.values_dict, self.algorithm.additional_dict)
 
         with Pool(processes=None) as pool:
@@ -659,35 +535,33 @@ class ParameterInputDialog(QtWidgets.QDialog):
         self._solvers = solvers
         self._clusters = clusters
 
-        self.elbow_curve_plot.pg_canvas.plotItem.plot(clusters, inertias,
-                                                      pen=pg.mkPen(color='w', width=2, style=QtCore.Qt.DotLine),
-                                                      symbolPen=pens, symbolSize=sizes, symbol=symbols,
-                                                      symbolBrush=brushes, pxMode=True, clear=True)
+        self.interface.elbow_curve_plot.pg_canvas.plotItem.plot(clusters, inertias,
+                                                                pen=pg.mkPen(color='w',
+                                                                             width=2,
+                                                                             style=QtCore.Qt.DotLine),
+                                                                symbolPen=pens,
+                                                                symbolSize=sizes,
+                                                                symbol=symbols,
+                                                                symbolBrush=brushes,
+                                                                pxMode=True,
+                                                                clear=True)
+
         QtWidgets.QApplication.restoreOverrideCursor()
 
     def update_values_dict(self):
         output_dict = {}
-        for key in self.key_names:
-            output_dict[key] = self.checkboxes[key].isChecked()
-        output_dict["clusters"] = int(self.clusters.value())
-        if self.time_split_box.isChecked():
-            output_dict["time split"] = int(self.time_split_threshold.value())
+        for key in self.interface.key_names:
+            output_dict[key] = self.interface.checkboxes[key].isChecked()
+        output_dict["clusters"] = int(self.interface.clusters.value())
+        if self.interface.time_split_box.isChecked():
+            output_dict["time split"] = int(self.interface.time_split_threshold.value())
         else:
             output_dict["time split"] = None
         self.values_dict = output_dict
-
-    def add_checkbox_group(self, texts, keys, default_states, layout):
-        for c, (text, key, val) in enumerate(zip(texts, keys, default_states)):
-            checkbox = QtWidgets.QCheckBox(text)
-            state = QtCore.Qt.Checked if val else QtCore.Qt.Unchecked
-            checkbox.setCheckState(state)
-            layout.addWidget(checkbox)
-            self.key_names.append(key)
-            self.checkboxes[key] = checkbox
 
     def exec_(self):
         QtWidgets.QDialog.exec_(self)
         self.update_values_dict()
         if self._solvers is not None:
-            self.chosen_solver = self._solvers[np.where(self._clusters == int(self.clusters.value()))]
+            self.chosen_solver = self._solvers[self._clusters.index(self.interface.clusters.value())]
         return self.values_dict, self.chosen_solver, self.final_state
