@@ -17,7 +17,7 @@ class Export(object):
     """
 
     @staticmethod
-    def export_csv(filename, vums):
+    def export_csv(filename, virtual_unit_maps_dict):
         """
         Exports the virtual unit maps to csv.
 
@@ -25,29 +25,30 @@ class Export(object):
 
             *filename* (string):
                 The name of the output file.
-            *vums* (dictionary):
+            *virtual_unit_maps_dict* (dictionary):
                 The dictionary containing all virtual unit maps.
 
         """
-        with open(filename, "w") as cfile:
-            cwriter = csv.writer(cfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
-            firstline = True
-            keys = (key for key in vums if key != "files")
-            files = vums["files"]
+        with open(filename, "w", newline='') as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONNUMERIC)
+            first_line = True
+            channel_virtual_unit_maps = (key for key in virtual_unit_maps_dict if key != "files")
+            files = virtual_unit_maps_dict["files"]
 
-            for vum in keys:
-                if firstline:
-                    cwriter.writerow([vum] + files)
-                    firstline = False
+            for channel in channel_virtual_unit_maps:
+                if first_line:
+                    csv_writer.writerow([channel] + files)
+                    first_line = False
                 else:
-                    cwriter.writerow([vum])
-                vus = (key for key in vums[vum] if key != "channel")
-                for vu in vus:
-                    vulist = [key[1] if isinstance(key[1], int) else "None" for key in vums[vum][vu]]
-                    cwriter.writerow([vu+1] + vulist)
+                    csv_writer.writerow([channel])
+                virtual_unit_keys = (key for key in virtual_unit_maps_dict[channel] if key != "channel")
+                for virtual_unit_id in virtual_unit_keys:
+                    virtual_unit_list = [key[1] if isinstance(key[1], int) else "None"
+                                         for key in virtual_unit_maps_dict[channel][virtual_unit_id]]
+                    csv_writer.writerow([virtual_unit_id+1] + virtual_unit_list)
 
     @staticmethod
-    def export_odml(filename, vums):
+    def export_odml(filename, virtual_unit_maps_dict):
         """
         Exports the virtual unit maps to odML.
 
@@ -55,32 +56,35 @@ class Export(object):
 
             *filename* (string):
                 The name of the output file.
-            *vums* (dictionary):
+            *virtual_unit_maps_dict* (dictionary):
                 The dictionary containing all virtual unit maps.
 
         """
-        keys = (key for key in vums if key != "files")
-        files = vums["files"]
-        doc = odml.Document(date=date.today())
-        filesec = odml.Section(name="Files",
-                               definition="Filenames of sessions loaded in project.")
-        doc.append(filesec)
-        for i, f in enumerate(files):
-            filesec.append(odml.Property(name=str(i), value=f, dtype=odml.DType.string))
-        for vum in keys:
-            keysec = odml.Section(name=vum)
-            doc.append(keysec)
-            vus = (key for key in vums[vum] if key != "channel")
-            channelprop = odml.Property(name="channel", value=vums[vum]["channel"])
-            keysec.append(channelprop)
-            for vu in vus:
-                vusec = odml.Section(name=vu, type=odml.DType.int)
-                keysec.append(vusec)
-                for t in vums[vum][vu]:
-                    v = t[1] if isinstance(t[1], int) else str(t[1])
-                    prop = odml.Property(name=t[0], value=v)
-                    vusec.append(prop)
-        odml.tools.xmlparser.XMLWriter(doc).write_file(filename)
+        channel_virtual_unit_maps = (key for key in virtual_unit_maps_dict if key != "files")
+        file_names = virtual_unit_maps_dict["files"]
+        document = odml.Document(date=date.today())
+        files_section = odml.Section(name="Files",
+                                     definition="File names of sessions loaded in project.")
+        document.append(files_section)
+        for idx, file_name in enumerate(file_names):
+            files_section.append(odml.Property(name=str(idx+1), value=file_name, dtype=odml.DType.string))
+        for channel in channel_virtual_unit_maps:
+            channel_section = odml.Section(name=channel)
+            document.append(channel_section)
+            virtual_unit_keys = (key for key in virtual_unit_maps_dict[channel] if key != "channel")
+            channel_property = odml.Property(name="Channel", value=virtual_unit_maps_dict[channel]["channel"])
+            channel_section.append(channel_property)
+            for virtual_unit_id in virtual_unit_keys:
+                virtual_unit_section = odml.Section(name=virtual_unit_id, type=odml.DType.int)
+                channel_section.append(virtual_unit_section)
+                for virtual_unit_tuple in virtual_unit_maps_dict[channel][virtual_unit_id]:
+                    virtual_unit = virtual_unit_tuple[1] \
+                        if isinstance(virtual_unit_tuple[1], int) \
+                        else str(virtual_unit_tuple[1])
+                    virtual_unit_property = odml.Property(name=virtual_unit_tuple[0], values=virtual_unit)
+                    virtual_unit_section.append(virtual_unit_property)
+
+        odml.tools.XMLWriter(document).write_file(filename, local_style=True)
 
     @staticmethod
     def import_csv(filename):
