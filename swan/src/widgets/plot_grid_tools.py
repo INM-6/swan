@@ -7,7 +7,7 @@ Created on Thu Jan 11 11:38:37 2018
 """
 
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
-from swan.src.widgets.selectorwidget import SelectorWidget
+from swan.src.widgets.selector_widget import SelectorWidget
 
 class plotGridTools(QtWidgets.QWidget):
     
