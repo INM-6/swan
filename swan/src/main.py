@@ -939,7 +939,7 @@ class Main(QtWidgets.QMainWindow):
         No error is raised if they exist.
         
         """
-        data_dir = join(self._program_dir, "data")
+        data_dir = join(self._CACHEDIR, "data")
         # if not isdir(data_dir):
         #     mkdir(data_dir)
         pathlib.Path(data_dir).mkdir(parents=True, exist_ok=True)
