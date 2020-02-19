@@ -27,7 +27,7 @@ from swan import about, title
 from swan.gui.main_ui import MainUI
 from swan.src.widgets.file_dialog import File_Dialog
 from swan.src.widgets.preferences_dialog import Preferences_Dialog
-from swan.src.mystorage import MyStorage
+from swan.src.storage import MyStorage
 from swan.src.views.virtual_units_view import VUnits
 from swan.src.export import Export
 

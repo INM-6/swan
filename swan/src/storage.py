@@ -21,7 +21,7 @@ import numpy as np
 from swan.stg.storage import Storage
 from swan.stg.project import Project
 from swan.src.neodata import NeoData
-from swan.src.virtualunitmap import VirtualUnitMap
+from swan.src.virtual_unit_map import VirtualUnitMap
 
 
 class Task(QtCore.QThread):
