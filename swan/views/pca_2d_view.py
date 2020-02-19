@@ -8,7 +8,7 @@ from :class:`src.mypgwidget.PyQtWidget2d`.
 
 It is extended by a 2d plot and the plotting methods.
 """
-from swan.src.widgets.mypgwidget import PyQtWidget2d
+from swan.widgets.mypgwidget import PyQtWidget2d
 from numpy import count_nonzero, argmax, zeros, trim_zeros, any as np_any, mean as mn, array
 from sklearn.decomposition import PCA
 

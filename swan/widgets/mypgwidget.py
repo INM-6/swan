@@ -10,8 +10,8 @@ from pyqtgraph.Qt import QtGui, QtWidgets, QtCore
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from numpy import array
-from swan.src.widgets.view_toolbar import ViewToolbar
-from swan.src.widgets.gl_view_widget import MyGLwidget
+from swan.widgets.view_toolbar import ViewToolbar
+from swan.widgets.gl_view_widget import MyGLwidget
 
 pg.setConfigOptions(useOpenGL=True)
 

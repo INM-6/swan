@@ -20,7 +20,7 @@ recompiling of the icons.qrc file. The step-by-step procedure to do this using P
         **dirctory structure**
 
             myproject
-            |___ res
+            |___ resources
                 |___ foo
                     |___ bar_1.png
                     |___ bar_2.png
@@ -49,7 +49,7 @@ recompiling of the icons.qrc file. The step-by-step procedure to do this using P
         **dirctory structure**
 
             myproject
-            |___ res
+            |___ resources
                 |___ foo
                     |___ bar_1.png
                     |___ bar_2.png
@@ -61,7 +61,7 @@ recompiling of the icons.qrc file. The step-by-step procedure to do this using P
 
             from PyQt5 import QtGui
             from os.path import sep
-            from myproject.res.foo import icons
+            from myproject.resources.foo import icons
 
             prefix = ":" + sep + "icons"
             icon_1 = QtGui.QIcon()

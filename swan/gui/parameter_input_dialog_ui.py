@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
-from swan.src.widgets.mypgwidget import PyQtWidget2d
+from swan.widgets.mypgwidget import PyQtWidget2d
 
 
 class ParameterInputDialogUI(object):

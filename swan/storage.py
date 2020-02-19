@@ -4,9 +4,9 @@ Created on Apr 4, 2014
 @author: Christoph Gollan
 
 In this module you can find the :class:`MyStorage`. It inherits
-from :class:`stg.storage.Storage`.
+from :class:`base.base.Storage`.
 
-This class represents the storage layer. It manages the project files,
+This class represents the base layer. It manages the project files,
 the data loading and the data writing.
 
 The data loading is called in the :class:`Task` which is a thread.
@@ -18,10 +18,10 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 
 # swan-specific imports
-from swan.stg.storage import Storage
-from swan.stg.project import Project
-from swan.src.neodata import NeoData
-from swan.src.virtual_unit_map import VirtualUnitMap
+from swan.base.storage import Storage
+from swan.base.project import Project
+from swan.neodata import NeoData
+from swan.virtual_unit_map import VirtualUnitMap
 
 
 class Task(QtCore.QThread):
@@ -67,7 +67,7 @@ class Task(QtCore.QThread):
 
 class MyStorage(Storage, QtCore.QObject):
     """
-    The storage class.
+    The base class.
         
     It manages the project files and the data.
     
@@ -90,7 +90,7 @@ class MyStorage(Storage, QtCore.QObject):
         """
         **Properties**
         
-            *_project* (:class:`stg.project.Project`):
+            *_project* (:class:`base.project.Project`):
                 The project object that manages project files.
             *_PNAME* (string):
                 The default project name.

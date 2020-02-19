@@ -1,5 +1,5 @@
 #!/bin/ksh
-sphinx-apidoc -o source -f ../stg
+sphinx-apidoc -o source -f ../base
 sphinx-apidoc -o source -f ../src
 make clean
 make html

@@ -25,11 +25,11 @@ import psutil
 # swan-specific imports
 from swan import about, title
 from swan.gui.main_ui import MainUI
-from swan.src.widgets.file_dialog import File_Dialog
-from swan.src.widgets.preferences_dialog import Preferences_Dialog
-from swan.src.storage import MyStorage
-from swan.src.views.virtual_units_view import VUnits
-from swan.src.export import Export
+from swan.widgets.file_dialog import File_Dialog
+from swan.widgets.preferences_dialog import Preferences_Dialog
+from swan.storage import MyStorage
+from swan.views.virtual_units_view import VUnits
+from swan.export import Export
 
 
 class MemoryTask(QtWidgets.QProgressBar):
@@ -136,7 +136,7 @@ class Main(QtWidgets.QMainWindow):
                 The preferences dictionary containing the default values.
             *_prodir* (string):
                 The path where the project files will be written to by default.
-            *_mystorage* (:class:`stg.mystorage.MyStorage`):
+            *_mystorage* (:class:`base.mystorage.MyStorage`):
                 The class which handles the data and the project files.
         
         """
@@ -159,7 +159,7 @@ class Main(QtWidgets.QMainWindow):
                        }
         self._prodir = join(home_dir, "swan")
 
-        # preferences have to be present for the storage.
+        # preferences have to be present for the base.
         self.load_preferences()
 
         self._my_storage = MyStorage(program_dir, self._preferences["cacheDir"])

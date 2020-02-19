@@ -5,7 +5,7 @@ import os
 import pyqtgraph as pg
 
 # swan-specific imports
-from swan.src.main import Main
+from swan.main import Main
 from swan.gui.palettes import DarkPalette
 
 

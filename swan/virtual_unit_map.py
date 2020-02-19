@@ -10,7 +10,7 @@ same units in the same row.
 import numpy as np
 from scipy.spatial.distance import cdist
 
-from swan.src.automatic_mapping import SwanImplementation
+from swan.automatic_mapping import SwanImplementation
 
 
 class VirtualUnitMap(object):
@@ -293,7 +293,7 @@ class VirtualUnitMap(object):
 
         print("Map being calculated")
         swaps = 0
-        # Retrieve mapping from storage
+        # Retrieve mapping from base
         backup_mapping = np.array(storage.get_map().mapping.copy()).T
         pre_mapping = backup_mapping.copy()
         # loop over columns/sessions
@@ -314,7 +314,7 @@ class VirtualUnitMap(object):
 
             #
             # Sort the units in each session by max amplitude of mean waveform
-            # and swap the corresponding units in the storage.
+            # and swap the corresponding units in the base.
             #
 
             # loop over rows/units
@@ -329,7 +329,7 @@ class VirtualUnitMap(object):
                     swaps += 1
 
         storage.change_map()
-        # Refresh the mapping using the values in storage
+        # Refresh the mapping using the values in base
         mapping = np.array(storage.get_map().mapping.copy()).T
 
         # Initialize an array shaped like "mapping" and set all values to np.nan
@@ -472,13 +472,13 @@ class VirtualUnitMap(object):
                 This object is needed to get the data 
                 which will be used to compare the units.
             
-            *storage* (:class:`stg.mystorage.MyStorage`):
+            *base* (:class:`base.mystorage.MyStorage`):
                 The class which handles the data and the project files.
         
         """
         if automatic_mapping == 0:
             print("New Implementation")
-            # self.swan_implementation(data=data, storage=storage)
+            # self.swan_implementation(data=data, base=base)
             algorithm = SwanImplementation(neodata=data, parent=parent)
             self.set_map_from_dataframe(algorithm.result)
 
@@ -557,7 +557,7 @@ class VirtualUnitMap(object):
         storage.change_map()
 
     """
-    def calculate_mapping(self, data, storage):
+    def calculate_mapping(self, data, base):
         
         Calculates a mapping for the units based on features like distance.
         

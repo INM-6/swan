@@ -8,7 +8,7 @@ from :class:`src.mypgwidget.PyQtWidget3d`.
 
 It is extended by a 3d plot and the plotting methods.
 """
-from swan.src.widgets.mypgwidget import PyQtWidget3d
+from swan.widgets.mypgwidget import PyQtWidget3d
 import numpy as np
 
 

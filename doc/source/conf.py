@@ -22,7 +22,7 @@ from os.path import pardir, join, realpath, abspath
 p = abspath(join(realpath(__file__), pardir, pardir, pardir))
 sys.path.insert(1, p)
 sys.path.insert(1, join(p, "src"))
-sys.path.insert(1, join(p, "res"))
+sys.path.insert(1, join(p, "resources"))
 sys.path.insert(1, join(p, "python-neo"))
 sys.path.insert(1, join(p, "python-odml"))
 

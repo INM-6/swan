@@ -10,16 +10,15 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from os import sep
 
 # swan-specific imports
-from swan.res import icons
-from swan.src.views.mean_waveforms_view import PgWidget2d
-from swan.src.widgets.plot_grid import MyPlotGrid
-from swan.src.views.isi_histograms_view import PgWidgetISI
-from swan.src.views.pca_3d_view import PgWidgetPCA
-from swan.src.views.waveforms_3d_view import PgWidget3d
-from swan.src.views.pca_2d_view import pgWidgetPCA2d
-from swan.src.views.rate_profile_view import PgWidgetRateProfile
-from swan.src.widgets.plot_grid_tools import plotGridTools
-from swan.src.widgets.view_toolbar import CollapsibleWidget
+from swan.views.mean_waveforms_view import PgWidget2d
+from swan.widgets.plot_grid import MyPlotGrid
+from swan.views.isi_histograms_view import PgWidgetISI
+from swan.views.pca_3d_view import PgWidgetPCA
+from swan.views.rate_profile_view import PgWidgetRateProfile
+from swan.widgets.plot_grid_tools import plotGridTools
+from swan.widgets.view_toolbar import CollapsibleWidget
+
+from swan.resources import icons
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8

@@ -15,7 +15,7 @@ class StorageError(ValueError):
 
 class Storage(object):
     """
-    A basic storage class for storing objects 
+    A basic base class for storing objects
     and read/write files.
 
     """
@@ -49,7 +49,7 @@ class Storage(object):
         
     def remove(self, name):
         """
-        Removes an object from the storage.
+        Removes an object from the base.
         
         **Arguments**
         

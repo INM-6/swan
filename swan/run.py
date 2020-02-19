@@ -22,7 +22,7 @@ if __name__ == '__main__':
     import os
     from main import Main
     import pyqtgraph as pg
-    from ..gui.palettes import DarkPalette
+    from swan.gui.palettes import DarkPalette
 
     if len(sys.argv) > 1:
         home = sys.argv[1]

@@ -6,7 +6,7 @@ Created on Mon Oct 16 12:56:06 2017
 @author: sridhar
 """
 
-from swan.src.widgets.mypgwidget import PyQtWidget3d
+from swan.widgets.mypgwidget import PyQtWidget3d
 from numpy import count_nonzero, argmax, amax, zeros, trim_zeros, any as np_any
 from sklearn.decomposition import PCA
 from itertools import chain

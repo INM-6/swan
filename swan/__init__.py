@@ -5,8 +5,8 @@ The contents are organized in five folders:
 
     * src: contains all the important scripts, including src.main
     * gui: contains code that renders the graphical aspects of the tool
-    * stg: contains important classes for data storage and access
-    * res: contains miscellaneous resources to complete the tool's functionality
+    * base: contains important classes for data base and access
+    * resources: contains miscellaneous resources to complete the tool's functionality
     * tools: contains additional tools that add functionality to SWAN
 
 """
