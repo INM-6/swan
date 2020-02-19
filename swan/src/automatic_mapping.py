@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from PyQt5 import QtWidgets, QtCore
 
-from swan.gui.parameter_input_dialog_gui import ParameterInputDialogUI
+from swan.gui.parameter_input_dialog_ui import ParameterInputDialogUI
 
 
 def p2p_amplitude(waves):

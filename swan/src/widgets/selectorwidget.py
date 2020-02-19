@@ -10,7 +10,7 @@ The electrodes on this map are represented by
 the :class:`SelectorItem`.
 """
 from PyQt5 import QtGui, QtCore, QtWidgets
-from swan.gui.selectorwidget_ui import Ui_Form
+from swan.gui.selector_widget_ui import Ui_Form
 
 
 class SelectorWidget(QtWidgets.QWidget):

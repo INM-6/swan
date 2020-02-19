@@ -10,7 +10,7 @@ It is extended by a 2d plot and the plotting methods.
 """
 from swan.src.widgets.mypgwidget import PyQtWidget2d
 import numpy as np
-from swan.gui.isiOptions_ui import IsiOptionsUi
+from swan.gui.isi_options_ui import IsiOptionsUi
 
 
 class PgWidgetISI(PyQtWidget2d):

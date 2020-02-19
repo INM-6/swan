@@ -18,7 +18,7 @@ from pyqtgraph.Qt import QtWidgets, QtCore
 
 # swan-specific imports
 from swan.src.widgets.mypgwidget import PyQtWidget2d
-from swan.gui.rpOptions_ui import RpOptionsUi
+from swan.gui.rate_profile_options_ui import RpOptionsUi
 
 
 class PgWidgetRateProfile(PyQtWidget2d):
