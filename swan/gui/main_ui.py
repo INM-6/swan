@@ -143,8 +143,12 @@ class MainUI(object):
         self.action_recalculate_mapping.setObjectName(_from_utf_8("action_recalculate_mapping"))
         self.action_save_as = QtWidgets.QAction(main_application)
         self.action_save_as.setObjectName(_from_utf_8("action_save_as"))
-        self.action_load_connector_map = QtWidgets.QAction(main_application)
+        self.action_load_connector_map = QtWidgets.QAction(main_application)                        ##connectormap option wird erstellt
         self.action_load_connector_map.setObjectName(_from_utf_8("action_load_connector_map"))
+
+        self.action_load_probe = QtWidgets.QAction(main_application)
+        self.action_load_probe.setObjectName(_from_utf_8("action_load_probe"))
+
         self.action_zoom_in = QtWidgets.QAction(main_application)
         self.action_zoom_in.setObjectName(_from_utf_8("action_zoom_in"))
         self.action_zoom_out = QtWidgets.QAction(main_application)
@@ -183,12 +187,14 @@ class MainUI(object):
         self.menu_File.addAction(self.action_save_project)
         self.menu_File.addAction(self.action_save_as)
         self.menu_File.addSeparator()
-        self.menu_File.addAction(self.action_load_connector_map)
+        self.menu_File.addAction(self.action_load_connector_map)                ##option wird an 'File' menue angehaengt
+
+        self.menu_File.addAction(self.action_load_probe)
+
         self.menu_File.addAction(self.action_export_to_csv)
         self.menu_File.addAction(self.action_export_to_odml)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.action_quit)
-
         self.menu_Edit.addAction(self.action_recalculate_mapping)
         self.menu_Edit.addAction(self.action_revert_mapping)
         self.menu_Edit.addAction(self.action_swap)
@@ -274,11 +280,13 @@ class MainUI(object):
         self.action_collapse.setText(_translate("main_application", "Collapse", None))
         self.action_collapse.setToolTip(_translate("main_application", "Collapse selected unit row(s)", None))
         self.action_recalculate_mapping.setText(_translate("main_application", "Recalculate mapping...", None))
-        self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically",
-                                                              None))
+        self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically",None))
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))
         self.action_save_as.setToolTip(_translate("main_application", "Save project to a new file", None))
-        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))
+        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))       ##hier wird der Name des Menuepunkts bestimmt
+
+        self.action_load_probe.setText(_translate("main_application", "Load Probe", None))
+
         self.action_zoom_in.setText(_translate("main_application", "Zoom in", None))
         self.action_zoom_in.setToolTip(_translate("main_application", "Zoom overview in", None))
         self.action_zoom_in.setShortcut(_translate("main_application", "Ctrl++", None))

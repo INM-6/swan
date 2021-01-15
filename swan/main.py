@@ -32,6 +32,12 @@ from swan.views.virtual_units_view import VUnits
 from swan.export import Export
 
 
+from probeinterface import Probe##, get_probe
+from probeinterface.plotting import plot_probe
+
+
+
+
 class MemoryTask(QtWidgets.QProgressBar):
     """
     A class to show the memory usage on the main window's status bar.
@@ -234,6 +240,8 @@ class Main(QtWidgets.QMainWindow):
 
         self.showMaximized()
 
+
+
     @QtCore.pyqtSlot(name="")
     def on_action_new_project_triggered(self):
         """
@@ -277,6 +285,29 @@ class Main(QtWidgets.QMainWindow):
                     self.set_status("Created new project successfully.")
                 else:
                     self.set_status("No files given. Nothing loaded.")
+
+    @QtCore.pyqtSlot(name="")
+    def on_action_load_probe_triggered(self):
+        """
+        This method is called if you click on *File->Load Probe*.
+
+        You have to choose a .prb project file which contains the formation of the electrodes.
+
+        NOT WORKING RIGHT NOW. WORK IN PROGRESS!
+
+        """
+
+        dialog_options = QtWidgets.QFileDialog.Options()
+        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(parent=None,
+                                                                   caption="Load probe file (test option)",
+                                                                   directory=self._prodir,
+                                                                   options=dialog_options,
+                                                                   filter='.prb')       ##only .prb files can be loaded
+        try:
+            self.load_probe(filename)
+        except ValueError:
+            QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded! (test option)")
 
     @QtCore.pyqtSlot(name="")
     def on_action_load_project_triggered(self):
@@ -995,6 +1026,17 @@ class Main(QtWidgets.QMainWindow):
                 self.selector.select_only(self._my_storage.get_channel())
             except Exception as e:
                 print(e)
+
+    def load_probe(self, filename):
+
+        """
+        Loads the layout of the electrodes that were used to measure the activity
+
+        Work in progress
+        """
+
+
+        print('test passed')
 
     def load_preferences(self):
         """
