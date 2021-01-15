@@ -35,6 +35,10 @@ from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
 
 
+from probeinterface import Probe##, get_probe
+from probeinterface.plotting import plot_probe
+
+
 
 
 class MemoryTask(QtWidgets.QProgressBar):
@@ -967,6 +971,17 @@ class Main(QtWidgets.QMainWindow):
                 self.selector.select_only(self._my_storage.get_channel())
             except Exception as e:
                 print(e)
+
+    def load_probe(self, filename):
+
+        """
+        Loads the layout of the electrodes that were used to measure the activity
+
+        Work in progress
+        """
+
+
+        print('test passed')
 
     def load_preferences(self):
         """
