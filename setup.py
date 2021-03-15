@@ -50,7 +50,9 @@ setup(
     description='Python based tool for tracking single units from spike sorted data across several '
                 'electrophysiological recording sessions.',
     long_description=readme(),
-    scripts=['scripts/swan'],
+    entry_points={
+        'console_scripts': ['swan = swan.app.start:launch']
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
