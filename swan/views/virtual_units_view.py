@@ -233,7 +233,7 @@ class VUnits(MatplotlibWidget):
         self.draw()
 
         # setting the labels
-        self._axes.set_xticklabels([str(i) for i in range(1, l+1)])
+        self._axes.set_xticklabels([str(i) for i in range(l+1)])
         self._axes.set_yticklabels(labels)
         self.draw()
 
