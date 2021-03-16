@@ -11,11 +11,10 @@ It is extended by a 2d plot and the plotting methods.
 import math
 import numpy as np
 from matplotlib import colors
-#from matplotlib import cm
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
+from swan.gui.palettes import UNIT_COLORS
 from swan.widgets.matplotlib_widget import MatplotlibWidget
-from PyQt5.QtGui import QComboBox
-from PyQt5 import QtCore
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 
 class VUnits(MatplotlibWidget):
@@ -57,35 +56,15 @@ class VUnits(MatplotlibWidget):
 
         self.setup(naviBar=True)
         #self.naviBar.remove_custom_actions()
-        self.combo = QComboBox()
+        self.combo = QtWidgets.QComboBox()
         self.combo.addItems(["1", "2", "3", "auto"])
         # self.combo.addItems(["1", "2", "3"])
         self.naviBar.addWidget(self.combo)
         self.combo.currentIndexChanged.connect(self.settings_changed)
         self.canvas.mpl_connect("pick_event", self.on_pick)
 
-        clist = [(255,   255,    255),
-                 (31,	119,	    180),
-                 (174,	199,	    232),
-                 (255,	127,	    14),
-                 (255,	187,	    120),
-                 (44,	160,	    44),
-                 (152,	223,	    138),
-                 (214,	39, 	    40),
-                 (255,	152,	    150),
-                 (148,	103,	    189),
-                 (197,	176,	    213),
-                 (140,	86, 	    75),
-                 (196,	156,	    148),
-                 (227,	119,	    194),
-                 (247,	182,	    210),
-                 (127,	127,	    127),
-                 (199,	199,	    199),
-                 (188,	189,	    34),
-                 (219,	219,	    141),
-                 (23,	190,	    207),
-                 (158,	218,	    229)]
-        clist = [(line[0]/255., line[1]/255., line[2]/255.) for line in clist]
+        clist = UNIT_COLORS / 255.
+
         #properties{
         self._axes = self.get_axes()[0]
         self._cmap = colors.ListedColormap(clist, N=20)
