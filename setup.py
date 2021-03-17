@@ -44,7 +44,7 @@ setup(
     download_url='https://github.com/INM-6/swan',
     license='BSD-3-Clause',
     author='SWAN authors and contributors',
-    author_email='s.sridhar@fz-juelich.de',
+    author_email='shashwat.sridhar.95@gmail.com',
     install_requires=install_requirements,
     dependency_links=['https://github.com/INM-6/python-neo'],
     description='Python based tool for tracking single units from spike sorted data across several '
