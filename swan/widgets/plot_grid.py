@@ -152,7 +152,7 @@ class MyPlotContent(QtWidgets.QWidget):
             for session_id in range(cols):
                 if session_id not in self._cols:
                     self._cols[session_id] = []
-                plot_widget = MyPlotWidget(width=self._width, height=self._height, parent=self)
+                plot_widget = MyPlotWidget(width=self._width, height=self._height)
                 self._plots.append(plot_widget)
 
                 plot_widget.pos = (session_id, unit_id)
