@@ -28,7 +28,7 @@ from swan.gui.main_ui import MainUI
 from swan.widgets.file_dialog import File_Dialog
 from swan.widgets.preferences_dialog import Preferences_Dialog
 from swan.storage import MyStorage
-from swan.views.virtual_units_view import VUnits
+from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
 
 
@@ -167,7 +167,7 @@ class Main(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
         # for the virtual unit overview
-        self.vu = VUnits()
+        self.vu = VirtualUnitsView()
         self.vu.setWindowTitle("Virtual Units")
 
         # connect channel selection
@@ -179,20 +179,10 @@ class Main(QtWidgets.QMainWindow):
         self._my_storage.progress.connect(self.set_progress)
 
         # connect redraw signal of the virtual unit view
-        self.vu.redraw.connect(self.plot_all)
+        # self.vu.redraw.connect(self.plot_all)
 
         # connect channel loading
-        self.vu.load.connect(self.load_channel)
-
-        # self.ui.mean_waveforms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.isi_histograms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.pca_3d_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.rate_profiles_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        #
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.mean_waveforms_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.isi_histograms_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.pca_3d_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.rate_profiles_view.highlightCurveFromPlot)
+        # self.vu.load.connect(self.load_channel)
 
         # shortcut reference
         self.plots = self.ui.plotGrid.child
