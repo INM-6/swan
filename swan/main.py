@@ -174,16 +174,13 @@ class Main(QtWidgets.QMainWindow):
         # connect loading progress
         self._my_storage.progress.connect(self.set_progress)
 
-        # connect redraw signal of the virtual unit view
-        # self.vu.redraw.connect(self.plot_all)
-
-        # connect channel loading
-        # self.vu.load.connect(self.load_channel)
-
         # shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.tools.selector
         self.virtual_units_view = self.ui.virtual_units_view
+
+        # connect channel loading
+        self.virtual_units_view.load.connect(self.load_channel)
 
         # store all views in one list for easy access
         self.views = [
@@ -739,21 +736,7 @@ class Main(QtWidgets.QMainWindow):
             data = self._my_storage.get_data()
 
             # plotting
-            # plots: pyqtgraph plotwidget overview
             self.plots.do_plot(vum, data)
-            # # mean_waveforms_view: 2D mpl plot
-            # self.ui.mean_waveforms_view.do_plot(vum, data)
-            # # view_2: mpl movie plot
-            # self.ui.waveforms_3d_view.do_plot(vum, data)
-            # # view_3: ISI mpl plot
-            # self.ui.isi_histograms_view.do_plot(vum, data)
-            # # view_4: PCA pyqtgraph plot
-            # self.ui.pca_3d_view.do_plot(vum, data)
-            # # raster_plots_view: 2D PCA pyqtgraph plot
-            # self.ui.raster_plots_view.do_plot(vum, data)
-            # # rate_profiles_view: Rate Profiles plot
-            # self.ui.rate_profiles_view.do_plot(vum, data)
-
             for view in self.views:
                 view.do_plot(vum, data)
 

@@ -195,7 +195,11 @@ class VirtualUnitsView(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(object, object)
     def on_mapping_clicked(self, x, y):
-        pass
+        x_, y_ = np.floor(x), np.floor(y)
+        unit, channel, session = self.data_mapping.get((x_, y_), (None, None, None))
+
+        if channel is not None:
+            self.load.emit(channel)
 
     @QtCore.pyqtSlot(object, object)
     def on_mapping_hovered(self, x, y):
