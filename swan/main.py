@@ -166,10 +166,6 @@ class Main(QtWidgets.QMainWindow):
         # }
         self.setWindowTitle(title)
 
-        # for the virtual unit overview
-        self.vu = VirtualUnitsView()
-        self.vu.setWindowTitle("Virtual Units")
-
         # connect channel selection
         self.ui.tools.selector.doChannel.connect(self.do_channel)
         self.ui.plotGrid.child.indicator_toggle.connect(self.plot_all)
@@ -187,6 +183,7 @@ class Main(QtWidgets.QMainWindow):
         # shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.tools.selector
+        self.virtual_unit_mappings = self.ui.tools.virtual_unit_map
 
         # store all views in one list for easy access
         self.views = [self.ui.mean_waveforms_view,
@@ -581,16 +578,6 @@ class Main(QtWidgets.QMainWindow):
             self._my_storage.set_cache_dir(pref["cacheDir"])
 
     @QtCore.pyqtSlot(name="")
-    def on_action_virtual_units_triggered(self):
-        """
-        This method is called if you click on *View->Virtual units*.
-
-        Shows an overview for the virtual units.
-
-        """
-        self.vu.show()
-
-    @QtCore.pyqtSlot(name="")
     def on_action_tutorials_triggered(self):
         """
         This method is called if you click on *Help->Tutorials*.
@@ -737,7 +724,7 @@ class Main(QtWidgets.QMainWindow):
                 vum.set_visible(i, j, visible)
 
             self.doPlot.emit(vum, data)
-            self.vu.do_plot(vum_all, data)
+            self.virtual_unit_mappings.do_plot(vum_all, data)
 
             QtWidgets.QApplication.restoreOverrideCursor()
 

@@ -15,7 +15,7 @@ from swan.widgets.plot_grid import MyPlotGrid
 from swan.views.isi_histograms_view import PgWidgetISI
 from swan.views.pca_3d_view import PgWidgetPCA
 from swan.views.rate_profile_view import PgWidgetRateProfile
-from swan.widgets.plot_grid_tools import plotGridTools
+from swan.widgets.plot_grid_tools import PlotGridTools
 from swan.widgets.view_toolbar import CollapsibleWidget
 
 from swan.resources import icons
@@ -97,7 +97,7 @@ class MainUI(object):
 
         self.dock_rate_profiles_view.setWidget(self.rate_profiles_view)
 
-        self.tools = plotGridTools()
+        self.tools = PlotGridTools()
 
         self.plotGridOptionsLayout = QtWidgets.QGridLayout()
         self.plotGridOptionsLayout.setObjectName(_from_utf_8("PlotGridOptionsLayout"))
@@ -161,8 +161,6 @@ class MainUI(object):
         self.action_about.setObjectName(_from_utf_8("action_about"))
         self.action_tutorials = QtWidgets.QAction(main_application)
         self.action_tutorials.setObjectName(_from_utf_8("action_tutorials"))
-        self.action_virtual_units = QtWidgets.QAction(main_application)
-        self.action_virtual_units.setObjectName(_from_utf_8("action_virtual_units"))
         self.action_export_to_csv = QtWidgets.QAction(main_application)
         self.action_export_to_csv.setObjectName(_from_utf_8("action_export_to_csv"))
         self.action_export_to_odml = QtWidgets.QAction(main_application)
@@ -202,7 +200,6 @@ class MainUI(object):
 
         self.menu_Help.addAction(self.action_tutorials)
         self.menu_Help.addAction(self.action_about)
-        self.menu_View.addAction(self.action_virtual_units)
         self.menu_View.addAction(self.action_save_state)
         self.menu_View.addAction(self.action_restore_state)
         self.menu_View.addAction(self.action_revert_state)
@@ -225,8 +222,6 @@ class MainUI(object):
         self.toolbar.addAction(self.action_zoom_out)
         self.toolbar.addAction(self.action_expand_overview)
         self.toolbar.addAction(self.action_collapse_overview)
-        self.toolbar.addSeparator()
-        self.toolbar.addAction(self.action_virtual_units)
 
         self.load_icons()
         self.retranslate_ui(main_application)
@@ -297,8 +292,6 @@ class MainUI(object):
         self.action_about.setText(_translate("main_application", "About", None))
         self.action_about.setToolTip(_translate("main_application", "Information about SWAN", None))
         self.action_tutorials.setText(_translate("main_application", "Tutorials", None))
-        self.action_virtual_units.setText(_translate("main_application", "Virtual units", None))
-        self.action_virtual_units.setToolTip(_translate("main_application", "See virtual units", None))
         self.action_export_to_csv.setText(_translate("main_application", "Export to CSV...", None))
         self.action_export_to_odml.setText(_translate("main_application", "Export to odML...", None))
         self.action_import_from_csv.setText(_translate("main_application", "Import from csv", None))
@@ -348,9 +341,6 @@ class MainUI(object):
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(prefix + "preferences.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.action_preferences.setIcon(icon)
-            icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(prefix + "vunits.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.action_virtual_units.setIcon(icon)
         except Exception as e:
             print("Icon Exception: {exception}".format(exception=e))
             pass
