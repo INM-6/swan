@@ -45,13 +45,19 @@ class SelectorWidget(QtWidgets.QWidget):
         """
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
 
-        self.grid_layout = QtWidgets.QGridLayout()
+        self.grid_layout = QtWidgets.QGridLayout(self)
 
         self._items = []
         self._dirty_items = []
         self._sel = None
         self.lastchannel = 1
         self.currentchannel = 1
+
+        self.autoFillBackground()
+
+        self.setLayout(self.grid_layout)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding))
 
         self.make_grid()
         
