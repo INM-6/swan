@@ -6,9 +6,8 @@ Created on Thu Jan 11 11:38:37 2018
 @author: sridhar
 """
 
-from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
-from swan.views.virtual_units_view import VirtualUnitsView
 from swan.widgets.selector_widget import SelectorWidget
 
 

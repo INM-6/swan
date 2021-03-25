@@ -8,13 +8,10 @@ from :class:`src.matplotlibwidget.MatplotlibWidget`.
 
 It is extended by a 2d plot and the plotting methods.
 """
-import math
 import numpy as np
 import pyqtgraph as pg
 from swan.gui.palettes import UNIT_COLORS
 from PyQt5 import QtCore, QtWidgets, QtGui
-
-from swan.widgets.mypgwidget import PyQtWidget2d
 
 
 class VirtualUnitsView(QtWidgets.QWidget):

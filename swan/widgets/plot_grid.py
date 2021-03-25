@@ -11,7 +11,6 @@ It shows an overview of many :class:`src.myplotwidget.MyPlotWidget`
 and manages them.
 """
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from swan.gui.plotgrid_ui import Ui_Form
 from swan.widgets.plot_widget import MyPlotWidget
 from swan.widgets.indicator_cell import IndicatorWidget
 from numpy.random import choice
