@@ -286,11 +286,10 @@ class Main(QtWidgets.QMainWindow):
                 success = self._my_storage.load_project(prodir, proname, channel)
 
                 if success and self.do_channel(self._my_storage.get_channel(), self._my_storage.get_last_channel()):
-                    files_str = self._my_storage.get_files(as_string=True, only_basenames=True)
-
                     self.save_project()
                     self.update_project()
                     self.reset_dirty()
+                    self.find_saved()
                     self.selector.select_only(self._my_storage.get_channel())
                     self.set_status("Loaded project successfully.")
                 else:
@@ -848,6 +847,7 @@ class Main(QtWidgets.QMainWindow):
         """
         self._my_storage.save_project()
         self.reset_dirty()
+        self.find_saved()
         self.set_status("Saved project successfully")
 
     def reset_dirty(self):
@@ -858,6 +858,10 @@ class Main(QtWidgets.QMainWindow):
         self._current_dirty = False
         self._global_dirty = False
         self.selector.reset_dirty()
+
+    def find_saved(self):
+        vum_all = self._my_storage.get_mappings()
+        self.selector.find_saved(vum_all)
 
     def reset_current_dirty(self):
         """

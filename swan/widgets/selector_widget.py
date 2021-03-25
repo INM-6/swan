@@ -49,6 +49,7 @@ class SelectorWidget(QtWidgets.QWidget):
 
         self._items = []
         self._dirty_items = []
+        self.saved_channels = []
         self._sel = None
         self.lastchannel = 1
         self.currentchannel = 1
@@ -156,8 +157,8 @@ class SelectorWidget(QtWidgets.QWidget):
         lastchannel = self.lastchannel
         self.reset_sel()
         self._sel = item
-        for item in self._dirty_items:
-            item.repaint()
+        for selector_item in self._dirty_items:
+            selector_item.repaint()
         self.doChannel.emit(channel, lastchannel)
         
     def select_only(self, channel):
@@ -229,6 +230,15 @@ class SelectorWidget(QtWidgets.QWidget):
             item.repaint()
         self._dirty_items = []
 
+    def find_saved(self, vum_all):
+        saved_channels = sorted([int(name[3:]) for name in vum_all.keys() if "vum" in name])
+        for selector_item in self._items:
+            item_channel = selector_item.channel
+            if item_channel in saved_channels:
+                selector_item.saved = True
+            selector_item.repaint()
+        self.saved_channels = saved_channels
+
     def minimumSizeHint(self) -> QtCore.QSize:
         return self.sizeHint()
         
@@ -283,6 +293,7 @@ class SelectorItem(QtWidgets.QWidget):
         self.selected = False
         self.selectable = True
         self.dirty = False
+        self.saved = False
         self.text = "0"
         self.channel = 0
         self.pos = None
@@ -304,21 +315,22 @@ class SelectorItem(QtWidgets.QWidget):
         """
         self.setAutoFillBackground(True)
         pal = QtGui.QPalette()
-        #white when normal
-        pal.setColor(QtGui.QPalette.Background, QtCore.Qt.white)
+        # white when normal
+        pal.setColor(QtGui.QPalette.Background, QtGui.QColor(30, 27, 24))
         pal2 = QtGui.QPalette()
-        #dark gray when selected
+        # dark gray when selected
         pal2.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
         pal3 = QtGui.QPalette()
-        #black when deactivated
-        pal3.setColor(QtGui.QPalette.Background, QtCore.Qt.black)
+        # black when deactivated
+        pal3.setColor(QtGui.QPalette.Background, QtGui.QColor(53, 50, 47))
         pal4 = QtGui.QPalette()
-        col4 = QtGui.QColor(255, 140, 0)
-        #orange when dirty
-        pal4.setColor(QtGui.QPalette.Background, col4)
+        # orange when dirty
+        pal4.setColor(QtGui.QPalette.Background, QtCore.Qt.darkRed)
         pal5 = QtGui.QPalette()
-        #light gray when mouse hover
-        pal5.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
+        # light gray when mouse hover
+        pal5.setColor(QtGui.QPalette.Background, QtCore.Qt.darkCyan)
+        pal6 = QtGui.QPalette()
+        pal6.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGreen)
         
         if self.inFocus and self.selectable:
             self.setPalette(pal5)
@@ -330,6 +342,8 @@ class SelectorItem(QtWidgets.QWidget):
                     self.setPalette(pal2)
                 elif self.dirty:
                     self.setPalette(pal4)
+                elif self.saved:
+                    self.setPalette(pal6)
                 else:
                     self.setPalette(pal)
             
@@ -350,7 +364,7 @@ class SelectorItem(QtWidgets.QWidget):
                 The painter that is used to draw the text.
         
         """
-        qp.setPen(QtGui.QColor(0, 0, 0))
+        qp.setPen(QtGui.QColor(255, 255, 255))
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignCenter, self.text)   
 
