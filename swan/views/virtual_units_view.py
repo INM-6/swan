@@ -42,62 +42,186 @@ class VirtualUnitsView(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(VirtualUnitsView, self).__init__(*args, **kwargs)
 
+        self.data_mapping = {}
+        self.vum_all = None
+
         layout = QtWidgets.QVBoxLayout()
 
         self.pg_canvas = pg.PlotWidget()
-        self.options = QtWidgets.QWidget()
+        self.details = QtWidgets.QWidget()
 
-        self.data_mapping = {}
+        details_layout = QtWidgets.QHBoxLayout()
 
-        layout.addWidget(self.pg_canvas, 9)
-        layout.addWidget(self.options, 1)
+        self.info = QtWidgets.QGroupBox("Information")
+        self.options = QtWidgets.QGroupBox("Options")
+
+        info_layout = QtWidgets.QVBoxLayout()
+
+        unit_channel_layout = QtWidgets.QHBoxLayout()
+
+        self.info_label = QtWidgets.QLabel("Hover over the coloured bars in the plot.")
+        self.real_unit_label = QtWidgets.QLabel("Unit ID: ---")
+        self.channel_label = QtWidgets.QLabel("Channel: ---")
+        self.session_label = QtWidgets.QLabel("Session: ---")
+
+        info_layout.addWidget(self.info_label)
+        self.info_label.hide()
+
+        unit_channel_layout.addWidget(self.real_unit_label)
+        unit_channel_layout.addWidget(self.channel_label)
+
+        info_layout.addLayout(unit_channel_layout)
+        info_layout.addWidget(self.session_label)
+
+        self.info.setLayout(info_layout)
+
+        options_layout = QtWidgets.QVBoxLayout()
+
+        unit_filter_layout = QtWidgets.QHBoxLayout()
+        unit_filter_label = QtWidgets.QLabel("Minimum #units: ")
+        self.unit_filter = pg.SpinBox(parent=self.options, value=0, bounds=(1, None), int=True, step=1)
+        self.unit_filter.sigValueChanged.connect(self.update_plot)
+        unit_filter_layout.addWidget(unit_filter_label)
+        unit_filter_layout.addWidget(self.unit_filter)
+
+        self.hist_mode = QtWidgets.QCheckBox("Histogram Mode")
+        self.hist_mode.stateChanged.connect(self.update_plot)
+
+        options_layout.addLayout(unit_filter_layout)
+        options_layout.addSpacing(5)
+        options_layout.addWidget(self.hist_mode)
+
+        self.options.setLayout(options_layout)
+
+        self.info.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.options.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+
+        details_layout.addWidget(self.info, 4)
+        details_layout.addWidget(self.options, 6)
+
+        self.details.setLayout(details_layout)
+
+        layout.addWidget(self.pg_canvas, 10)
+        layout.addWidget(self.details, 1)
 
         self.setLayout(layout)
 
-    def do_plot(self, vum_all, data):
+    @QtCore.pyqtSlot()
+    def update_plot(self):
         self.pg_canvas.clear()
+        vum_all = self.vum_all
         channels = [name[3:] for name in vum_all.keys() if "vum" in name]
+        file_names = vum_all["files"]
         num_processed_channels = len(channels)
+        min_unit_filter = self.unit_filter.value()
+        mode = "histogram" if self.hist_mode.isChecked() else "temporal"
 
         self.data_mapping = {}
 
+        # proceed only if a vum is found
         if num_processed_channels > 0:
-            all_mappings = []
-            channel_stops = []
+            all_mappings = []  # list to store global-channel-unit-id-wise mappings
+            channel_stops = []  # demarcation points for each channel
+            global_unit_counter = 0
+
+            # loop over channels
             for channel in channels:
-                channel_mapping = vum_all[f"vum{channel}"]
+                channel_mapping = vum_all[f"vum{channel}"]  # vum for current channel
                 global_unit_ids = sorted([key for key in channel_mapping.keys() if isinstance(key, int)])
-                global_unit_counter = 0
                 for global_id in global_unit_ids:
                     global_units_by_session = channel_mapping[global_id]
                     real_unit_pos = [element[1] for element in global_units_by_session]
                     if any(real_unit_pos):
                         global_unit_pos = []
-                        for element in real_unit_pos:
+                        unit_count = 0
+                        for e, element in enumerate(real_unit_pos):
                             if element == 0:
                                 global_unit_pos.append(-1)
                             else:
                                 global_unit_pos.append(global_id)
+                                unit_count += 1
+                                self.data_mapping[(e, global_unit_counter)] = (element, channel, file_names[e])
 
-                        all_mappings.append(global_unit_pos)
-                        global_unit_counter += 1
+                        if unit_count >= min_unit_filter:
+                            all_mappings.append(global_unit_pos)
+                            global_unit_counter += 1
 
                 channel_stops.append(global_unit_counter)
 
-            mapping_array = np.vstack(all_mappings)
+            if all_mappings:
+                mapping_array = np.vstack(all_mappings)
+            else:
+                mapping_array = np.array([])
 
-            mapping_mesh_plot = SwanColorMeshItem(mapping_array.T)
-            mapping_mesh_plot.clicked.connect(self.on_mapping_clicked)
+            if mode == "temporal":
+                self._add_mesh_item(mapping_array=mapping_array, channel_stops=channel_stops)
+            elif mode == "histogram":
+                self._add_hist_item(mapping_array=mapping_array)
 
-            self.pg_canvas.addItem(mapping_mesh_plot)
+            self.info_label.show()
+        else:
+            self.info_label.hide()
 
-            for channel_stop in channel_stops:
-                line = pg.InfiniteLine(pos=channel_stop, angle=0, pen=pg.fn.mkPen(color='k', width=3))
-                self.pg_canvas.addItem(line)
+    def do_plot(self, vum_all, data):
+        self.vum_all = vum_all
+        self.update_plot()
+
+    def _add_mesh_item(self, mapping_array, channel_stops):
+        mapping_mesh_plot = SwanColorMeshItem(mapping_array.T)
+        mapping_mesh_plot.clicked.connect(self.on_mapping_clicked)
+        mapping_mesh_plot.hovered.connect(self.on_mapping_hovered)
+
+        self.pg_canvas.addItem(mapping_mesh_plot)
+
+        for channel_stop in channel_stops:
+            line = pg.InfiniteLine(pos=channel_stop, angle=0, pen=pg.fn.mkPen(color='w'))
+            self.pg_canvas.addItem(line)
+
+        self.pg_canvas.setLabel("bottom", text="sessions")
+        self.pg_canvas.setTitle("Virtual Unit Mappings")
+        self.pg_canvas.plotItem.showGrid(x=False, y=True)
+
+    def _add_hist_item(self, mapping_array):
+        mapping_array += 1
+        mapping_array[mapping_array > 0] = 1
+        counts = np.sum(mapping_array, axis=1)
+
+        bincounts = np.bincount(counts)
+        x_positions = np.arange(bincounts.size)
+        non_zero_positions = np.where(bincounts)[0]
+
+        bar_graph_item = pg.BarGraphItem(
+            x=x_positions[non_zero_positions],
+            height=bincounts[non_zero_positions],
+            width=0.5
+        )
+
+        self.pg_canvas.addItem(bar_graph_item)
+        self.pg_canvas.setLabel("bottom", text="# units")
+        self.pg_canvas.setLabel("left", text="# virtual units")
+        self.pg_canvas.setTitle("Distribution of # real units contained in virtual units")
+        self.pg_canvas.plotItem.showGrid(x=True, y=True)
 
     @QtCore.pyqtSlot(object, object)
     def on_mapping_clicked(self, x, y):
         pass
+
+    @QtCore.pyqtSlot(object, object)
+    def on_mapping_hovered(self, x, y):
+        x_, y_ = np.floor(x), np.floor(y)
+        unit, channel, session = self.data_mapping.get((x_, y_), (None, None, None))
+
+        if unit is not None:
+            self.real_unit_label.setText(f"Unit ID: {unit}")
+            self.channel_label.setText(f"Channel: {channel}")
+            self.session_label.setText(f"Session: {session}")
+        else:
+            self.real_unit_label.setText("Unit ID: ---")
+            self.channel_label.setText("Channel: ---")
+            self.session_label.setText("Session: ---")
+
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(400, 500)
 
 
 class SwanColorMeshItem(pg.GraphicsObject):
@@ -106,6 +230,7 @@ class SwanColorMeshItem(pg.GraphicsObject):
     """
 
     clicked = QtCore.pyqtSignal(object, object)
+    hovered = QtCore.pyqtSignal(object, object)
 
     def __init__(self, *args, **kwargs):
         """
@@ -316,6 +441,10 @@ class SwanColorMeshItem(pg.GraphicsObject):
             pos = ev.pos()
             x, y = pos.x(), pos.y()
             self.clicked.emit(x, y)
-            print(x, y)
         else:
             ev.ignore()
+
+    def hoverEvent(self, ev):
+        pos = ev.pos()
+        self.hovered.emit(pos.x(), pos.y())
+        ev.accept()

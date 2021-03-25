@@ -229,7 +229,7 @@ class SelectorWidget(QtWidgets.QWidget):
         self._dirty_items = []
         
     def sizeHint(self):
-        return QtCore.QSize(300, 300)
+        return QtCore.QSize(400, 500)
     
     def heightForWidth(self, width):
         return width
@@ -275,8 +275,7 @@ class SelectorItem(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)      
         
         self.setMinimumSize(20, 20)
-        
-        #properties{
+
         self.selected = False
         self.selectable = True
         self.dirty = False
@@ -284,11 +283,10 @@ class SelectorItem(QtWidgets.QWidget):
         self.channel = 0
         self.pos = None
         self.inFocus = False
-        #}
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+
         self.setMouseTracking(True)
-        
-    
-    #### event handler ####    
         
     def paintEvent(self, event):
         """
@@ -403,4 +401,8 @@ class SelectorItem(QtWidgets.QWidget):
         self.repaint()
         event.accept()
 
-        
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(50, 50)
+
+    def heightForWidth(self, a0: int) -> int:
+        return a0
