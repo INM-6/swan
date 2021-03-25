@@ -96,53 +96,54 @@ class VirtualUnitsView(QtWidgets.QWidget):
     def update_plot(self):
         self.pg_canvas.clear()
         vum_all = self.vum_all
-        channels = sorted([int(name[3:]) for name in vum_all.keys() if "vum" in name])
-        file_names = vum_all["files"]
-        num_processed_channels = len(channels)
-        min_unit_filter = self.unit_filter.value()
-        mode = "histogram" if self.hist_mode.isChecked() else "temporal"
+        if vum_all is not None:
+            channels = sorted([int(name[3:]) for name in vum_all.keys() if "vum" in name])
+            file_names = vum_all["files"]
+            num_processed_channels = len(channels)
+            min_unit_filter = self.unit_filter.value()
+            mode = "histogram" if self.hist_mode.isChecked() else "temporal"
 
-        self.data_mapping = {}
+            self.data_mapping = {}
 
-        # proceed only if a vum is found
-        if num_processed_channels > 0:
-            all_mappings = []  # list to store global-channel-unit-id-wise mappings
-            channel_stops = [0]  # demarcation points for each channel
-            global_unit_counter = 0
+            # proceed only if a vum is found
+            if num_processed_channels > 0:
+                all_mappings = []  # list to store global-channel-unit-id-wise mappings
+                channel_stops = [0]  # demarcation points for each channel
+                global_unit_counter = 0
 
-            # loop over channels
-            for channel in channels:
-                channel_mapping = vum_all[f"vum{channel}"]  # vum for current channel
-                global_unit_ids = sorted([key for key in channel_mapping.keys() if isinstance(key, int)])
-                for global_id in global_unit_ids:
-                    global_units_by_session = channel_mapping[global_id]
-                    real_unit_pos = [element[1] for element in global_units_by_session]
-                    if any(real_unit_pos):
-                        global_unit_pos = []
-                        unit_count = 0
-                        for e, element in enumerate(real_unit_pos):
-                            if element == 0:
-                                global_unit_pos.append(-1)
-                            else:
-                                global_unit_pos.append(global_id)
-                                unit_count += 1
-                                self.data_mapping[(e, global_unit_counter)] = (element, channel, file_names[e])
+                # loop over channels
+                for channel in channels:
+                    channel_mapping = vum_all[f"vum{channel}"]  # vum for current channel
+                    global_unit_ids = sorted([key for key in channel_mapping.keys() if isinstance(key, int)])
+                    for global_id in global_unit_ids:
+                        global_units_by_session = channel_mapping[global_id]
+                        real_unit_pos = [element[1] for element in global_units_by_session]
+                        if any(real_unit_pos):
+                            global_unit_pos = []
+                            unit_count = 0
+                            for e, element in enumerate(real_unit_pos):
+                                if element == 0:
+                                    global_unit_pos.append(-1)
+                                else:
+                                    global_unit_pos.append(global_id)
+                                    unit_count += 1
+                                    self.data_mapping[(e, global_unit_counter)] = (element, channel, file_names[e])
 
-                        if unit_count >= min_unit_filter:
-                            all_mappings.append(global_unit_pos)
-                            global_unit_counter += 1
+                            if unit_count >= min_unit_filter:
+                                all_mappings.append(global_unit_pos)
+                                global_unit_counter += 1
 
-                channel_stops.append(global_unit_counter)
+                    channel_stops.append(global_unit_counter)
 
-            if all_mappings:
-                mapping_array = np.vstack(all_mappings)
-            else:
-                mapping_array = np.array([])
+                if all_mappings:
+                    mapping_array = np.vstack(all_mappings)
+                else:
+                    mapping_array = np.array([])
 
-            if mode == "temporal":
-                self._add_mesh_item(mapping_array=mapping_array, channels=channels, channel_stops=channel_stops)
-            elif mode == "histogram":
-                self._add_hist_item(mapping_array=mapping_array)
+                if mode == "temporal":
+                    self._add_mesh_item(mapping_array=mapping_array, channels=channels, channel_stops=channel_stops)
+                elif mode == "histogram":
+                    self._add_hist_item(mapping_array=mapping_array)
 
     def do_plot(self, vum_all, data):
         self.vum_all = vum_all
