@@ -106,12 +106,14 @@ class VirtualUnitsView(QtWidgets.QWidget):
             if num_processed_channels > 0:
                 all_mappings = []  # list to store global-channel-unit-id-wise mappings
                 channel_stops = [0]  # demarcation points for each channel
+                channel_names = []
                 global_unit_counter = 0
 
                 # loop over channels
                 for channel in channels:
                     channel_mapping = vum_all[f"vum{channel}"]  # vum for current channel
                     global_unit_ids = sorted([key for key in channel_mapping.keys() if isinstance(key, int)])
+                    per_channel_global_unit_counter = 0
                     for global_id in global_unit_ids:
                         global_units_by_session = channel_mapping[global_id]
                         real_unit_pos = [element[1] for element in global_units_by_session]
@@ -129,8 +131,11 @@ class VirtualUnitsView(QtWidgets.QWidget):
                             if unit_count >= min_unit_filter:
                                 all_mappings.append(global_unit_pos)
                                 global_unit_counter += 1
+                                per_channel_global_unit_counter += 1
 
-                    channel_stops.append(global_unit_counter)
+                    if per_channel_global_unit_counter > 0:
+                        channel_names.append(channel)
+                        channel_stops.append(global_unit_counter)
 
                 if all_mappings:
                     mapping_array = np.vstack(all_mappings)
@@ -138,7 +143,11 @@ class VirtualUnitsView(QtWidgets.QWidget):
                     mapping_array = np.array([])
 
                 if mode == "temporal":
-                    self._add_mesh_item(mapping_array=mapping_array, channels=channels, channel_stops=channel_stops)
+                    self._add_mesh_item(
+                        mapping_array=mapping_array,
+                        channels=channel_names,
+                        channel_stops=channel_stops
+                    )
                     self.enable_mouse(x=False, y=True)
                 elif mode == "histogram":
                     self._add_hist_item(mapping_array=mapping_array)
