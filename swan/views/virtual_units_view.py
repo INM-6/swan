@@ -139,8 +139,10 @@ class VirtualUnitsView(QtWidgets.QWidget):
 
                 if mode == "temporal":
                     self._add_mesh_item(mapping_array=mapping_array, channels=channels, channel_stops=channel_stops)
+                    self.enable_mouse(x=False, y=True)
                 elif mode == "histogram":
                     self._add_hist_item(mapping_array=mapping_array)
+                    self.enable_mouse(x=True, y=True)
 
     def do_plot(self, vum_all, data):
         self.vum_all = vum_all
@@ -214,6 +216,9 @@ class VirtualUnitsView(QtWidgets.QWidget):
             self.real_unit_label.setText("Unit ID: ---")
             self.channel_label.setText("Channel: ---")
             self.session_label.setText("Session: ---")
+
+    def enable_mouse(self, x=None, y=None):
+        self.pg_canvas.plotItem.getViewBox().setMouseEnabled(x=x, y=y)
 
     def sizeHint(self) -> QtCore.QSize:
         return QtCore.QSize(300, 400)
