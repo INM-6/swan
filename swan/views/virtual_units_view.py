@@ -8,31 +8,19 @@ from :class:`src.matplotlibwidget.MatplotlibWidget`.
 
 It is extended by a 2d plot and the plotting methods.
 """
-import math
 import numpy as np
-from matplotlib import colors
-#from matplotlib import cm
-from matplotlib.ticker import FixedLocator, FormatStrFormatter
-from swan.widgets.matplotlib_widget import MatplotlibWidget
-from PyQt5.QtGui import QComboBox
-from PyQt5 import QtCore
+import pyqtgraph as pg
+from swan.gui.palettes import UNIT_COLORS
+from PyQt5 import QtCore, QtWidgets, QtGui
 
 
-class VUnits(MatplotlibWidget):
+class VirtualUnitsView(QtWidgets.QWidget):
     """
     A class for showing a virtual unit overview.
 
     The *args* and *kwargs* are passed to :class:`src.matplotlibwidget.MatplotlibWidget`.
 
     """
-
-    redraw = QtCore.pyqtSignal()
-    """
-    Plot signal to let the parent widget know
-    that it should redraw everything.
-
-    """
-
     load = QtCore.pyqtSignal(int)
     """
     Load signal to let the parent widget know
@@ -40,209 +28,434 @@ class VUnits(MatplotlibWidget):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        super(VirtualUnitsView, self).__init__(*args, **kwargs)
+
+        self.data_mapping = {}
+        self.vum_all = None
+
+        layout = QtWidgets.QVBoxLayout()
+
+        self.pg_canvas = pg.PlotWidget()
+        self.details = QtWidgets.QWidget()
+
+        details_layout = QtWidgets.QHBoxLayout()
+
+        self.info = QtWidgets.QGroupBox("Information")
+        self.options = QtWidgets.QGroupBox("Options")
+
+        info_layout = QtWidgets.QVBoxLayout()
+
+        self.real_unit_label = QtWidgets.QLabel("Unit ID: ---")
+        self.channel_label = QtWidgets.QLabel("Channel: ---")
+        self.session_label = QtWidgets.QLabel("Session: ---")
+
+        info_layout.addWidget(self.real_unit_label)
+        info_layout.addWidget(self.channel_label)
+        info_layout.addWidget(self.session_label)
+
+        self.info.setLayout(info_layout)
+        self.info.setMinimumSize(200, 50)
+
+        options_layout = QtWidgets.QVBoxLayout()
+
+        unit_filter_layout = QtWidgets.QHBoxLayout()
+        unit_filter_label = QtWidgets.QLabel("Minimum #units: ")
+        self.unit_filter = pg.SpinBox(parent=self.options, value=0, bounds=(1, None), int=True, step=1)
+        self.unit_filter.sigValueChanged.connect(self.update_plot)
+        self.unit_filter.setMinimumSize(50, 20)
+        unit_filter_layout.addWidget(unit_filter_label)
+        unit_filter_layout.addWidget(self.unit_filter)
+
+        self.hist_mode = QtWidgets.QCheckBox("Histogram Mode")
+        self.hist_mode.stateChanged.connect(self.update_plot)
+
+        options_layout.addLayout(unit_filter_layout)
+        options_layout.addStretch(10)
+        options_layout.addWidget(self.hist_mode)
+
+        self.options.setLayout(options_layout)
+
+        self.info.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.options.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        details_layout.addWidget(self.info, 4)
+        details_layout.addWidget(self.options, 6)
+
+        self.details.setLayout(details_layout)
+
+        layout.addWidget(self.pg_canvas, 10)
+        layout.addWidget(self.details, 1)
+
+        self.setLayout(layout)
+
+    @QtCore.pyqtSlot()
+    def update_plot(self):
+        self.pg_canvas.clear()
+        vum_all = self.vum_all
+        if vum_all is not None:
+            channels = sorted([int(name[3:]) for name in vum_all.keys() if "vum" in name])
+            file_names = vum_all["files"]
+            num_processed_channels = len(channels)
+            min_unit_filter = self.unit_filter.value()
+            mode = "histogram" if self.hist_mode.isChecked() else "temporal"
+
+            self.data_mapping = {}
+
+            # proceed only if a vum is found
+            if num_processed_channels > 0:
+                all_mappings = []  # list to store global-channel-unit-id-wise mappings
+                channel_stops = [0]  # demarcation points for each channel
+                channel_names = []
+                global_unit_counter = 0
+
+                # loop over channels
+                for channel in channels:
+                    channel_mapping = vum_all[f"vum{channel}"]  # vum for current channel
+                    global_unit_ids = sorted([key for key in channel_mapping.keys() if isinstance(key, int)])
+                    per_channel_global_unit_counter = 0
+                    for global_id in global_unit_ids:
+                        global_units_by_session = channel_mapping[global_id]
+                        real_unit_pos = [element[1] for element in global_units_by_session]
+                        if any(real_unit_pos):
+                            global_unit_pos = []
+                            unit_count = 0
+                            for e, element in enumerate(real_unit_pos):
+                                if element == 0:
+                                    global_unit_pos.append(-1)
+                                else:
+                                    global_unit_pos.append(global_id)
+                                    unit_count += 1
+                                    self.data_mapping[(e, global_unit_counter)] = (element, channel, file_names[e])
+
+                            if unit_count >= min_unit_filter:
+                                all_mappings.append(global_unit_pos)
+                                global_unit_counter += 1
+                                per_channel_global_unit_counter += 1
+
+                    if per_channel_global_unit_counter > 0:
+                        channel_names.append(channel)
+                        channel_stops.append(global_unit_counter)
+
+                if all_mappings:
+                    mapping_array = np.vstack(all_mappings)
+                else:
+                    mapping_array = np.array([])
+
+                if mode == "temporal":
+                    self._add_mesh_item(
+                        mapping_array=mapping_array,
+                        channels=channel_names,
+                        channel_stops=channel_stops
+                    )
+                    self.enable_mouse(x=False, y=True)
+                elif mode == "histogram":
+                    self._add_hist_item(mapping_array=mapping_array)
+                    self.enable_mouse(x=True, y=True)
+
+    def do_plot(self, vum_all, data):
+        self.vum_all = vum_all
+        self.update_plot()
+
+    def _add_mesh_item(self, mapping_array, channels, channel_stops):
+        mapping_mesh_plot = SwanColorMeshItem(mapping_array.T, edgecolors='k')
+        mapping_mesh_plot.clicked.connect(self.on_mapping_clicked)
+        mapping_mesh_plot.hovered.connect(self.on_mapping_hovered)
+
+        self.pg_canvas.addItem(mapping_mesh_plot)
+
+        for channel, channel_stop in zip(channels, channel_stops):
+            line = pg.InfiniteLine(
+                pos=channel_stop,
+                angle=0,
+                pen=pg.fn.mkPen(color='w'),
+                label=f"Channel {channel}",
+                labelOpts={
+                    "movable": True,
+                    "position": 0.9,
+                    "anchors": [(0.5, 1), (0.5, 1)]
+                }
+            )
+            self.pg_canvas.addItem(line)
+
+        self.pg_canvas.setLabel("bottom", text="sessions")
+        self.pg_canvas.setLabel("left", text="virtual unit number")
+        self.pg_canvas.setTitle("Virtual Unit Mappings")
+        self.pg_canvas.plotItem.showGrid(x=False, y=False)
+
+    def _add_hist_item(self, mapping_array):
+        mapping_array += 1
+        mapping_array[mapping_array > 0] = 1
+        counts = np.sum(mapping_array, axis=1)
+
+        bincounts = np.bincount(counts)
+        x_positions = np.arange(bincounts.size)
+        non_zero_positions = np.where(bincounts)[0]
+
+        bar_graph_item = pg.BarGraphItem(
+            x=x_positions[non_zero_positions],
+            height=bincounts[non_zero_positions],
+            width=0.5
+        )
+
+        self.pg_canvas.addItem(bar_graph_item)
+        self.pg_canvas.setLabel("bottom", text="number of sessions")
+        self.pg_canvas.setLabel("left", text="number of virtual units")
+        self.pg_canvas.setTitle("Distribution of virtual units by\noccurrence in no. of sessions")
+        self.pg_canvas.plotItem.showGrid(x=True, y=True)
+
+    @QtCore.pyqtSlot(object, object)
+    def on_mapping_clicked(self, x, y):
+        x_, y_ = np.floor(x), np.floor(y)
+        unit, channel, session = self.data_mapping.get((x_, y_), (None, None, None))
+
+        if channel is not None:
+            self.load.emit(channel)
+
+    @QtCore.pyqtSlot(object, object)
+    def on_mapping_hovered(self, x, y):
+        x_, y_ = np.floor(x), np.floor(y)
+        unit, channel, session = self.data_mapping.get((x_, y_), (None, None, None))
+
+        if unit is not None:
+            self.real_unit_label.setText(f"Unit ID: {unit}")
+            self.channel_label.setText(f"Channel: {channel}")
+            self.session_label.setText(f"Session: {session}")
+        else:
+            self.real_unit_label.setText("Unit ID: ---")
+            self.channel_label.setText("Channel: ---")
+            self.session_label.setText("Session: ---")
+
+    def enable_mouse(self, x=None, y=None):
+        self.pg_canvas.plotItem.getViewBox().setMouseEnabled(x=x, y=y)
+
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(300, 400)
+
+
+class SwanColorMeshItem(pg.GraphicsObject):
+    """
+    **Bases:** :class:`GraphicsObject <pyqtgraph.GraphicsObject>`
+    """
+
+    clicked = QtCore.pyqtSignal(object, object)
+    hovered = QtCore.pyqtSignal(object, object)
 
     def __init__(self, *args, **kwargs):
         """
-        **Properties**
+        Create a pseudocolor plot with convex polygons.
 
-            *_axes* (:class:`matplotlib.axes.Axes`):
-                The 2d plot for this widget.
-            *_cmap* (:class:`matplotlib.colors.ListedColormap`)
-                A colormap for the pcolormesh plot.
-            *_settings* (dictionary):
-                A dictionary containing settings as key value pares.
+        Function adapted from pyqtgraph's PColorMeshItem:
 
+        https://github.com/pyqtgraph/pyqtgraph/blob/master/pyqtgraph/graphicsItems/PColorMeshItem.py
+
+        Call signature:
+        ``PColorMeshItem([x, y,] z, **kwargs)``
+        x and y can be used to specify the corners of the quadrilaterals.
+        z must be used to specified to color of the quadrilaterals.
+        Parameters
+        ----------
+        x, y : np.ndarray, optional, default None
+            2D array containing the coordinates of the polygons
+        z : np.ndarray
+            2D array containing the value which will be maped into the polygons
+            colors.
+            If x and y is None, the polygons will be displaced on a grid
+            otherwise x and y will be used as polygons vertices coordinates as::
+                (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                    +---------+
+                                    | z[i, j] |
+                                    +---------+
+                    (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
+            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html>".
+        edgecolors : dict, default None
+            The color of the edges of the polygons.
+            Default None means no edges.
+            The dict may contains any arguments accepted by :func:`mkColor() <pyqtgraph.mkColor>`.
+            Example:
+                ``mkPen(color='w', width=2)``
+        antialiasing : bool, default False
+            Whether to draw edgelines with antialiasing.
+            Note that if edgecolors is None, antialiasing is always False.
         """
-        MatplotlibWidget.__init__(self, *args, **kwargs)
 
-        self.setup(naviBar=True)
-        #self.naviBar.remove_custom_actions()
-        self.combo = QComboBox()
-        self.combo.addItems(["1", "2", "3", "auto"])
-        # self.combo.addItems(["1", "2", "3"])
-        self.naviBar.addWidget(self.combo)
-        self.combo.currentIndexChanged.connect(self.settings_changed)
-        self.canvas.mpl_connect("pick_event", self.on_pick)
+        super(SwanColorMeshItem, self).__init__()
 
-        clist = [(255,   255,    255),
-                 (31,	119,	    180),
-                 (174,	199,	    232),
-                 (255,	127,	    14),
-                 (255,	187,	    120),
-                 (44,	160,	    44),
-                 (152,	223,	    138),
-                 (214,	39, 	    40),
-                 (255,	152,	    150),
-                 (148,	103,	    189),
-                 (197,	176,	    213),
-                 (140,	86, 	    75),
-                 (196,	156,	    148),
-                 (227,	119,	    194),
-                 (247,	182,	    210),
-                 (127,	127,	    127),
-                 (199,	199,	    199),
-                 (188,	189,	    34),
-                 (219,	219,	    141),
-                 (23,	190,	    207),
-                 (158,	218,	    229)]
-        clist = [(line[0]/255., line[1]/255., line[2]/255.) for line in clist]
-        #properties{
-        self._axes = self.get_axes()[0]
-        self._cmap = colors.ListedColormap(clist, N=20)
-        self._settings = {"num_vu":"1"}
-        #}
+        self.qpicture = None  # rendered picture for display
 
+        self.axisOrder = pg.getConfigOption('imageAxisOrder')
 
-    def on_pick(self, event):
+        self.edgecolors = kwargs.get("edgecolors", None)
+        self.antialiasing = kwargs.get("antialiasing", False)
+
+        self.lut = UNIT_COLORS
+
+        self.border = None
+
+        # If some data have been sent we directly display it
+        if len(args) > 0:
+            self.set_data(*args)
+
+    def _prepare_data(self, args):
         """
-        Is called if you pick a virtual unit in the pcolor plot.
-
-        **Arguments**
-
-            *event* (:class:`matplotlib.backend_bases.PickEvent`):
-                The pick event with information
-                about what was picked.
-
+        Check the shape of the data.
+        Return a set of 2d array x, y, z ready to be used to draw the picture.
         """
-        ymouse = event.mouseevent.ydata
-        y = math.ceil(ymouse)
-        num_vu = self._settings["num_vu"]
-        try:
-            num_vu = int(num_vu)
-            channel = int(y/num_vu)
-            self.load.emit(channel)
-        except:
-            pass
 
-    def settings_changed(self):
-        """
-        Is called if you select something in the combobox in the
-        navigation toolbar.
+        # User didn't specified data
+        if len(args) == 0:
 
-        Emits a signal to redraw the plot.
+            self.x = None
+            self.y = None
+            self.z = None
 
-        """
-        self._settings["num_vu"] = str(self.combo.currentText())
-        self.redraw.emit()
+        # User only specified z
+        elif len(args) == 1:
+            # If x and y is None, the polygons will be displaced on a grid
+            x = np.arange(0, args[0].shape[0] + 1, 1)
+            y = np.arange(0, args[0].shape[1] + 1, 1)
+            self.x, self.y = np.meshgrid(x, y, indexing='ij')
+            self.z = args[0]
 
-    def plot(self, y):
-        """
-        Plots data to the plot.
+        # User specified x, y, z
+        elif len(args) == 3:
 
-        **Arguments**
+            # Shape checking
+            if args[0].shape[0] != args[2].shape[0] + 1 or args[0].shape[1] != args[2].shape[1] + 1:
+                raise ValueError('The dimension of x should be one greater than the one of z')
 
-            *y* (tuple of iterable objects):
-                The data that should be plotted.
+            if args[1].shape[0] != args[2].shape[0] + 1 or args[1].shape[1] != args[2].shape[1] + 1:
+                raise ValueError('The dimension of y should be one greater than the one of z')
 
-        """
-        self._axes.pcolormesh(y, cmap=self._cmap, picker=True)
+            self.x = args[0]
+            self.y = args[1]
+            self.z = args[2]
 
-    def do_plot(self, vum, data):
-        """
-        Plots data.
-
-        **Arguments**
-
-            *vum* (dictionary):
-                A dictionary containing all virtual unit maps.
-            *data* (:class:`src.neodata.NeoData`):
-                Is needed to get block length.
-
-        """
-        kwargs = {"set_xlabel":"sessions", "set_ylabel":"electrodes and virtual units"}
-        tick_params = {"which":"both", "direction":"out", "labelsize":8}
-        self.clear_and_reset_axes(grid=True, tick_params=tick_params, **kwargs)
-        num_vu = self._settings["num_vu"]
-        l = len(data.blocks)
-
-        if num_vu != "auto":
-            # num_vu is an integer
-            num_vu = int(num_vu)
-
-        values = []
-        lens = []
-        # for every channel
-        for i in range(100):
-            lens.append(0)
-            try:
-                m = vum["vum" + str(i+1)]
-
-                if num_vu == "auto":
-                    # search for the indexes of the virtual units
-                    inds = []
-                    kmax = max([key for key in m.keys() if isinstance(key, int)])
-                    for k in range(kmax):
-                        for j in range(l):
-                            v = m[k+1][j][1]
-                            if v is not None:
-                                inds.append(k)
-                                lens[i] += 1
-                                break
-                else:
-                    kmax = num_vu
-                    inds = range(kmax)
-
-                # for every virtual unit to show
-                for k in inds:
-                    val = []
-                    # for every session
-                    for j in range(l):
-                        v = m[k+1][j][1]
-                        if v is not None:
-                            if i % 2 == 0:
-                                val.append(0.1 * (k+1))
-                            else:
-                                val.append(1 - 0.1 * (k+1))
-                        else:
-                            val.append(0)
-                    values.append(val)
-            except:
-                if num_vu != "auto":
-                    for k in range(num_vu):
-                        values.append([0 for j in range(l)])
-                else:
-                    lens[i] = 1
-                    values.append([0 for j in range(l)])
-
-        if num_vu != "auto":
-            maj_ticks = [num_vu * i * 2 for i in range(50)]
-            min_ticks = [num_vu * i for i in range(100)]
         else:
-            min_ticks = [sum(lens[:i]) for i in range(100)]
-            maj_ticks = [min_ticks[i*2] for i in range(50)]
+            ValueError('Data must been sent as (z) or (x, y, z)')
 
-        minorLocator = FixedLocator(min_ticks)
-        majorLocator = FixedLocator(maj_ticks)
+    def set_data(self, *args):
+        """
+        Set the data to be drawn.
+        Parameters
+        ----------
+        x, y : np.ndarray, optional, default None
+            2D array containing the coordinates of the polygons
+        z : np.ndarray
+            2D array containing the value which will be maped into the polygons
+            colors.
+            If x and y is None, the polygons will be displaced on a grid
+            otherwise x and y will be used as polygons vertices coordinates as::
 
-        labels = ["ch. " + str(1+i*2) for i in range(0, 50)]
+                (x[i+1, j], y[i+1, j])           (x[i+1, j+1], y[i+1, j+1])
+                                    +---------+
+                                    | z[i, j] |
+                                    +---------+
+                    (x[i, j], y[i, j])           (x[i, j+1], y[i, j+1])
+            "ASCII from: <https://matplotlib.org/3.2.1/api/_as_gen/
+                         matplotlib.pyplot.pcolormesh.html>".
+        """
 
-        # loc = MultipleLocator(1)
-        loc = FixedLocator(range(l+1))
-        majorFormatter = FormatStrFormatter('%d')
+        # Prepare data
+        cd = self._prepare_data(args)
 
-        # setting the major and minor ticks
-        self._axes.xaxis.set_major_formatter(majorFormatter)
-        self._axes.xaxis.set_major_locator(loc)
-        self._axes.yaxis.set_major_locator(majorLocator)
-        self._axes.yaxis.set_major_formatter(majorFormatter)
-        self._axes.yaxis.set_minor_locator(minorLocator)
+        # Has the view bounds changed
+        shape_changed = False
+        if self.qpicture is None:
+            shape_changed = True
+        elif len(args) == 1:
+            if args[0].shape[0] != self.x[:, 1][-1] or args[0].shape[1] != self.y[0][-1]:
+                shape_changed = True
+        elif len(args) == 3:
+            if np.any(self.x != args[0]) or np.any(self.y != args[1]):
+                shape_changed = True
 
-        self._axes.set_title("pick a virtual unit to go to the channel")
+        self.qpicture = QtGui.QPicture()
+        p = QtGui.QPainter(self.qpicture)
+        # We set the pen of all polygons once
+        if self.edgecolors is None:
+            p.setPen(pg.fn.mkPen(QtGui.QColor(0, 0, 0, 0)))
+        else:
+            p.setPen(pg.fn.mkPen(self.edgecolors))
+            if self.antialiasing:
+                p.setRenderHint(QtGui.QPainter.Antialiasing)
 
-        self.plot(np.array(values))
-        self.draw()
+        # Prepare colormap
+        # First we get the LookupTable
+        lut = self.lut
 
-        # setting the labels
-        self._axes.set_xticklabels([str(i) for i in range(l+1)])
-        self._axes.set_yticklabels(labels)
-        self.draw()
+        # # Second we associate each z value, that we normalize, to the lut
+        # norm = self.z - self.z.min()
+        # norm = norm / norm.max()
+        # norm = (norm * (len(lut) - 1)).astype(int)
 
+        z = self.z.copy().astype(int)
 
-# if __name__ == "__main__":
-#     import sys
-#     from PyQt5.QtGui import QApplication
-#
-#     app = QApplication(sys.argv)
-#     m = VUnits()
-#     m.show()
-#     sys.exit(app.exec_())
+        # Go through all the data and draw the polygons accordingly
+        for xi in range(self.z.shape[0]):
+            for yi in range(self.z.shape[1]):
+                # Set the color of the polygon first
+                z_val = z[xi][yi]
+                if z_val < 0:
+                    c = [0, 0, 0]
+                else:
+                    c = lut[z_val]
+                p.setBrush(pg.fn.mkBrush(QtGui.QColor(c[0], c[1], c[2])))
+
+                polygon = QtGui.QPolygonF(
+                    [QtCore.QPointF(self.x[xi][yi], self.y[xi][yi]),
+                     QtCore.QPointF(self.x[xi + 1][yi], self.y[xi + 1][yi]),
+                     QtCore.QPointF(self.x[xi + 1][yi + 1], self.y[xi + 1][yi + 1]),
+                     QtCore.QPointF(self.x[xi][yi + 1], self.y[xi][yi + 1])]
+                )
+
+                # DrawConvexPlygon is faster
+                p.drawConvexPolygon(polygon)
+
+        p.end()
+        self.update()
+
+        self.prepareGeometryChange()
+        if shape_changed:
+            self.informViewBoundsChanged()
+
+    def paint(self, p, *args):
+        if self.z is None:
+            return
+
+        p.drawPicture(0, 0, self.qpicture)
+
+    def set_border(self, b):
+        self.border = pg.fn.mkPen(b)
+        self.update()
+
+    def width(self):
+        if self.x is None:
+            return None
+        return np.max(self.x)
+
+    def height(self):
+        if self.y is None:
+            return None
+        return np.max(self.y)
+
+    def boundingRect(self):
+        if self.qpicture is None:
+            return QtCore.QRectF(0., 0., 0., 0.)
+        return QtCore.QRectF(self.qpicture.boundingRect())
+
+    def mouseClickEvent(self, ev):
+        if ev.button() == QtCore.Qt.LeftButton:
+            pos = ev.pos()
+            x, y = pos.x(), pos.y()
+            self.clicked.emit(x, y)
+        else:
+            ev.ignore()
+
+    def hoverEvent(self, ev):
+        try:
+            pos = ev.pos()
+            self.hovered.emit(pos.x(), pos.y())
+        except AttributeError:
+            pass

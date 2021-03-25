@@ -11,7 +11,6 @@ It shows an overview of many :class:`src.myplotwidget.MyPlotWidget`
 and manages them.
 """
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
-from swan.gui.plotgrid_ui import Ui_Form
 from swan.widgets.plot_widget import MyPlotWidget
 from swan.widgets.indicator_cell import IndicatorWidget
 from numpy.random import choice
@@ -34,6 +33,11 @@ class MyPlotGrid(QtWidgets.QWidget):
         self.main_grid_layout.addWidget(self.scroll_area)
 
         self.setLayout(self.main_grid_layout)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(600, 400)
 
 
 class MyPlotContent(QtWidgets.QWidget):
@@ -71,8 +75,7 @@ class MyPlotContent(QtWidgets.QWidget):
         
         """
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
+        self.grid_layout = QtWidgets.QGridLayout(self)
 
         self._shape = None
         self._plots = []
@@ -83,18 +86,19 @@ class MyPlotContent(QtWidgets.QWidget):
         self._yrange = (-0.001, 0.0006)
         self._xrange = (0, 0)
         self._second_select = None
-        self._width = 120
-        self._height = 90
-        self._constant_dimension = 65
+        self._width = 60
+        self._height = 45
+        self._constant_dimension = 75
 
         self._plot_gray = QtGui.QColor(180, 180, 180, 85)
 
         self.sample_waveform_number = 500
 
-        self.ui.gridLayout.setColumnStretch(1000, 1000)
-        self.ui.gridLayout.setRowStretch(1000, 1000)
+        self.grid_layout.setColumnStretch(1000, 1000)
+        self.grid_layout.setRowStretch(1000, 1000)
 
-    #### general methods ####
+        self.grid_layout.setHorizontalSpacing(1)
+        self.grid_layout.setVerticalSpacing(1)
 
     def make_plots(self, rows, cols, dates=None):
         """
@@ -120,21 +124,21 @@ class MyPlotContent(QtWidgets.QWidget):
                                           width=self._width, height=self._height,
                                           const_dim=self._constant_dimension)
         pivot_indicator.responsive = False
-        self.ui.gridLayout.addWidget(pivot_indicator, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+        self.grid_layout.addWidget(pivot_indicator, 0, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for global_unit_id in range(rows):
             iw = IndicatorWidget(
-                str(global_unit_id+1), indicator_type='unit', position=global_unit_id,
+                str(global_unit_id + 1), indicator_type='unit', position=global_unit_id,
                 width=self._width, height=self._height, const_dim=self._constant_dimension
             )
             self._indicators.append(iw)
             iw.select_indicator.connect(self.indicator_toggled)
-            self.ui.gridLayout.addWidget(iw, global_unit_id + 1, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+            self.grid_layout.addWidget(iw, global_unit_id + 1, 0, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for session_id in range(cols):
             if dates is not None:
                 iw = IndicatorWidget(
-                    str(session_id+1) + " (" + str(dates[session_id].strftime("%d.%m.%y")) + ")",
+                    str(session_id + 1) + " (" + str(dates[session_id].strftime("%d.%m.%y")) + ")",
                     indicator_type='session', position=session_id,
                     width=self._width, height=self._height, const_dim=self._constant_dimension
                 )
@@ -145,7 +149,7 @@ class MyPlotContent(QtWidgets.QWidget):
                 )
             self._indicators.append(iw)
             iw.select_indicator.connect(self.indicator_toggled)
-            self.ui.gridLayout.addWidget(iw, 0, session_id + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+            self.grid_layout.addWidget(iw, 0, session_id + 1, QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         for unit_id in range(rows):
             self._rows[unit_id] = []
@@ -164,8 +168,8 @@ class MyPlotContent(QtWidgets.QWidget):
                 plot_widget.colour_strip_toggle.connect(self.toggle_indicator_colour)
                 plot_widget.visibility_toggle.connect(self.toggle_plot_visibility)
 
-                self.ui.gridLayout.addWidget(plot_widget, unit_id + 1, session_id + 1,
-                                             QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
+                self.grid_layout.addWidget(plot_widget, unit_id + 1, session_id + 1,
+                                           QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
         return self._plots
 

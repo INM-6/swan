@@ -10,7 +10,6 @@ The electrodes on this map are represented by
 the :class:`SelectorItem`.
 """
 from PyQt5 import QtGui, QtCore, QtWidgets
-from swan.gui.selector_widget_ui import Ui_Form
 
 
 class SelectorWidget(QtWidgets.QWidget):
@@ -45,20 +44,22 @@ class SelectorWidget(QtWidgets.QWidget):
         
         """
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
-        
-        #properties{
+
+        self.grid_layout = QtWidgets.QGridLayout(self)
+
         self._items = []
         self._dirty_items = []
         self._sel = None
         self.lastchannel = 1
         self.currentchannel = 1
-        #}
-        self.make_grid()
-        
 
-    #### general methods ####
+        self.autoFillBackground()
+
+        self.setLayout(self.grid_layout)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding))
+
+        self.make_grid()
         
     def make_grid(self, rows=10, cols=10):
         """
@@ -80,7 +81,7 @@ class SelectorWidget(QtWidgets.QWidget):
                 s.selectChannel.connect(self.select_channel)
                 s.pos = (i, j)
                 self._items.append(s)
-                self.ui.gridLayout.addWidget(s, i, j)
+                self.grid_layout.addWidget(s, i, j)
         self.set_channels()
         
     def set_channels(self, channel_list=None):
@@ -97,7 +98,7 @@ class SelectorWidget(QtWidgets.QWidget):
         if channel_list is not None:
             j = 0
             for i in range(9, -1, -1):
-                #channels = range(1+j*10, 11+j*10)
+                # channels = range(1+j*10, 11+j*10)
                 channels = channel_list[(j*10):(11+j*10)]
                 items = [s for s in self._items if s.pos[0] == i]
                 for k in range(10):
@@ -227,9 +228,12 @@ class SelectorWidget(QtWidgets.QWidget):
             item.dirty = False
             item.repaint()
         self._dirty_items = []
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return self.sizeHint()
         
     def sizeHint(self):
-        return QtCore.QSize(300, 300)
+        return QtCore.QSize(200, 250)
     
     def heightForWidth(self, width):
         return width
@@ -275,8 +279,7 @@ class SelectorItem(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)      
         
         self.setMinimumSize(20, 20)
-        
-        #properties{
+
         self.selected = False
         self.selectable = True
         self.dirty = False
@@ -284,11 +287,10 @@ class SelectorItem(QtWidgets.QWidget):
         self.channel = 0
         self.pos = None
         self.inFocus = False
-        #}
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+
         self.setMouseTracking(True)
-        
-    
-    #### event handler ####    
         
     def paintEvent(self, event):
         """
@@ -403,4 +405,8 @@ class SelectorItem(QtWidgets.QWidget):
         self.repaint()
         event.accept()
 
-        
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(50, 50)
+
+    def heightForWidth(self, a0: int) -> int:
+        return a0

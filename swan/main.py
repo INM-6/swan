@@ -28,7 +28,7 @@ from swan.gui.main_ui import MainUI
 from swan.widgets.file_dialog import File_Dialog
 from swan.widgets.preferences_dialog import Preferences_Dialog
 from swan.storage import MyStorage
-from swan.views.virtual_units_view import VUnits
+from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
 
 
@@ -166,10 +166,6 @@ class Main(QtWidgets.QMainWindow):
         # }
         self.setWindowTitle(title)
 
-        # for the virtual unit overview
-        self.vu = VUnits()
-        self.vu.setWindowTitle("Virtual Units")
-
         # connect channel selection
         self.ui.tools.selector.doChannel.connect(self.do_channel)
         self.ui.plotGrid.child.indicator_toggle.connect(self.plot_all)
@@ -178,31 +174,21 @@ class Main(QtWidgets.QMainWindow):
         # connect loading progress
         self._my_storage.progress.connect(self.set_progress)
 
-        # connect redraw signal of the virtual unit view
-        self.vu.redraw.connect(self.plot_all)
-
-        # connect channel loading
-        self.vu.load.connect(self.load_channel)
-
-        # self.ui.mean_waveforms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.isi_histograms_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.pca_3d_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        # self.ui.rate_profiles_view.sigClicked.connect(self.ui.plotGrid.child.highlightPlot)
-        #
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.mean_waveforms_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.isi_histograms_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.pca_3d_view.highlightCurveFromPlot)
-        # self.ui.plotGrid.child.plotSelected.connect(self.ui.rate_profiles_view.highlightCurveFromPlot)
-
         # shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.tools.selector
+        self.virtual_units_view = self.ui.virtual_units_view
+
+        # connect channel loading
+        self.virtual_units_view.load.connect(self.load_channel)
 
         # store all views in one list for easy access
-        self.views = [self.ui.mean_waveforms_view,
-                      self.ui.isi_histograms_view,
-                      self.ui.rate_profiles_view,
-                      self.ui.pca_3d_view]
+        self.views = [
+            self.ui.mean_waveforms_view,
+            self.ui.isi_histograms_view,
+            self.ui.rate_profiles_view,
+            self.ui.pca_3d_view,
+        ]
 
         self.check_dirs()
 
@@ -267,8 +253,6 @@ class Main(QtWidgets.QMainWindow):
 
                 if success and self.do_channel(self._my_storage.get_channel(), self._my_storage.get_last_channel()):
                     files_str = self._my_storage.get_files(as_string=True, only_basenames=True)
-                    # setting filelist detail
-                    self.set_detail(3, files_str)
 
                     self.save_project()
                     self.update_project()
@@ -303,9 +287,6 @@ class Main(QtWidgets.QMainWindow):
 
                 if success and self.do_channel(self._my_storage.get_channel(), self._my_storage.get_last_channel()):
                     files_str = self._my_storage.get_files(as_string=True, only_basenames=True)
-
-                    # setting filelist detail
-                    self.set_detail(3, files_str)
 
                     self.save_project()
                     self.update_project()
@@ -596,16 +577,6 @@ class Main(QtWidgets.QMainWindow):
             self._my_storage.set_cache_dir(pref["cacheDir"])
 
     @QtCore.pyqtSlot(name="")
-    def on_action_virtual_units_triggered(self):
-        """
-        This method is called if you click on *View->Virtual units*.
-
-        Shows an overview for the virtual units.
-
-        """
-        self.vu.show()
-
-    @QtCore.pyqtSlot(name="")
     def on_action_tutorials_triggered(self):
         """
         This method is called if you click on *Help->Tutorials*.
@@ -708,8 +679,6 @@ class Main(QtWidgets.QMainWindow):
 
             self.plot_all()
 
-            # setting channel detail
-            self.set_detail(1, str(channel))
             self.ui.set_program_title(self, self._preferences["projectName"] + " | " + "Channel " + str(
                 channel) + " | " + title)
 
@@ -754,7 +723,7 @@ class Main(QtWidgets.QMainWindow):
                 vum.set_visible(i, j, visible)
 
             self.doPlot.emit(vum, data)
-            self.vu.do_plot(vum_all, data)
+            self.virtual_units_view.do_plot(vum_all, data)
 
             QtWidgets.QApplication.restoreOverrideCursor()
 
@@ -767,21 +736,7 @@ class Main(QtWidgets.QMainWindow):
             data = self._my_storage.get_data()
 
             # plotting
-            # plots: pyqtgraph plotwidget overview
             self.plots.do_plot(vum, data)
-            # # mean_waveforms_view: 2D mpl plot
-            # self.ui.mean_waveforms_view.do_plot(vum, data)
-            # # view_2: mpl movie plot
-            # self.ui.waveforms_3d_view.do_plot(vum, data)
-            # # view_3: ISI mpl plot
-            # self.ui.isi_histograms_view.do_plot(vum, data)
-            # # view_4: PCA pyqtgraph plot
-            # self.ui.pca_3d_view.do_plot(vum, data)
-            # # raster_plots_view: 2D PCA pyqtgraph plot
-            # self.ui.raster_plots_view.do_plot(vum, data)
-            # # rate_profiles_view: Rate Profiles plot
-            # self.ui.rate_profiles_view.do_plot(vum, data)
-
             for view in self.views:
                 view.do_plot(vum, data)
 
@@ -869,10 +824,6 @@ class Main(QtWidgets.QMainWindow):
         if self._my_storage.has_project():
             (prodir, proname) = split(self._my_storage.get_project_path())
             vumname = basename(self._my_storage.get_map_path())
-            # setting project details
-            self.set_detail(0, proname)
-            self.set_detail(1, prodir)
-            self.set_detail(2, vumname)
 
     def check_project(self):
         """
@@ -917,21 +868,6 @@ class Main(QtWidgets.QMainWindow):
         self.selector.set_dirty(self._my_storage.get_channel(), False)
         if len(self.selector.get_dirty_channels()) == 0:
             self._global_dirty = False
-
-    def set_detail(self, i, value):
-        """
-        Sets a detail in the details tab.
-        
-        **Arguments**
-        
-            *i* (integer):
-                The index of the detail.
-            *value* (string):
-                The value that should be shown.
-        
-        """
-        self.ui.tools.details.item(i, 1).setText(value)
-        self.ui.tools.details.resizeRowToContents(i)
 
     def check_dirs(self):
         """

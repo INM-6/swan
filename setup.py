@@ -10,24 +10,26 @@ def readme():
 if version_info < (3, 3):
     raise RuntimeError("Required: Python version > 3.3")
 
-
 with open("swan/version.py") as fp:
     d = {}
     exec(fp.read(), d)
     swan_version = d['version']
 
-install_requirements = ['numpy',
-                        'quantities',
-                        'PyQt5',
-                        'pyqtgraph',
-                        'odml',
-                        'elephant',
-                        'pyopengl',
-                        'matplotlib',
-                        'scikit-learn',
-                        'psutil',
-                        'scipy',
-                        'pandas']
+install_requirements = [
+    'numpy',
+    'quantities',
+    'PyQt5',
+    'pyqtgraph',
+    'odml',
+    'elephant',
+    'pyopengl',
+    'matplotlib',
+    'scikit-learn',
+    'psutil',
+    'scipy',
+    'pandas',
+    'colorcet',
+]
 
 setup(
     name='swan',
