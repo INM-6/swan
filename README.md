@@ -78,7 +78,7 @@ Once installed, start SWAN using
 swan /path/to/temp/
 ```
 
-where `/path/to/temp/` is where you want store cache files generated while using SWAN. When no argument is provided, it defaults to the output of `tempfile.gettempdir()` from the [tempfile](https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir) package.
+where `/path/to/temp/` is where you want store cache files generated while using SWAN. When no argument is provided, it defaults to the output of `tempfile.gettempdir()` from the [tempfile](https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir) package. **Note:** on a Windows machine, the path argument should look something like `C:\path\to\temp`.
 
 ### Creating a new project
 

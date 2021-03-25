@@ -109,7 +109,7 @@ class PyQtWidget3d(QtWidgets.QWidget):
             raise ValueError("x and y must both be None or be 1D arrays of shape (z.shape[0], z.shape[1])")
 
     def set_camera_position(self, distance=None, elevation=None, azimuth=None):
-        self.pg_canvas.setCameraPosition(self, distance=distance, elevation=elevation, azimuth=azimuth)
+        self.pg_canvas.setCameraPosition(pos=None, distance=distance, elevation=elevation, azimuth=azimuth)
 
     def save_camera_position(self):
         distance = self.pg_canvas.opts['distance']
