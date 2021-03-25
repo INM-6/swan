@@ -24,14 +24,6 @@ class VirtualUnitsView(QtWidgets.QWidget):
     The *args* and *kwargs* are passed to :class:`src.matplotlibwidget.MatplotlibWidget`.
 
     """
-
-    redraw = QtCore.pyqtSignal()
-    """
-    Plot signal to let the parent widget know
-    that it should redraw everything.
-
-    """
-
     load = QtCore.pyqtSignal(int)
     """
     Load signal to let the parent widget know
@@ -74,6 +66,7 @@ class VirtualUnitsView(QtWidgets.QWidget):
         info_layout.addWidget(self.session_label)
 
         self.info.setLayout(info_layout)
+        self.info.setMinimumSize(200, 50)
 
         options_layout = QtWidgets.QVBoxLayout()
 
@@ -81,6 +74,7 @@ class VirtualUnitsView(QtWidgets.QWidget):
         unit_filter_label = QtWidgets.QLabel("Minimum #units: ")
         self.unit_filter = pg.SpinBox(parent=self.options, value=0, bounds=(1, None), int=True, step=1)
         self.unit_filter.sigValueChanged.connect(self.update_plot)
+        self.unit_filter.setMinimumSize(50, 20)
         unit_filter_layout.addWidget(unit_filter_label)
         unit_filter_layout.addWidget(self.unit_filter)
 
@@ -88,13 +82,13 @@ class VirtualUnitsView(QtWidgets.QWidget):
         self.hist_mode.stateChanged.connect(self.update_plot)
 
         options_layout.addLayout(unit_filter_layout)
-        options_layout.addSpacing(5)
+        options_layout.addStretch(10)
         options_layout.addWidget(self.hist_mode)
 
         self.options.setLayout(options_layout)
 
-        self.info.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.options.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.info.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.options.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         details_layout.addWidget(self.info, 4)
         details_layout.addWidget(self.options, 6)
@@ -221,7 +215,7 @@ class VirtualUnitsView(QtWidgets.QWidget):
             self.session_label.setText("Session: ---")
 
     def sizeHint(self) -> QtCore.QSize:
-        return QtCore.QSize(400, 500)
+        return QtCore.QSize(300, 400)
 
 
 class SwanColorMeshItem(pg.GraphicsObject):

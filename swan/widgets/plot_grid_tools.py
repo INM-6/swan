@@ -21,13 +21,10 @@ class PlotGridTools(QtWidgets.QWidget):
         self.layout = QtWidgets.QHBoxLayout()
         
         self.selector = SelectorWidget(self)
-        self.virtual_unit_map = VirtualUnitsView(self)
 
-        self.selector.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Maximum)
-        self.virtual_unit_map.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Maximum)
+        self.selector.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
         
-        self.layout.addWidget(self.selector, 1)
-        self.layout.addWidget(self.virtual_unit_map, 1)
+        self.layout.addWidget(self.selector)
 
         self.layout.setContentsMargins(0, 0, 0, 0)
         

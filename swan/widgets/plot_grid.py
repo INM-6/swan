@@ -35,6 +35,11 @@ class MyPlotGrid(QtWidgets.QWidget):
 
         self.setLayout(self.main_grid_layout)
 
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(600, 400)
+
 
 class MyPlotContent(QtWidgets.QWidget):
     """
@@ -93,8 +98,6 @@ class MyPlotContent(QtWidgets.QWidget):
 
         self.ui.gridLayout.setColumnStretch(1000, 1000)
         self.ui.gridLayout.setRowStretch(1000, 1000)
-
-    #### general methods ####
 
     def make_plots(self, rows, cols, dates=None):
         """

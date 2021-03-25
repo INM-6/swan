@@ -183,13 +183,15 @@ class Main(QtWidgets.QMainWindow):
         # shortcut reference
         self.plots = self.ui.plotGrid.child
         self.selector = self.ui.tools.selector
-        self.virtual_unit_mappings = self.ui.tools.virtual_unit_map
+        self.virtual_units_view = self.ui.virtual_units_view
 
         # store all views in one list for easy access
-        self.views = [self.ui.mean_waveforms_view,
-                      self.ui.isi_histograms_view,
-                      self.ui.rate_profiles_view,
-                      self.ui.pca_3d_view]
+        self.views = [
+            self.ui.mean_waveforms_view,
+            self.ui.isi_histograms_view,
+            self.ui.rate_profiles_view,
+            self.ui.pca_3d_view,
+        ]
 
         self.check_dirs()
 
@@ -724,7 +726,7 @@ class Main(QtWidgets.QMainWindow):
                 vum.set_visible(i, j, visible)
 
             self.doPlot.emit(vum, data)
-            self.virtual_unit_mappings.do_plot(vum_all, data)
+            self.virtual_units_view.do_plot(vum_all, data)
 
             QtWidgets.QApplication.restoreOverrideCursor()
 

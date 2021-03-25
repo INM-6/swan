@@ -11,6 +11,7 @@ from os import sep
 
 # swan-specific imports
 from swan.views.mean_waveforms_view import PgWidget2d
+from swan.views.virtual_units_view import VirtualUnitsView
 from swan.widgets.plot_grid import MyPlotGrid
 from swan.views.isi_histograms_view import PgWidgetISI
 from swan.views.pca_3d_view import PgWidgetPCA
@@ -52,6 +53,17 @@ class MainUI(object):
                                       QtWidgets.QDockWidget.DockWidgetFloatable)
         self.plotGridDock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         self.plotGridDock.setWidget(self.plotGrid)
+
+        self.dock_virtual_unit_view = QtWidgets.QDockWidget("Virtual Unit Mappings")
+        self.dock_virtual_unit_view.setObjectName(_from_utf_8("virtualUnitsDock"))
+        self.dock_virtual_unit_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
+                                                QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.dock_virtual_unit_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+
+        self.virtual_units_view = VirtualUnitsView()
+        self.virtual_units_view.setObjectName(_from_utf_8("virtualUnitsView"))
+
+        self.dock_virtual_unit_view.setWidget(self.virtual_units_view)
 
         self.dock_mean_waveforms_view = QtWidgets.QDockWidget("Mean Waveforms")
         self.dock_mean_waveforms_view.setObjectName(_from_utf_8("meanWaveformView"))
@@ -227,12 +239,14 @@ class MainUI(object):
         self.retranslate_ui(main_application)
 
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_virtual_unit_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_rate_profiles_view, QtCore.Qt.Vertical)
-        main_application.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.dock_pca_3d_view, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_pca_3d_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_mean_waveforms_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_isi_histograms_view, QtCore.Qt.Vertical)
 
-        main_application.splitDockWidget(self.plotGridDock, self.dock_rate_profiles_view, QtCore.Qt.Horizontal)
+        main_application.splitDockWidget(self.plotGridDock, self.dock_virtual_unit_view, QtCore.Qt.Horizontal)
+        main_application.splitDockWidget(self.dock_virtual_unit_view, self.dock_rate_profiles_view, QtCore.Qt.Horizontal)
         main_application.splitDockWidget(self.dock_rate_profiles_view, self.dock_pca_3d_view, QtCore.Qt.Vertical)
 
         # self.action_quit.triggered.connect(main_application.close)

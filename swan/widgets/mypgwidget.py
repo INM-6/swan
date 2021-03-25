@@ -50,6 +50,8 @@ class PyQtWidget3d(QtWidgets.QWidget):
         self.suggested_plots = []
         self.shadow_pen_colour = (0.9, 0.9, 0.9, 0.5)
 
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
+
     def setup_axes(self, size=None, spacing=None, gl_options=None, axes='xyz', set_camera=True, **kwargs):
 
         if size is None:
@@ -178,6 +180,9 @@ class PyQtWidget3d(QtWidgets.QWidget):
                 if not self.selected_plots:
                     self.clear_suggests()
 
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(500, 400)
+
 
 class MyScatterPlotItem(gl.GLScatterPlotItem, QtWidgets.QGraphicsItem):
     sig_clicked = QtCore.pyqtSignal(object)
@@ -240,6 +245,8 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
         self._home = None
         self._processing = False
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def show_grid(self):
         self.pg_canvas.plotItem.showGrid(x=True, y=True)
@@ -372,3 +379,6 @@ class PyQtWidget2d(QtWidgets.QWidget):
 
     def is_processing(self):
         return self._processing
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(300, 400)

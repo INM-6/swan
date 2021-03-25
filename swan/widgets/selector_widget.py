@@ -229,7 +229,7 @@ class SelectorWidget(QtWidgets.QWidget):
         self._dirty_items = []
         
     def sizeHint(self):
-        return QtCore.QSize(400, 500)
+        return QtCore.QSize(200, 250)
     
     def heightForWidth(self, width):
         return width
