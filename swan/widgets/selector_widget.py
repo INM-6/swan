@@ -228,6 +228,9 @@ class SelectorWidget(QtWidgets.QWidget):
             item.dirty = False
             item.repaint()
         self._dirty_items = []
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return self.sizeHint()
         
     def sizeHint(self):
         return QtCore.QSize(200, 250)
