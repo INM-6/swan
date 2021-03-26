@@ -722,7 +722,8 @@ class Main(QtWidgets.QMainWindow):
                 vum.set_visible(i, j, visible)
 
             self.doPlot.emit(vum, data)
-            self.virtual_units_view.do_plot(vum_all, data)
+            if vum_all:
+                self.virtual_units_view.do_plot(vum_all, data)
 
             QtWidgets.QApplication.restoreOverrideCursor()
 
