@@ -59,7 +59,7 @@ def isih(train, bin_max, bin_step):
 
 
 def run_kmeans_solver(data, n_clusters, n_init=10):
-    solver = KMeans(n_clusters=n_clusters, n_init=n_init, n_jobs=-1)
+    solver = KMeans(n_clusters=n_clusters, n_init=n_init)
     solver.fit(data)
     clusters = solver.cluster_centers_
     labels = solver.predict(data)
@@ -67,7 +67,7 @@ def run_kmeans_solver(data, n_clusters, n_init=10):
 
 
 def run_kmeans_solver_no_prediction(data, n_clusters, n_init=10):
-    solver = KMeans(n_clusters=n_clusters, n_init=n_init, n_jobs=-1)
+    solver = KMeans(n_clusters=n_clusters, n_init=n_init)
     solver.fit(data)
     return solver, n_clusters
 

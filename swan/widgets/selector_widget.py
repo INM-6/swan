@@ -10,7 +10,6 @@ The electrodes on this map are represented by
 the :class:`SelectorItem`.
 """
 from PyQt5 import QtGui, QtCore, QtWidgets
-from swan.gui.selector_widget_ui import Ui_Form
 
 
 class SelectorWidget(QtWidgets.QWidget):
@@ -45,20 +44,23 @@ class SelectorWidget(QtWidgets.QWidget):
         
         """
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
-        self.ui = Ui_Form()
-        self.ui.setupUi(self)
-        
-        #properties{
+
+        self.grid_layout = QtWidgets.QGridLayout(self)
+
         self._items = []
         self._dirty_items = []
+        self.saved_channels = []
         self._sel = None
         self.lastchannel = 1
         self.currentchannel = 1
-        #}
-        self.make_grid()
-        
 
-    #### general methods ####
+        self.autoFillBackground()
+
+        self.setLayout(self.grid_layout)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding))
+
+        self.make_grid()
         
     def make_grid(self, rows=10, cols=10):
         """
@@ -80,7 +82,7 @@ class SelectorWidget(QtWidgets.QWidget):
                 s.selectChannel.connect(self.select_channel)
                 s.pos = (i, j)
                 self._items.append(s)
-                self.ui.gridLayout.addWidget(s, i, j)
+                self.grid_layout.addWidget(s, i, j)
         self.set_channels()
         
     def set_channels(self, channel_list=None):
@@ -97,7 +99,7 @@ class SelectorWidget(QtWidgets.QWidget):
         if channel_list is not None:
             j = 0
             for i in range(9, -1, -1):
-                #channels = range(1+j*10, 11+j*10)
+                # channels = range(1+j*10, 11+j*10)
                 channels = channel_list[(j*10):(11+j*10)]
                 items = [s for s in self._items if s.pos[0] == i]
                 for k in range(10):
@@ -155,8 +157,8 @@ class SelectorWidget(QtWidgets.QWidget):
         lastchannel = self.lastchannel
         self.reset_sel()
         self._sel = item
-        for item in self._dirty_items:
-            item.repaint()
+        for selector_item in self._dirty_items:
+            selector_item.repaint()
         self.doChannel.emit(channel, lastchannel)
         
     def select_only(self, channel):
@@ -227,9 +229,21 @@ class SelectorWidget(QtWidgets.QWidget):
             item.dirty = False
             item.repaint()
         self._dirty_items = []
+
+    def find_saved(self, vum_all):
+        saved_channels = sorted([int(name[3:]) for name in vum_all.keys() if "vum" in name])
+        for selector_item in self._items:
+            item_channel = selector_item.channel
+            if item_channel in saved_channels:
+                selector_item.saved = True
+            selector_item.repaint()
+        self.saved_channels = saved_channels
+
+    def minimumSizeHint(self) -> QtCore.QSize:
+        return self.sizeHint()
         
     def sizeHint(self):
-        return QtCore.QSize(300, 300)
+        return QtCore.QSize(200, 250)
     
     def heightForWidth(self, width):
         return width
@@ -275,20 +289,19 @@ class SelectorItem(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)      
         
         self.setMinimumSize(20, 20)
-        
-        #properties{
+
         self.selected = False
         self.selectable = True
         self.dirty = False
+        self.saved = False
         self.text = "0"
         self.channel = 0
         self.pos = None
         self.inFocus = False
-        #}
+
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+
         self.setMouseTracking(True)
-        
-    
-    #### event handler ####    
         
     def paintEvent(self, event):
         """
@@ -302,21 +315,22 @@ class SelectorItem(QtWidgets.QWidget):
         """
         self.setAutoFillBackground(True)
         pal = QtGui.QPalette()
-        #white when normal
-        pal.setColor(QtGui.QPalette.Background, QtCore.Qt.white)
+        # white when normal
+        pal.setColor(QtGui.QPalette.Background, QtGui.QColor(30, 27, 24))
         pal2 = QtGui.QPalette()
-        #dark gray when selected
+        # dark gray when selected
         pal2.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGray)
         pal3 = QtGui.QPalette()
-        #black when deactivated
-        pal3.setColor(QtGui.QPalette.Background, QtCore.Qt.black)
+        # black when deactivated
+        pal3.setColor(QtGui.QPalette.Background, QtGui.QColor(53, 50, 47))
         pal4 = QtGui.QPalette()
-        col4 = QtGui.QColor(255, 140, 0)
-        #orange when dirty
-        pal4.setColor(QtGui.QPalette.Background, col4)
+        # orange when dirty
+        pal4.setColor(QtGui.QPalette.Background, QtCore.Qt.darkRed)
         pal5 = QtGui.QPalette()
-        #light gray when mouse hover
-        pal5.setColor(QtGui.QPalette.Background, QtCore.Qt.lightGray)
+        # light gray when mouse hover
+        pal5.setColor(QtGui.QPalette.Background, QtCore.Qt.darkCyan)
+        pal6 = QtGui.QPalette()
+        pal6.setColor(QtGui.QPalette.Background, QtCore.Qt.darkGreen)
         
         if self.inFocus and self.selectable:
             self.setPalette(pal5)
@@ -328,6 +342,8 @@ class SelectorItem(QtWidgets.QWidget):
                     self.setPalette(pal2)
                 elif self.dirty:
                     self.setPalette(pal4)
+                elif self.saved:
+                    self.setPalette(pal6)
                 else:
                     self.setPalette(pal)
             
@@ -348,7 +364,7 @@ class SelectorItem(QtWidgets.QWidget):
                 The painter that is used to draw the text.
         
         """
-        qp.setPen(QtGui.QColor(0, 0, 0))
+        qp.setPen(QtGui.QColor(255, 255, 255))
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignCenter, self.text)   
 
@@ -403,4 +419,8 @@ class SelectorItem(QtWidgets.QWidget):
         self.repaint()
         event.accept()
 
-        
+    def sizeHint(self) -> QtCore.QSize:
+        return QtCore.QSize(50, 50)
+
+    def heightForWidth(self, a0: int) -> int:
+        return a0
