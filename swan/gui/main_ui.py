@@ -292,9 +292,10 @@ class MainUI(object):
         self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically",None))
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))
         self.action_save_as.setToolTip(_translate("main_application", "Save project to a new file", None))
-        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))       ##hier wird der Name des Menuepunkts bestimmt
+        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))
 
-        self.action_load_probe.setText(_translate("main_application", "Load Probe", None))
+        self.action_load_probe.setText(_translate("main_application", "Load Probe (work in progress)", None))       ##Name des Menuepunktes
+        self.action_load_probe.setShortcut(_translate("main_application", "Ctrl+P", None))                          ##Shortcut Ctrl+P (test)
 
         self.action_zoom_in.setText(_translate("main_application", "Zoom in", None))
         self.action_zoom_in.setToolTip(_translate("main_application", "Zoom overview in", None))
