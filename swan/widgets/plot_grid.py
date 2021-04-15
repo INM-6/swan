@@ -472,7 +472,6 @@ class MyPlotContent(QtWidgets.QWidget):
                 a list of string containing the tool tips for that column.
         
         """
-        print(len(tooltips))
         for col in self._cols.keys():
             tips = tooltips[col]
             plots = self._cols[col]
