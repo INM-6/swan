@@ -57,7 +57,7 @@ class VirtualUnitMap(object):
         
         """
         maximum_units = sum(data.total_units_per_block)
-        mapping = np.zeros((len(data.total_units_per_block), maximum_units)).tolist()
+        mapping = np.zeros((len(data.total_units_per_block), maximum_units), dtype=int).tolist()
 
         count = 1
         for s, session in enumerate(data.blocks):
