@@ -239,7 +239,7 @@ class PgWidgetISI(PyQtWidget2d):
                             runit = vum.get_realunit(session, unit_id, data)
                             d = data.get_data("sessions", runit)
                             intervals[unit_id].extend(d)
-                            col = vum.get_colour(unit_id, False, layer, False)
+                            col = vum.get_colour(unit_id)
                             self.datas[unit_id] = [np.sort(intervals[unit_id]), col, unit_id, session, clickable]
 
                 if intervals:
@@ -263,7 +263,7 @@ class PgWidgetISI(PyQtWidget2d):
                         if active[session][unit_id]:
                             runit = vum.get_realunit(session, unit_id, data)
                             datas = data.get_data("units", runit)
-                            col = vum.get_colour(unit_id, False, layer, False)
+                            col = vum.get_colour(unit_id)
                             clickable = True
                             self.datas["{}{}".format(session, unit_id)] = [datas, col, unit_id, session, clickable]
                             for d in datas:

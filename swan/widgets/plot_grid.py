@@ -253,7 +253,7 @@ class MyPlotContent(QtWidgets.QWidget):
                 plot_widget = self.find_plot(global_unit_id, session)
                 if plot_widget.to_be_updated:
                     plot_widget.clear_()
-                    pen_colour = vum.get_colour(global_unit_id, False, "average", False)
+                    pen_colour = vum.get_colour(global_unit_id)
                     plot_widget.default_pen_colour = pen_colour
                     if active[session][global_unit_id]:
                         unit = vum.get_realunit(session, global_unit_id, data)

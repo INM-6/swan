@@ -385,7 +385,7 @@ class PgWidgetRateProfile(PyQtWidget2d):
                         if active[session][global_unit_id]:
                             unit = vum.get_realunit(session, global_unit_id, data)
                             spiketrain = data.get_data("spiketrain", unit)
-                            col = vum.get_colour(global_unit_id, False, layer, False)
+                            col = vum.get_colour(global_unit_id)
                             self.datas[(session, global_unit_id)] = [spiketrain, col, clickable]
 
                 if self.trigger_event in self.events.keys():

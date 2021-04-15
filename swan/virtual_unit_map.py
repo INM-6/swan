@@ -9,7 +9,6 @@ same units in the same row.
 """
 import numpy as np
 from scipy.spatial.distance import cdist
-
 from swan.automatic_mapping import SwanImplementation
 from swan.gui.palettes import UNIT_COLORS
 
@@ -232,7 +231,7 @@ class VirtualUnitMap(object):
     def get_color_list(self):
         return self.colors
 
-    def get_colour(self, global_unit_id, mpl=False, layer=None, pqt=False):
+    def get_colour(self, global_unit_id, alpha=1.0):
         """
         Returns the color for the given unit row.
         
@@ -254,20 +253,10 @@ class VirtualUnitMap(object):
     
         """
         global_unit_id = global_unit_id % self.number_of_colors
-        if mpl:
-            col = (self.colors[global_unit_id][0] / 255.,
-                   self.colors[global_unit_id][1] / 255.,
-                   self.colors[global_unit_id][2] / 255.)
-            if layer == "standard deviation":
-                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
-            elif layer == "session":
-                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
-        elif pqt:
-            col = [self.colors[global_unit_id][0] / 255.,
-                   self.colors[global_unit_id][1] / 255.,
-                   self.colors[global_unit_id][2] / 255., 0.9]
-        else:
-            col = self.colors[global_unit_id]
+        col = [self.colors[global_unit_id][0],
+               self.colors[global_unit_id][1],
+               self.colors[global_unit_id][2],
+               int(alpha * 255)]
         return col
 
     def swan_implementation(self, data, storage):
