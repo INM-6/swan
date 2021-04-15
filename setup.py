@@ -7,8 +7,8 @@ def readme():
         return f.read()
 
 
-if version_info < (3, 3):
-    raise RuntimeError("Required: Python version > 3.3")
+if version_info < (3, 8):
+    raise RuntimeError("Required: Python version > 3.8")
 
 with open("swan/version.py") as fp:
     d = {}
@@ -21,7 +21,7 @@ install_requirements = [
     'PyQt5',
     'pyqtgraph',
     'odml',
-    'elephant',
+    'elephant>=0.9.0',
     'pyopengl',
     'matplotlib',
     'scikit-learn',
@@ -29,6 +29,7 @@ install_requirements = [
     'scipy',
     'pandas',
     'colorcet',
+    'neo>=0.9.0',
 ]
 
 setup(
