@@ -25,7 +25,7 @@ import psutil
 # swan-specific imports
 from swan import about, title
 from swan.gui.main_ui import MainUI
-from swan.widgets.file_dialog import File_Dialog
+from swan.widgets.file_dialog import FileDialog
 from swan.widgets.preferences_dialog import Preferences_Dialog
 from swan.storage import MyStorage
 from swan.views.virtual_units_view import VirtualUnitsView
@@ -225,7 +225,7 @@ class Main(QtWidgets.QMainWindow):
         """
         This method is called if you click on *File->New Project*.
         
-        Shows a :class:`src.file_dialog.File_Dialog` to choose files and after accepting it creates a
+        Shows a :class:`src.file_dialog.FileDialog` to choose files and after accepting it creates a
         new project. The project consists of two files. One is a .txt file which contains
         the data file paths and the other one is a .vum file which contains
         the :class:`src.virtualunitmap.VirtualUnitMap`.
@@ -241,7 +241,7 @@ class Main(QtWidgets.QMainWindow):
         """
         if self.dirty_project():
 
-            dia = File_Dialog()
+            dia = FileDialog()
 
             if dia.exec_():
                 files = dia.get_files()

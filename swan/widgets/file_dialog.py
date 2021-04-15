@@ -1,25 +1,15 @@
 """
-Created on Oct 24, 2013
-
-@author: Christoph Gollan
-
-In this module you can find the :class:`File_Dialog` which lets
+In this module you can find the :class:`FileDialog` which lets
 you choose files from one directory.
 """
 import os
 from os import curdir
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtWidgets
 
-try:
-    from pyqtgraph.Qt.QtCore import QString
-except ImportError:
-    # we are using Python3 so QString is not defined
-    QString = str
-
-from swan.gui.file_dialog_ui import Ui_File_Dialog
+from swan.gui.file_dialog_ui import FileDialogUI
 
 
-class File_Dialog(QtWidgets.QDialog):
+class FileDialog(QtWidgets.QDialog):
     """
     A file dialog which can be used to choose a directory and 
     after that you can choose specific files in this directory.
@@ -37,7 +27,7 @@ class File_Dialog(QtWidgets.QDialog):
     
     """
 
-    def __init__(self, fileext=".nev", *args, **kwargs):
+    def __init__(self, fileext=".pkl", *args, **kwargs):
         """
         **Properties**
         
@@ -55,19 +45,15 @@ class File_Dialog(QtWidgets.QDialog):
                 from found files.
         
         """
-        QtGui.QDialog.__init__(self, *args, **kwargs)
-        self.ui = Ui_File_Dialog()
-        self.ui.setupUi(self)
-        
-        #properties{
+        super(FileDialog, self).__init__(*args, **kwargs)
+        self.ui = FileDialogUI(self)
+
         self._path = None
         self._files = []
         self._fileext = fileext
-        self._extlength = len(self._fileext)
-        #}
         
-        self.ui.selectList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
-        self.ui.selectionList.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
+        self.ui.selectList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.selectionList.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
         self.ui.btnBox.accepted.connect(self.accept)
         self.ui.btnBox.rejected.connect(self.reject)
@@ -75,8 +61,6 @@ class File_Dialog(QtWidgets.QDialog):
         self.ui.removeBtn.clicked.connect(self.remove)
         self.ui.pathBtn.clicked.connect(self.browse)
         self.ui.pathEdit.textChanged.connect(self.pathChangeEvent)
-                
-    #### button handler ####
         
     def accept(self):
         """
@@ -85,9 +69,9 @@ class File_Dialog(QtWidgets.QDialog):
         Sets the files and closes the dialog.
         
         """
-        files = self._get_files(self.ui.selectionList)
+        files = self._get_files()
         self._files = [os.path.join(self._path, str(f)) for f in files]
-        QtGui.QDialog.accept(self)
+        QtWidgets.QDialog.accept(self)
     
     def reject(self):
         """
@@ -96,7 +80,7 @@ class File_Dialog(QtWidgets.QDialog):
         Closes the dialog without setting the files.
         
         """
-        QtGui.QDialog.reject(self)
+        QtWidgets.QDialog.reject(self)
         
     def add(self):
         """
@@ -125,10 +109,9 @@ class File_Dialog(QtWidgets.QDialog):
         Asks you for an existing directory.
         
         """
-        self.ui.pathEdit.setText(QtGui.QFileDialog.getExistingDirectory(self, str("Choose a directory"), str(curdir)))
-        
-        
-    #### event handler ####
+        self.ui.pathEdit.setText(
+            QtWidgets.QFileDialog.getExistingDirectory(self, str("Choose a directory"), str(curdir))
+        )
         
     def pathChangeEvent(self, newpath):
         """
@@ -141,22 +124,17 @@ class File_Dialog(QtWidgets.QDialog):
                 The directory that was selected.
         
         """
-        #path = str(self.ui.pathEdit.text())
         path = str(newpath)
         
         self._path = path
         self.ui.selectList.clear()
         files = []
-        #for p, dirs, files in os.walk(path):
-        #    for f in files:
         if path:
             for f in os.listdir(path):
                 if f.endswith(self._fileext):
                     files.append(f)
                     
             self.fillSelectList(files)
-    
-    #### general methods ####
         
     def fillSelectList(self, files):
         """
@@ -172,7 +150,7 @@ class File_Dialog(QtWidgets.QDialog):
         files.sort()
         file_list = []
         for f in files:
-            file_list.append(f[:-self._extlength])
+            file_list.append(f)
         self.ui.selectList.addItems(file_list)
             
     def updateSelectionList(self, selection, remove=False):
@@ -189,7 +167,7 @@ class File_Dialog(QtWidgets.QDialog):
                 Default: False.
         
         """
-        old_files = self._get_files(self.ui.selectionList)
+        old_files = self._get_files()
         files = []
         if not remove:
             for item in selection:
@@ -203,23 +181,18 @@ class File_Dialog(QtWidgets.QDialog):
                 i = old_files.index(text)
                 old_files.remove(text)
                 self.ui.selectionList.takeItem(i)
-            
-    def _get_files(self, listWidget):
+
+    def _get_files(self):
         """
         Getter for the files.
-        
-        **Arguments**
-        
-            *listWidget* (:class:`PyQt5.QtGui.QListWidgetItem`):
-                The list widget you want the file names from.
                 
             **Returns**: list of string
                 The file names.
         
         """
         files = []
-        for i in range(listWidget.count()):
-            files.append(listWidget.item(i).text())
+        for i in range(self.ui.selectionList.count()):
+            files.append(self.ui.selectionList.item(i).text())
         return files
     
     def get_files(self):
@@ -231,6 +204,3 @@ class File_Dialog(QtWidgets.QDialog):
         
         """
         return self._files
-
-        
-        

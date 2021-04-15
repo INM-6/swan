@@ -57,23 +57,15 @@ class VirtualUnitMap(object):
         
         """
         maximum_units = sum(data.total_units_per_block)
+        mapping = np.zeros((len(data.total_units_per_block), maximum_units)).tolist()
+
+        count = 1
+        for s, session in enumerate(data.blocks):
+            for pos in range(data.total_units_per_block[s]):
+                mapping[s][pos] = 1
+                count += 1
+
         self.total_units = maximum_units
-        mapping = []
-        for session in range(len(data.blocks)):
-            mapping.append([])
-            count = 1
-            for global_unit_id in range(maximum_units):
-                try:
-                    unit_description = data.blocks[session].channel_indexes[0].units[global_unit_id].description.split()
-
-                    if "unclassified" in unit_description or "noise" in unit_description:
-                        mapping[session].append(0)
-                    else:
-                        mapping[session].append(count)
-                        count += 1
-                except IndexError:
-                    mapping[session].append(0)
-
         self.mapping = mapping
         self.visible = [[True for unit in session] for session in mapping]
         self.update_active()
@@ -84,7 +76,7 @@ class VirtualUnitMap(object):
             for session_id in range(vmap.shape[0]):
                 session_frame = dataframe.loc[dataframe.session == session_id]
                 for global_unit_id, real_unit_id in zip(session_frame.label, session_frame.unit):
-                    vmap[session_id][global_unit_id] = real_unit_id
+                    vmap[session_id][global_unit_id] = real_unit_id + 1
 
             self.mapping = vmap.astype(np.int32).tolist()
             self.visible = [[True for unit in session] for session in vmap]
@@ -137,11 +129,7 @@ class VirtualUnitMap(object):
         
         """
         virtual_unit = self.mapping[session_index][unit_index]
-        if "unclassified" not in data.blocks[session_index].channel_indexes[0].units[0].description.split():
-            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit - 1]
-        else:
-            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
-        # real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
+        real_unit = data.blocks[session_index].groups[virtual_unit - 1]
         return real_unit
 
     def swap(self, session_index, first_unit_index, second_unit_index):
