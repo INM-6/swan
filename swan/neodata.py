@@ -12,14 +12,26 @@ This class works together with the :class:`src.virtualunitmap.VirtualUnitMap`.
 """
 import gc
 from itertools import chain
-from neo.io.blackrockio_v4 import BlackrockIO
 from neo.io.pickleio import PickleIO
+from neo.io import get_io
+from neo import Group, SpikeTrain
 import numpy as np
 from numpy.linalg import norm
 from os.path import join, split, exists
 from PyQt5.QtCore import QObject, pyqtSignal
 import quantities as pq
 from scipy.signal import filtfilt, butter
+
+
+def unit_in_channel(unit, channel):
+    channel_id = unit.annotations.get("channel_id", None)
+    if channel_id is not None:
+        if channel_id == channel:
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 class NeoData(QObject):
@@ -57,7 +69,6 @@ class NeoData(QObject):
             
         """
         super(QObject, self).__init__()
-        # properties{
         self.cdir = cache_dir
         self.blocks = []
         self.total_units_per_block = []
@@ -68,19 +79,7 @@ class NeoData(QObject):
         self.events = []
         self.unique_labels = []
         self.sampling_rate = 0.
-        # }
-
-    #### general methods ####    
-
-    #     def load_rgIOs(self, files):
-    #         l = len(files)
-    #         step = int(50/l)
-    #         if not self.rgios:
-    #             for i, f in enumerate(files):
-    #                 rgIO = BlackrockIO(f)
-    #                 self.rgios.append(rgIO)
-    #                 self.progress.emit(step*(i+1))
-    #         return self.rgios
+        self.current_channel = 0
 
     def load(self, files, channel):
         """
@@ -99,15 +98,10 @@ class NeoData(QObject):
         
         """
         # information for the progress
-        l = len(files)
-        #         if not self.rgios:
-        #             v = 50
-        #             step = int(50/l)
-        #         else:
-        #             v = 0
-        #             step = int(100/l)
-        v = 0
-        step = int(100 / l)
+        num_of_files = len(files)
+
+        count = 0
+        step = int(100 / num_of_files)
 
         self.delete_blocks()
         blocks = []
@@ -121,40 +115,66 @@ class NeoData(QObject):
                 pIO = PickleIO(name)
                 block = pIO.read_block()
             else:
-                # loading
-                session = BlackrockIO(f)
-                block = session.read_block(index=None, name=None, description=None, nsx_to_load='none',
-                                           n_starts=None, n_stops=None, channels=channel, units='all',
-                                           load_waveforms=True, load_events=True, lazy=False, cascade=True)
+
+                session = get_io(f)
+                block = session.read_block()
+
                 del session
 
                 # caching
-                pIO = PickleIO(name)
-                pIO.write_block(block)
+                # pIO = PickleIO(name)
+                # pIO.write_block(block)
 
             blocks.append(block)
             # emits a signal with the current progress
             # after loading a block
-            self.progress.emit(v + step * (i + 1))
+            self.progress.emit(count + step * (i + 1))
 
-        self.blocks = blocks
-        self.segments = [block.segments for block in self.blocks]
-        nums = [len([unit for unit in b.channel_indexes[0].units
-                     if "noise" not in unit.description.split()
-                     and "unclassified" not in unit.description.split()])
-                for b in self.blocks]
-        self.units = [[unit for unit in b.channel_indexes[0].units
-                       if "noise" not in unit.description.split()
-                       and "unclassified" not in unit.description.split()]
-                      for b in self.blocks]
-        # self.spiketrains = self.create_spiketrains_dictionary(self.units)
+        self.blocks = []
+        self.segments = []
+        self.units = []
+        nums = []
+        for b, block in enumerate(blocks):
+            self.units.append([])
+            for s, segment in enumerate(block.segments):
+
+                # count spiketrains and save units as neo.Group objects
+                num_spiketrains = 0
+                for spiketrain in segment.spiketrains:
+                    if spiketrain.annotations["channel_id"] == channel and len(spiketrain) > 2:
+                        unit = Group(
+                            objects=[spiketrain],
+                            name=spiketrain.name,
+                            description=f"Unit channel_id: {spiketrain.annotations['channel_id']}, "
+                                        f"unit_id: {spiketrain.annotations['unit_id']}",
+                            file_origin=spiketrain.file_origin,
+                            allowed_types=[SpikeTrain],
+                            **spiketrain.annotations,
+                        )
+                        self.units[b].append(unit)
+                        num_spiketrains += 1
+
+                nums.append(num_spiketrains)
+
+            block.groups = sorted(self.units[b], key=lambda x: int(x.annotations["unit_id"]))
+            self.segments.append(block.segments)
+            self.blocks.append(block)
+
         self.set_events_and_labels()
         self.total_units_per_block = nums
 
-        self._wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
+        try:
+            self._wave_length = self.blocks[0].groups[0].spiketrains[0].waveforms.shape[-1]
+        except IndexError:
+            self._wave_length = 0
         # TODO: Loop over all sessions to find the first session which has a unit with waveforms
 
-        self.sampling_rate = self.blocks[0].channel_indexes[0].units[0].spiketrains[0].sampling_rate
+        try:
+            self.sampling_rate = self.blocks[0].annotations["sampling_rate"]
+        except (KeyError, IndexError):
+            self.sampling_rate = 30000. * pq.Hz
+
+        self.current_channel = channel
 
     def get_data(self, layer, unit, **kwargs):
         """
@@ -240,9 +260,10 @@ class NeoData(QObject):
         yranges0 = []
         yranges1 = []
         for block in self.blocks:
-            for unit in block.channel_indexes[0].units:
-                if "noise" not in unit.description.split() and "unclassified" not in unit.description.split():
+            for unit in block.groups:
+                if unit_in_channel(unit, self.current_channel):
                     datas.append(self.get_data(layer, unit))
+
         for data in datas:
             tmp0 = np.min(data)
             tmp1 = np.max(data)

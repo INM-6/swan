@@ -127,10 +127,9 @@ def generate_feature_vectors(parent_class, feature_dictionary, additional_dictio
 def get_session_ids(blocks):
     session_ids = []
     for b, block in enumerate(blocks):
-        units = block.channel_indexes[0].units
-        for u, unit in enumerate(units):
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                session_ids.append(b)
+        units = block.groups
+        for unit in units:
+            session_ids.append(b)
 
     return session_ids
 
@@ -138,10 +137,9 @@ def get_session_ids(blocks):
 def get_real_unit_ids(blocks):
     unit_ids = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for u, unit in enumerate(units):
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                unit_ids.append(u)
+            unit_ids.append(u)
 
     return unit_ids
 
@@ -149,12 +147,11 @@ def get_real_unit_ids(blocks):
 def get_mean_waveforms(blocks):
     mean_waveforms = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
-                waves = waves - waves.mean(axis=1, keepdims=True)
-                mean_waveforms.append(waves.mean(axis=0))
+            waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
+            waves = waves - waves.mean(axis=1, keepdims=True)
+            mean_waveforms.append(waves.mean(axis=0))
 
     return mean_waveforms
 
@@ -162,33 +159,30 @@ def get_mean_waveforms(blocks):
 def get_all_waveforms(blocks):
     waveforms = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
-                waves = waves - waves.mean(axis=1, keepdims=True)
-                waveforms.append(waves)
+            waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
+            waves = waves - waves.mean(axis=1, keepdims=True)
+            waveforms.append(waves)
     return waveforms
 
 
 def get_all_spiketrains(blocks):
     spiketrains = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                train = unit.spiketrains[0].times.magnitude
-                spiketrains.append(train)
+            train = unit.spiketrains[0].times.magnitude
+            spiketrains.append(train)
     return spiketrains
 
 
 def get_time_stamps(blocks):
     all_time_stamps = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                all_time_stamps.append(block.rec_datetime)
+            all_time_stamps.append(block.rec_datetime)
 
     corrected_time_stamps = []
     for ts in all_time_stamps:
