@@ -271,8 +271,6 @@ class VirtualUnitMap(object):
         return col
 
     def swan_implementation(self, data, storage):
-
-        print("Map being calculated")
         swaps = 0
         # Retrieve mapping from base
         backup_mapping = np.array(storage.get_map().mapping.copy()).T
@@ -458,13 +456,11 @@ class VirtualUnitMap(object):
         
         """
         if automatic_mapping == 0:
-            print("New Implementation")
             # self.swan_implementation(data=data, base=base)
             algorithm = SwanImplementation(neodata=data, parent=parent)
             self.set_map_from_dataframe(algorithm.result)
 
         elif automatic_mapping == 1:
-            print("Old Implementation")
             self.calculate_mapping_bu(data=data, storage=storage)
 
     def calculate_mapping_bu(self, data, storage):
@@ -480,26 +476,22 @@ class VirtualUnitMap(object):
                 which will be used to compare the units.
             
         """
-        print("Map being calculated")
-
         wave_length = data.get_wave_length()
 
         for i in range(len(data.blocks) - 1):
             sessions = np.zeros((sum(data.total_units_per_block), 2, wave_length))
 
             for j, val in enumerate(storage.get_map().mapping[i]):
-                if val is not 0:
+                if val != 0:
                     runit = self.get_realunit(i, j, data)
-                    # sessions[j][0] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
                     sessions[j][0] = avg / np.max(avg)
                 else:
                     sessions[j][0] = np.zeros(wave_length)
 
             for j, val in enumerate(storage.get_map().mapping[i + 1]):
-                if val is not 0:
+                if val != 0:
                     runit = self.get_realunit(i + 1, j, data)
-                    # sessions[j][1] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
                     sessions[j][1] = avg / np.max(avg)
                 else:
@@ -514,7 +506,7 @@ class VirtualUnitMap(object):
                 print("Executing this in session {}".format(i))
                 print("J: {}, Val: {}".format(j, val))
 
-                if val is not 0:
+                if val != 0:
                     print(distances[j])
 
                     min_arg = np.argmin(distances[j])
