@@ -114,7 +114,7 @@ class PgWidget3d(PyQtWidget3d):
                 if layer == "average":
                     for unit_index in range(len(active)):
                         if any(active[unit_index]):
-                            col = vum.get_colour(unit_index, False, layer, True)
+                            col = vum.get_colour(unit_index, alpha=0.75)
                             zs = []
                             for session_index in range(len(active[unit_index])):
                                 if active[unit_index][session_index]:
@@ -132,7 +132,7 @@ class PgWidget3d(PyQtWidget3d):
                 elif layer == "standard deviation":
                     for unit_index in range(len(active)):
                         if any(active[unit_index]):
-                            col = vum.get_colour(unit_index, False, layer, True)
+                            col = vum.get_colour(unit_index, alpha=0.75)
                             zs = []
                             length = 0
                             for session_index in range(len(active[unit_index])):
