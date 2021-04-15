@@ -296,18 +296,18 @@ class MyPlotWidget(QtWidgets.QWidget):
             event.ignore()
 
 
-class MultiLine(pg.QtGui.QGraphicsPathItem):
+class MultiLine(QtWidgets.QGraphicsPathItem):
     def __init__(self, data, color):
         """x and y are 2D arrays of shape (Nplots, Nsamples)"""
         connect = np.ones(data.shape, dtype=bool)
         connect[:, -1] = 0  # don't draw the segment between each trace
         x = np.tile([i for i in range(data.shape[1])], data.shape[0]).reshape(data.shape)
         self.path = arrayToQPath(x.flatten(), data.flatten(), connect.flatten())
-        QtGui.QGraphicsPathItem.__init__(self, self.path)
+        super(MultiLine, self).__init__(self.path)
         self.setPen(mkPen(color))
 
     def shape(self):  # override because QGraphicsPathItem.shape is too expensive.
-        return QtGui.QGraphicsItem.shape(self)
+        return QtWidgets.QGraphicsItem.shape(self)
 
     def boundingRect(self):
         return self.path.boundingRect()

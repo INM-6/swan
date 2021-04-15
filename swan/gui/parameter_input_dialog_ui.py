@@ -123,9 +123,9 @@ class ParameterInputDialogUI(object):
         self.main_layout.addWidget(self.cancel_button, offset_height + 3, 0, 1, 1)
         self.cancel_button.clicked.connect(parent_dialog.on_cancel)
 
-        self.update_plot_button = QtWidgets.QPushButton("Update Plots")
+        self.update_plot_button = QtWidgets.QPushButton("Update Plot")
         self.main_layout.addWidget(self.update_plot_button, offset_height + 3, 2, 1, 1)
-        self.update_plot_button.clicked.connect(parent_dialog.update_plots)
+        self.update_plot_button.clicked.connect(parent_dialog.plot)
 
         self.confirm_button = QtWidgets.QPushButton("Calculate")
         self.main_layout.addWidget(self.confirm_button, offset_height + 3, 3, 1, 1)

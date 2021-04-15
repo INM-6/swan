@@ -474,7 +474,6 @@ class MyPlotContent(QtWidgets.QWidget):
         """
         print(len(tooltips))
         for col in self._cols.keys():
-            print("Setting tooltips for col {}".format(col))
             tips = tooltips[col]
             plots = self._cols[col]
             for t, plot in zip(tips, plots):
