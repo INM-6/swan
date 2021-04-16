@@ -28,6 +28,8 @@ class PgWidgetPCA(PyQtWidget3d):
         self.positions = []
         self.means = []
 
+        self.fill_alpha = 0.9
+
         self.pg_canvas.set_clickable(True)
 
         self.max_distance = 0
@@ -101,7 +103,8 @@ class PgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[session_index])):
                                         if active[session_index][unit_index]:
-                                            col = vum.get_colour(unit_index, alpha=0.9)
+                                            col = vum.get_colour(unit_index)
+                                            col = tuple(val / 255. for val in col) + (self.fill_alpha,)
                                             self.positions.append(
                                                 self.create_scatter_plot_item(pos=pca_session[c], size=1, color=col,
                                                                               unit_id=unit_index, session=session_index,
@@ -129,7 +132,8 @@ class PgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[dom])):
                                         if active[dom][unit_index]:
-                                            col = vum.get_colour(unit_index, alpha=0.9)
+                                            col = vum.get_colour(unit_index)
+                                            col = tuple(val / 255. for val in col) + (self.fill_alpha,)
                                             self.positions.append(
                                                 self.create_scatter_plot_item(pos=dom_ch_pca[c], size=1, color=col,
                                                                               unit_id=unit_index, session=session_index,
