@@ -150,16 +150,16 @@ class PyQtWidget3d(QtWidgets.QWidget):
     def highlight_curve_from_plot(self, plot, select):
         scatter_plot_mean = next((x for x in self.means if (x.opts["session"], x.opts["unit_id"]) == plot.pos), None)
         scatter_plot_pos = next((x for x in self.positions if (x.opts["session"], x.opts["unit_id"]) == plot.pos), None)
-        suggested_plots = [x for x in self.positions if
-                           x.opts["session"] == plot.pos[0] and x not in self.selected_plots]
+        # suggested_plots = [x for x in self.positions if
+        #                    x.opts["session"] == plot.pos[0] and x not in self.selected_plots]
 
         if scatter_plot_mean is not None:
             if select:
-                self.clear_suggests()
-                for suggested_plot in suggested_plots:
-                    if suggested_plot not in self.suggested_plots:
-                        suggested_plot.set_suggest_pen()
-                        self.suggested_plots.append(suggested_plot)
+                # self.clear_suggests()
+                # for suggested_plot in suggested_plots:
+                #     if suggested_plot not in self.suggested_plots:
+                #         suggested_plot.set_suggest_pen()
+                #         self.suggested_plots.append(suggested_plot)
                 if scatter_plot_mean not in self.selected_plots:
                     self.selected_plots.append(scatter_plot_mean)
                 if scatter_plot_pos not in self.selected_plots:
@@ -177,8 +177,8 @@ class PyQtWidget3d(QtWidgets.QWidget):
                 if scatter_plot_pos in self.selected_plots:
                     scatter_plot_pos.restore_pen()
                     self.selected_plots.remove(scatter_plot_pos)
-                if not self.selected_plots:
-                    self.clear_suggests()
+                # if not self.selected_plots:
+                #     self.clear_suggests()
 
     def minimumSizeHint(self) -> QtCore.QSize:
         return QtCore.QSize(500, 400)
