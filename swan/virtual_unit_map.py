@@ -253,10 +253,11 @@ class VirtualUnitMap(object):
     
         """
         global_unit_id = global_unit_id % self.number_of_colors
-        col = [self.colors[global_unit_id][0],
-               self.colors[global_unit_id][1],
-               self.colors[global_unit_id][2],
-               int(alpha * 255)]
+        col = (
+            self.colors[global_unit_id][0],
+            self.colors[global_unit_id][1],
+            self.colors[global_unit_id][2],
+        )
         return col
 
     def swan_implementation(self, data, storage):
