@@ -219,7 +219,7 @@ class VirtualUnitMap(object):
     def get_color_list(self):
         return self.colors
 
-    def get_colour(self, global_unit_id, alpha=1.0):
+    def get_colour(self, global_unit_id):
         """
         Returns the color for the given unit row.
         
