@@ -126,6 +126,8 @@ class NeoData(QObject):
             # after loading a block
             self.progress.emit(count + step * (i + 1))
 
+        blocks = sorted(blocks, key=lambda x: x.rec_datetime)
+
         self.blocks = []
         self.segments = []
         self.units = []
