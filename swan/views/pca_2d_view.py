@@ -119,7 +119,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                     c = 0
                                     for u in range(len(active[i])):
                                         if active[i][u]:
-                                            col = vum.get_colour(u, False, layer, False)
+                                            col = vum.get_colour(u)
                                             self.plotPoints(pos=pca_channel[c], size=1, color=col, name="".format(i, u))
                                             self.plotMean(x=mn(pca_channel[c][:, 0], axis=0),
                                                           y=mn(pca_channel[c][:, 1], axis=0), size=15, color=col,
@@ -137,7 +137,7 @@ class pgWidgetPCA2d(PyQtWidget2d):
                                 c = 0
                                 for u in range(len(active[dom])):
                                     if active[dom][u]:
-                                        col = vum.get_colour(u, False, layer, False)
+                                        col = vum.get_colour(u)
                                         self.plotPoints(pos=dom_ch_pca[c], size=1, color=col, name="".format(i, u))
                                         self.plotMean(x=mn(dom_ch_pca[c][:, 0], axis=0),
                                                       y=mn(dom_ch_pca[c][:, 1], axis=0), size=15, color=col,

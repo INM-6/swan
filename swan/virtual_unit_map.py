@@ -9,7 +9,6 @@ same units in the same row.
 """
 import numpy as np
 from scipy.spatial.distance import cdist
-
 from swan.automatic_mapping import SwanImplementation
 from swan.gui.palettes import UNIT_COLORS
 
@@ -58,23 +57,13 @@ class VirtualUnitMap(object):
         
         """
         maximum_units = sum(data.total_units_per_block)
+        mapping = np.zeros((len(data.total_units_per_block), maximum_units), dtype=int).tolist()
+
+        for s, session in enumerate(data.blocks):
+            for pos in range(data.total_units_per_block[s]):
+                mapping[s][pos] = pos+1
+
         self.total_units = maximum_units
-        mapping = []
-        for session in range(len(data.blocks)):
-            mapping.append([])
-            count = 1
-            for global_unit_id in range(maximum_units):
-                try:
-                    unit_description = data.blocks[session].channel_indexes[0].units[global_unit_id].description.split()
-
-                    if "unclassified" in unit_description or "noise" in unit_description:
-                        mapping[session].append(0)
-                    else:
-                        mapping[session].append(count)
-                        count += 1
-                except IndexError:
-                    mapping[session].append(0)
-
         self.mapping = mapping
         self.visible = [[True for unit in session] for session in mapping]
         self.update_active()
@@ -85,7 +74,7 @@ class VirtualUnitMap(object):
             for session_id in range(vmap.shape[0]):
                 session_frame = dataframe.loc[dataframe.session == session_id]
                 for global_unit_id, real_unit_id in zip(session_frame.label, session_frame.unit):
-                    vmap[session_id][global_unit_id] = real_unit_id
+                    vmap[session_id][global_unit_id] = real_unit_id + 1
 
             self.mapping = vmap.astype(np.int32).tolist()
             self.visible = [[True for unit in session] for session in vmap]
@@ -138,11 +127,7 @@ class VirtualUnitMap(object):
         
         """
         virtual_unit = self.mapping[session_index][unit_index]
-        if "unclassified" not in data.blocks[session_index].channel_indexes[0].units[0].description.split():
-            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit - 1]
-        else:
-            real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
-        # real_unit = data.blocks[session_index].channel_indexes[0].units[virtual_unit]
+        real_unit = data.blocks[session_index].groups[virtual_unit - 1]
         return real_unit
 
     def swap(self, session_index, first_unit_index, second_unit_index):
@@ -232,7 +217,7 @@ class VirtualUnitMap(object):
     def get_color_list(self):
         return self.colors
 
-    def get_colour(self, global_unit_id, mpl=False, layer=None, pqt=False):
+    def get_colour(self, global_unit_id):
         """
         Returns the color for the given unit row.
         
@@ -254,25 +239,14 @@ class VirtualUnitMap(object):
     
         """
         global_unit_id = global_unit_id % self.number_of_colors
-        if mpl:
-            col = (self.colors[global_unit_id][0] / 255.,
-                   self.colors[global_unit_id][1] / 255.,
-                   self.colors[global_unit_id][2] / 255.)
-            if layer == "standard deviation":
-                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
-            elif layer == "session":
-                col = (col[0] / 2., col[1] / 2., col[2] / 2.)
-        elif pqt:
-            col = [self.colors[global_unit_id][0] / 255.,
-                   self.colors[global_unit_id][1] / 255.,
-                   self.colors[global_unit_id][2] / 255., 0.9]
-        else:
-            col = self.colors[global_unit_id]
+        col = (
+            self.colors[global_unit_id][0],
+            self.colors[global_unit_id][1],
+            self.colors[global_unit_id][2],
+        )
         return col
 
     def swan_implementation(self, data, storage):
-
-        print("Map being calculated")
         swaps = 0
         # Retrieve mapping from base
         backup_mapping = np.array(storage.get_map().mapping.copy()).T
@@ -458,13 +432,11 @@ class VirtualUnitMap(object):
         
         """
         if automatic_mapping == 0:
-            print("New Implementation")
             # self.swan_implementation(data=data, base=base)
             algorithm = SwanImplementation(neodata=data, parent=parent)
             self.set_map_from_dataframe(algorithm.result)
 
         elif automatic_mapping == 1:
-            print("Old Implementation")
             self.calculate_mapping_bu(data=data, storage=storage)
 
     def calculate_mapping_bu(self, data, storage):
@@ -480,26 +452,22 @@ class VirtualUnitMap(object):
                 which will be used to compare the units.
             
         """
-        print("Map being calculated")
-
         wave_length = data.get_wave_length()
 
         for i in range(len(data.blocks) - 1):
             sessions = np.zeros((sum(data.total_units_per_block), 2, wave_length))
 
             for j, val in enumerate(storage.get_map().mapping[i]):
-                if val is not 0:
+                if val != 0:
                     runit = self.get_realunit(i, j, data)
-                    # sessions[j][0] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
                     sessions[j][0] = avg / np.max(avg)
                 else:
                     sessions[j][0] = np.zeros(wave_length)
 
             for j, val in enumerate(storage.get_map().mapping[i + 1]):
-                if val is not 0:
+                if val != 0:
                     runit = self.get_realunit(i + 1, j, data)
-                    # sessions[j][1] = data.get_data("average", runit)
                     avg = data.get_data("average", runit)
                     sessions[j][1] = avg / np.max(avg)
                 else:
@@ -514,7 +482,7 @@ class VirtualUnitMap(object):
                 print("Executing this in session {}".format(i))
                 print("J: {}, Val: {}".format(j, val))
 
-                if val is not 0:
+                if val != 0:
                     print(distances[j])
 
                     min_arg = np.argmin(distances[j])

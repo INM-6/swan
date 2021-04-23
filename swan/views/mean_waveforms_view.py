@@ -114,7 +114,7 @@ class PgWidget2d(PyQtWidget2d):
                             if layer == "standard deviation":
                                 runit = vum.get_realunit(session, unit_id, data)
                                 datas = data.get_data(layer, runit)
-                                col = vum.get_colour(unit_id, False, layer, False)
+                                col = vum.get_colour(unit_id)
                                 xs = arange(data.get_wave_length()) * 1 / data.sampling_rate.magnitude
                                 ys = datas.rescale(V)
                                 self.plot_std(xs=xs, ys=ys, color=col)
@@ -122,7 +122,7 @@ class PgWidget2d(PyQtWidget2d):
                             elif layer == "average":
                                 runit = vum.get_realunit(session, unit_id, data)
                                 datas = data.get_data(layer, runit)
-                                col = vum.get_colour(unit_id, False, layer, False)
+                                col = vum.get_colour(unit_id)
                                 x = arange(data.get_wave_length()) * 1 / data.sampling_rate.magnitude
                                 y = datas.rescale(V)
                                 self.plot_mean(x=x, y=y, color=col, unit_id=unit_id, session=session, clickable=True)

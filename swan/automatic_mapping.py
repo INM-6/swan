@@ -127,10 +127,9 @@ def generate_feature_vectors(parent_class, feature_dictionary, additional_dictio
 def get_session_ids(blocks):
     session_ids = []
     for b, block in enumerate(blocks):
-        units = block.channel_indexes[0].units
-        for u, unit in enumerate(units):
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                session_ids.append(b)
+        units = block.groups
+        for unit in units:
+            session_ids.append(b)
 
     return session_ids
 
@@ -138,10 +137,9 @@ def get_session_ids(blocks):
 def get_real_unit_ids(blocks):
     unit_ids = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for u, unit in enumerate(units):
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                unit_ids.append(u)
+            unit_ids.append(u)
 
     return unit_ids
 
@@ -149,12 +147,11 @@ def get_real_unit_ids(blocks):
 def get_mean_waveforms(blocks):
     mean_waveforms = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
-                waves = waves - waves.mean(axis=1, keepdims=True)
-                mean_waveforms.append(waves.mean(axis=0))
+            waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
+            waves = waves - waves.mean(axis=1, keepdims=True)
+            mean_waveforms.append(waves.mean(axis=0))
 
     return mean_waveforms
 
@@ -162,33 +159,30 @@ def get_mean_waveforms(blocks):
 def get_all_waveforms(blocks):
     waveforms = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
-                waves = waves - waves.mean(axis=1, keepdims=True)
-                waveforms.append(waves)
+            waves = unit.spiketrains[0].waveforms.magnitude[:, 0, :]
+            waves = waves - waves.mean(axis=1, keepdims=True)
+            waveforms.append(waves)
     return waveforms
 
 
 def get_all_spiketrains(blocks):
     spiketrains = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                train = unit.spiketrains[0].times.magnitude
-                spiketrains.append(train)
+            train = unit.spiketrains[0].times.magnitude
+            spiketrains.append(train)
     return spiketrains
 
 
 def get_time_stamps(blocks):
     all_time_stamps = []
     for block in blocks:
-        units = block.channel_indexes[0].units
+        units = block.groups
         for unit in units:
-            if 'noise' not in unit.description.split() and 'unclassified' not in unit.description.split():
-                all_time_stamps.append(block.rec_datetime)
+            all_time_stamps.append(block.rec_datetime)
 
     corrected_time_stamps = []
     for ts in all_time_stamps:
@@ -477,13 +471,27 @@ class ParameterInputDialog(QtWidgets.QDialog):
         self.algorithm = algorithm
 
         self.interface = ParameterInputDialogUI(self)
+        self.plot_widget = self.interface.elbow_curve_plot.pg_canvas
 
-        self._solvers = None
-        self._clusters = None
+        self.interface.clusters.textChanged.connect(self.update_plot)
+
+        self._solvers = []
+        self._clusters = []
+        self._inertias = []
         self.chosen_solver = None
 
         self.values_dict = {}
         self.final_state = False
+
+        self.spot_size = 10
+        self.default_pen = pg.mkPen(color='w',
+                                    width=2,
+                                    style=QtCore.Qt.DotLine)
+        self.default_symbol_pen = pg.mkPen(color='b')
+        self.default_brush = pg.mkBrush((0, 255, 0, 128))
+        self.default_symbol = 'o'
+
+        self.current_clusters_value = 2
 
     def on_confirm(self):
         self.final_state = True
@@ -493,23 +501,69 @@ class ParameterInputDialog(QtWidgets.QDialog):
         self.final_state = False
         self.reject()
 
-    def update_plots(self):
-        size = 10
-        pen = pg.mkPen(color='b')
-        brush = pg.mkBrush((0, 255, 0, 128))
-        symbol = 'o'
+    # @QtCore.pyqtSlot(object, object)
+    # def on_plot_clicked(self, data_item, ev):
+    #     if ev.button() == 1:
+    #         x_pos = ev.pos().x()
+    #         closest_val = self._get_closest_val(x_pos)
+    #         if closest_val is not None:
+    #             self.interface.clusters.setValue(closest_val)
+    #
+    # @staticmethod
+    # def _get_closest_val(input_value):
+    #     lower = np.floor(input_value)
+    #     lower_diff = input_value - lower
+    #     upper = np.ceil(input_value)
+    #     upper_diff = upper - input_value
+    #
+    #     pprint({"lower": lower,
+    #             "lower_diff": lower_diff,
+    #             "upper": upper,
+    #             "upper_diff": upper_diff})
+    #
+    #     if lower_diff < upper_diff and lower_diff < 0.1:
+    #         return lower
+    #     elif upper_diff < lower_diff and upper_diff < 0.1:
+    #         return upper
+    #     else:
+    #         return None
 
-        solvers = []
-        clusters = []
-        inertias = []
+    @QtCore.pyqtSlot()
+    def update_plot(self):
+        clusters = self._clusters
+        inertias = self._inertias
         sizes = []
         pens = []
         brushes = []
         symbols = []
 
+        self.current_clusters_value = int(self.interface.clusters.value())
+
+        for cluster in clusters:
+            sizes.append(self.spot_size)
+            symbols.append(self.default_symbol)
+            if cluster == self.current_clusters_value:
+                pens.append(pg.mkPen('r'))
+                brushes.append(pg.mkBrush((255, 0, 0, 128)))
+            else:
+                pens.append(self.default_symbol_pen)
+                brushes.append(self.default_brush)
+
+        self._plot(clusters, inertias,
+                   symbolPen=pens,
+                   symbolSize=sizes,
+                   symbol=symbols,
+                   symbolBrush=brushes,
+                   pxMode=True,
+                   clear=True)
+
+    def plot(self):
+        solvers = []
+        clusters = []
+        inertias = []
+
         QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.update_values_dict()
-        current_clusters_values = self.interface.clusters.value()
         feature_vectors = generate_feature_vectors(self.algorithm, self.values_dict, self.algorithm.additional_dict)
 
         with Pool(processes=None) as pool:
@@ -522,31 +576,19 @@ class ParameterInputDialog(QtWidgets.QDialog):
                 solvers.append(solver)
                 clusters.append(n_clusters)
                 inertias.append(solver.inertia_)
-                sizes.append(size)
-                symbols.append(symbol)
-
-                if n_clusters == int(current_clusters_values):
-                    pens.append(pg.mkPen('r'))
-                    brushes.append(pg.mkBrush((255, 0, 0, 128)))
-                else:
-                    pens.append(pen)
-                    brushes.append(brush)
 
         self._solvers = solvers
         self._clusters = clusters
+        self._inertias = inertias
 
-        self.interface.elbow_curve_plot.pg_canvas.plotItem.plot(clusters, inertias,
-                                                                pen=pg.mkPen(color='w',
-                                                                             width=2,
-                                                                             style=QtCore.Qt.DotLine),
-                                                                symbolPen=pens,
-                                                                symbolSize=sizes,
-                                                                symbol=symbols,
-                                                                symbolBrush=brushes,
-                                                                pxMode=True,
-                                                                clear=True)
+        self.update_plot()
 
         QtWidgets.QApplication.restoreOverrideCursor()
+
+    def _plot(self, x, y, *args, **kwargs):
+        self.interface.elbow_curve_plot.pg_canvas.clear()
+        plot_item = self.interface.elbow_curve_plot.pg_canvas.plot(x, y, *args, **kwargs)
+        # plot_item.sigClicked.connect(self.on_plot_clicked)
 
     def update_values_dict(self):
         output_dict = {}
@@ -563,5 +605,5 @@ class ParameterInputDialog(QtWidgets.QDialog):
         QtWidgets.QDialog.exec_(self)
         self.update_values_dict()
         if self._solvers is not None:
-            self.chosen_solver = self._solvers[self._clusters.index(self.interface.clusters.value())]
+            self.chosen_solver = self._solvers[self._clusters.index(self.current_clusters_value)]
         return self.values_dict, self.chosen_solver, self.final_state

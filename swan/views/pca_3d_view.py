@@ -28,6 +28,8 @@ class PgWidgetPCA(PyQtWidget3d):
         self.positions = []
         self.means = []
 
+        self.fill_alpha = 0.9
+
         self.pg_canvas.set_clickable(True)
 
         self.max_distance = 0
@@ -43,8 +45,8 @@ class PgWidgetPCA(PyQtWidget3d):
 
     def connect_means(self):
         self.pg_canvas.set_means(self.means)
-        for plot in self.pg_canvas.means:
-            plot.sig_clicked.connect(self.get_item)
+        # for plot in self.pg_canvas.means:
+        #     plot.sig_clicked.connect(self.get_item)
 
     def do_plot(self, vum, data):
         self.save_camera_position()
@@ -70,8 +72,8 @@ class PgWidgetPCA(PyQtWidget3d):
                 dom_session = []
 
                 for unit_index in range(len(active[dom])):
-                    runit = vum.get_realunit(dom, unit_index, data)
                     if active[dom][unit_index]:
+                        runit = vum.get_realunit(dom, unit_index, data)
                         dom_session.append(data.get_data("all", runit))
 
                 m_dom_session, lv_dom_session = self.merge_session(dom_session)
@@ -86,8 +88,8 @@ class PgWidgetPCA(PyQtWidget3d):
                             if session_index != dom:
                                 session = []
                                 for unit_index in range(len(active[session_index])):
-                                    runit = vum.get_realunit(session_index, unit_index, data)
                                     if active[session_index][unit_index]:
+                                        runit = vum.get_realunit(session_index, unit_index, data)
                                         session.append(data.get_data("all", runit))
 
                                 merged_session, len_vec = self.merge_session(session)
@@ -101,7 +103,8 @@ class PgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[session_index])):
                                         if active[session_index][unit_index]:
-                                            col = vum.get_colour(unit_index, False, None, True)
+                                            col = vum.get_colour(unit_index)
+                                            col = tuple(val / 255. for val in col) + (self.fill_alpha,)
                                             self.positions.append(
                                                 self.create_scatter_plot_item(pos=pca_session[c], size=1, color=col,
                                                                               unit_id=unit_index, session=session_index,
@@ -129,7 +132,8 @@ class PgWidgetPCA(PyQtWidget3d):
                                     c = 0
                                     for unit_index in range(len(active[dom])):
                                         if active[dom][unit_index]:
-                                            col = vum.get_colour(unit_index, False, None, True)
+                                            col = vum.get_colour(unit_index)
+                                            col = tuple(val / 255. for val in col) + (self.fill_alpha,)
                                             self.positions.append(
                                                 self.create_scatter_plot_item(pos=dom_ch_pca[c], size=1, color=col,
                                                                               unit_id=unit_index, session=session_index,

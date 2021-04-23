@@ -118,8 +118,8 @@ class MyStorage(Storage, QtCore.QObject):
         self._loading = False
         # }
 
-        self.store("channel", 1)
-        self.store("lastchannel", 1)
+        self.store("channel", 0)
+        self.store("lastchannel", 0)
 
     def set_cache_dir(self, cache_dir):
         """
@@ -483,10 +483,10 @@ class MyStorage(Storage, QtCore.QObject):
         
         """
         vum = self.get_map()
-        print("VUM before recalculation: {}".format(np.shape(vum.mapping)))
         data = self.get_data()
+
         vum.calculate_mapping(data, self, automatic_mapping=mapping, parent=parent)
-        print("VUM after recalculation: {}".format(np.shape(vum.mapping)))
+
         self.change_map()
 
     def revert(self):

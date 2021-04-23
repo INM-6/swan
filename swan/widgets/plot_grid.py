@@ -253,19 +253,19 @@ class MyPlotContent(QtWidgets.QWidget):
                 plot_widget = self.find_plot(global_unit_id, session)
                 if plot_widget.to_be_updated:
                     plot_widget.clear_()
-                    pen_colour = vum.get_colour(global_unit_id, False, "average", False)
+                    pen_colour = vum.get_colour(global_unit_id)
                     plot_widget.default_pen_colour = pen_colour
                     if active[session][global_unit_id]:
                         unit = vum.get_realunit(session, global_unit_id, data)
                         mean_waveform = data.get_data("average", unit)
-                        all_waveforms = data.get_data("all", unit)
-                        try:
-                            plot_widget.plot_many(all_waveforms[choice(all_waveforms.shape[0],
-                                                                       size=self.sample_waveform_number,
-                                                                       replace=False)],
-                                                  self._plot_gray)
-                        except ValueError:
-                            plot_widget.plot_many(all_waveforms, self._plot_gray)
+                        # all_waveforms = data.get_data("all", unit)
+                        # try:
+                        #     plot_widget.plot_many(all_waveforms[choice(all_waveforms.shape[0],
+                        #                                                size=self.sample_waveform_number,
+                        #                                                replace=False)],
+                        #                           self._plot_gray)
+                        # except ValueError:
+                        #     plot_widget.plot_many(all_waveforms, self._plot_gray)
                         plot_widget.plot(mean_waveform.magnitude, pen_colour)
                         plot_widget.hasPlot = True
                         plot_widget.toggle_colour_strip(pen_colour)
@@ -472,9 +472,7 @@ class MyPlotContent(QtWidgets.QWidget):
                 a list of string containing the tool tips for that column.
         
         """
-        print(len(tooltips))
         for col in self._cols.keys():
-            print("Setting tooltips for col {}".format(col))
             tips = tooltips[col]
             plots = self._cols[col]
             for t, plot in zip(tips, plots):
