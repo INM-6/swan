@@ -9,6 +9,8 @@ It is used to represent a connector map.
 The electrodes on this map are represented by 
 the :class:`SelectorItem`.
 """
+import csv
+
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 
@@ -238,6 +240,47 @@ class SelectorWidget(QtWidgets.QWidget):
                 selector_item.saved = True
             selector_item.repaint()
         self.saved_channels = saved_channels
+
+    def load_connector_map(self, filename, select_channel):
+        """
+        Loads a connector map given as a .csv file.
+
+        The file has to contain two columns. The first will be ignored but must exist
+        (e.g. the numbers 1-100) and the other one has to contain the mapped channel numbers.
+        Choose **,** as delimiter.
+
+        **Arguments**
+
+            *filename* (string):
+                The csv file to load.
+
+            **Raises**: :class:`ValueError`
+                If the connector map could not be loaded.
+
+        """
+        if filename:
+            delimiter = ','
+            try:
+                with open(filename, "r") as fn:
+                    channel_list = []
+                    reader = csv.reader(fn, delimiter=delimiter)
+                    for row in reader:
+                        # just read the second column
+                        channel_list.append(int(row[1]))
+                channels = self.get_dirty_channels()
+
+                # overwrite existing mapping
+                self.set_channels(channel_list)
+                self.reset_sel()
+                self.reset_dirty()
+
+                # the dirty channels and the selected one has to be set again
+                for channel in channels:
+                    self.set_dirty(channel, True)
+
+                self.select_only(select_channel)
+            except Exception as e:
+                print(e)
 
     def minimumSizeHint(self) -> QtCore.QSize:
         return self.sizeHint()

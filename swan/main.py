@@ -14,7 +14,6 @@ Look at :mod:`src.run` for more information.
 """
 # system imports
 from os.path import basename, split, join, exists
-import csv
 import webbrowser as web
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import os
@@ -349,7 +348,7 @@ class Main(QtWidgets.QMainWindow):
                                                                    directory=self._prodir,
                                                                    options=dialog_options)
         try:
-            self.load_connector_map(filename)
+            self.selector.load_connector_map(filename, self._my_storage.get_channel())
         except ValueError:
             QtWidgets.QMessageBox.critical(None, "Loading error", "The connector map could not be loaded!")
 
@@ -895,47 +894,6 @@ class Main(QtWidgets.QMainWindow):
         # if not isdir(self._preferences["cacheDir"]):
         #     mkdir(self._preferences["cacheDir"])
         pathlib.Path(self._preferences["cacheDir"]).mkdir(parents=True, exist_ok=True)
-
-    def load_connector_map(self, filename):
-        """
-        Loads a connector map given as a .csv file.
-        
-        The file has to contain two columns. The first will be ignored but must exist
-        (e.g. the numbers 1-100) and the other one has to contain the mapped channel numbers.
-        Choose **,** as delimiter.
-        
-        **Arguments**
-        
-            *filename* (string):
-                The csv file to load.
-        
-            **Raises**: :class:`ValueError`
-                If the connector map could not be loaded.
-                
-        """
-        if filename:
-            delimiter = ','
-            try:
-                with open(filename, "r") as fn:
-                    channel_list = []
-                    reader = csv.reader(fn, delimiter=delimiter)
-                    for row in reader:
-                        # just read the second column
-                        channel_list.append(int(row[1]))
-                channels = self.selector.get_dirty_channels()
-
-                # overwrite existing mapping
-                self.selector.set_channels(channel_list)
-                self.selector.reset_sel()
-                self.selector.reset_dirty()
-
-                # the dirty channels and the selected one has to be set again
-                for channel in channels:
-                    self.selector.set_dirty(channel, True)
-
-                self.selector.select_only(self._my_storage.get_channel())
-            except Exception as e:
-                print(e)
 
     def load_preferences(self):
         """
