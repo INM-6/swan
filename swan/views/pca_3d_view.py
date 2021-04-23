@@ -45,8 +45,8 @@ class PgWidgetPCA(PyQtWidget3d):
 
     def connect_means(self):
         self.pg_canvas.set_means(self.means)
-        for plot in self.pg_canvas.means:
-            plot.sig_clicked.connect(self.get_item)
+        # for plot in self.pg_canvas.means:
+        #     plot.sig_clicked.connect(self.get_item)
 
     def do_plot(self, vum, data):
         self.save_camera_position()
