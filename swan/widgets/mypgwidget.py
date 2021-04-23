@@ -185,7 +185,6 @@ class PyQtWidget3d(QtWidgets.QWidget):
 
 
 class MyScatterPlotItem(gl.GLScatterPlotItem, QtWidgets.QGraphicsItem):
-    sig_clicked = QtCore.pyqtSignal(object)
 
     def __init__(self, **kwargs):
         gl.GLScatterPlotItem.__init__(self, **kwargs)
