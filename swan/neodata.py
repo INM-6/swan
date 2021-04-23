@@ -73,7 +73,7 @@ class NeoData(QObject):
         self.blocks = []
         self.total_units_per_block = []
         self.rgios = []
-        self._wave_length = 0.
+        self._wave_length = 0
         self.segments = []
         self.units = []
         self.events = []
@@ -163,11 +163,14 @@ class NeoData(QObject):
         self.set_events_and_labels()
         self.total_units_per_block = nums
 
-        try:
-            self._wave_length = self.blocks[0].groups[0].spiketrains[0].waveforms.shape[-1]
-        except IndexError:
-            self._wave_length = 0
-        # TODO: Loop over all sessions to find the first session which has a unit with waveforms
+        waveform_sizes = []
+        for block in blocks:
+            for unit in block.groups:
+                waveform_sizes.append(unit.spiketrains[0].waveforms.shape[-1])
+
+        assert np.unique(waveform_sizes).size == 1, "spike_widths across blocks must be equal"
+
+        self._wave_length = np.unique(waveform_sizes)[0]
 
         try:
             self.sampling_rate = self.blocks[0].annotations["sampling_rate"]
