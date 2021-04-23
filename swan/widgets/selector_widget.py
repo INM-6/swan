@@ -53,8 +53,8 @@ class SelectorWidget(QtWidgets.QWidget):
         self._dirty_items = []
         self.saved_channels = []
         self._sel = None
-        self.lastchannel = 1
-        self.currentchannel = 1
+        self.lastchannel = 0
+        self.currentchannel = 0
 
         self.autoFillBackground()
 
@@ -115,7 +115,7 @@ class SelectorWidget(QtWidgets.QWidget):
         else:
             j = 0
             for i in range(9, -1, -1):
-                channels = range(1+j*10, 11+j*10)
+                channels = range(j*10, 10+j*10)
                 items = [s for s in self._items if s.pos[0] == i]
                 for k in range(10):
                     items[k].text = str(channels[k])

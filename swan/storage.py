@@ -118,8 +118,8 @@ class MyStorage(Storage, QtCore.QObject):
         self._loading = False
         # }
 
-        self.store("channel", 1)
-        self.store("lastchannel", 1)
+        self.store("channel", 0)
+        self.store("lastchannel", 0)
 
     def set_cache_dir(self, cache_dir):
         """
