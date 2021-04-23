@@ -23,7 +23,7 @@ class MyGLwidget(gl.GLViewWidget):
 
         gl.GLViewWidget.__init__(self, parent=app)
         self.clickable = False
-        self._mouse_click_pos = []
+        self._mouse_click_pos = QtCore.QPoint()
         self.means = []
         self.candidates = []
 
