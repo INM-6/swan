@@ -72,8 +72,8 @@ class PgWidgetPCA(PyQtWidget3d):
                 dom_session = []
 
                 for unit_index in range(len(active[dom])):
-                    runit = vum.get_realunit(dom, unit_index, data)
                     if active[dom][unit_index]:
+                        runit = vum.get_realunit(dom, unit_index, data)
                         dom_session.append(data.get_data("all", runit))
 
                 m_dom_session, lv_dom_session = self.merge_session(dom_session)
@@ -88,8 +88,8 @@ class PgWidgetPCA(PyQtWidget3d):
                             if session_index != dom:
                                 session = []
                                 for unit_index in range(len(active[session_index])):
-                                    runit = vum.get_realunit(session_index, unit_index, data)
                                     if active[session_index][unit_index]:
+                                        runit = vum.get_realunit(session_index, unit_index, data)
                                         session.append(data.get_data("all", runit))
 
                                 merged_session, len_vec = self.merge_session(session)
