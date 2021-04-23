@@ -73,7 +73,7 @@ class NeoData(QObject):
         self.blocks = []
         self.total_units_per_block = []
         self.rgios = []
-        self._wave_length = 0.
+        self._wave_length = 0
         self.segments = []
         self.units = []
         self.events = []
@@ -181,6 +181,8 @@ class NeoData(QObject):
             self.sampling_rate = self.sampling_rate.rescale(pq.Hz)
         except ValueError:
             self.sampling_rate = self.sampling_rate * pq.Hz
+
+        self.current_channel = channel
 
     def get_data(self, layer, unit, **kwargs):
         """
