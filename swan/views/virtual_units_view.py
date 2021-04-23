@@ -37,6 +37,7 @@ class VirtualUnitsView(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.pg_canvas = pg.PlotWidget()
+        self.pg_canvas.getViewBox().invertY(True)
         self.details = QtWidgets.QWidget()
 
         details_layout = QtWidgets.QHBoxLayout()
@@ -166,14 +167,14 @@ class VirtualUnitsView(QtWidgets.QWidget):
 
         for channel, channel_stop in zip(channels, channel_stops):
             line = pg.InfiniteLine(
-                pos=channel_stop,
+                pos=channel_stop + 0.5,
                 angle=0,
                 pen=pg.fn.mkPen(color='w'),
                 label=f"Channel {channel}",
                 labelOpts={
                     "movable": True,
                     "position": 0.9,
-                    "anchors": [(0.5, 1), (0.5, 1)]
+                    "anchors": [(0.5, 0), (0.5, 0)]
                 }
             )
             self.pg_canvas.addItem(line)
@@ -313,8 +314,8 @@ class SwanColorMeshItem(pg.GraphicsObject):
         # User only specified z
         elif len(args) == 1:
             # If x and y is None, the polygons will be displaced on a grid
-            x = np.arange(0, args[0].shape[0] + 1, 1)
-            y = np.arange(0, args[0].shape[1] + 1, 1)
+            x = np.arange(0, args[0].shape[0] + 1, 1) + 0.5  # +0.5 to align the polygons with the ticklabels in 1-order
+            y = np.arange(0, args[0].shape[1] + 1, 1) + 0.5  # +0.5 to align the polygons with the ticklabels in 1-order
             self.x, self.y = np.meshgrid(x, y, indexing='ij')
             self.z = args[0]
 
