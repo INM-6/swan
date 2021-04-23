@@ -108,24 +108,20 @@ class NeoData(QObject):
 
         # loading the blocks
         for i, f in enumerate(files):
-            name = join(self.cdir, split(f)[1] + "_" + str(channel) + ".pkl")
+            # name = join(self.cdir, split(f)[1] + "_" + str(channel) + ".pkl")
+            #
+            # if exists(name):
+            #     # load from cache
+            #     pIO = PickleIO(name)
+            #     block = pIO.read_block()
+            # else:
 
-            if exists(name):
-                # load from cache
-                pIO = PickleIO(name)
-                block = pIO.read_block()
-            else:
-
-                session = get_io(f)
-                block = session.read_block()
-
-                del session
-
-                # caching
-                # pIO = PickleIO(name)
-                # pIO.write_block(block)
-
+            session = get_io(f)
+            block = session.read_block()
             blocks.append(block)
+
+            del session
+
             # emits a signal with the current progress
             # after loading a block
             self.progress.emit(count + step * (i + 1))
