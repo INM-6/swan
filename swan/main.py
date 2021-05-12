@@ -35,10 +35,6 @@ from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
 
 
-from probeinterface import Probe##, get_probe
-from probeinterface.plotting import plot_probe
-
-
 
 
 class MemoryTask(QtWidgets.QProgressBar):
