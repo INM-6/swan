@@ -16,6 +16,8 @@ Look at :mod:`src.run` for more information.
 from os.path import basename, split, join, exists
 import csv
 import webbrowser as web
+
+from probeinterface import read_prb
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import os
 import pickle as pkl
@@ -25,15 +27,12 @@ import psutil
 # swan-specific imports
 from swan import about, title
 from swan.gui.main_ui import MainUI
+from swan.widgets import probe_widget
 from swan.widgets.file_dialog import File_Dialog
 from swan.widgets.preferences_dialog import Preferences_Dialog
 from swan.storage import MyStorage
 from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
-
-
-from probeinterface import Probe##, get_probe
-from probeinterface.plotting import plot_probe
 
 
 
@@ -287,9 +286,10 @@ class Main(QtWidgets.QMainWindow):
                                                                    caption="Load probe file (test option)",
                                                                    directory=self._prodir,
                                                                    options=dialog_options,
-                                                                   filter='.prb')       ##only .prb files can be loaded
+                                                                   #filter='.prb'
+                                                                   )
         try:
-            self.load_probe(filename)
+            self.ui.probe_view.update(os.path.abspath(filename))
         except ValueError:
             QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded! (test option)")
 

@@ -1,30 +1,51 @@
+import numpy
 from PyQt5 import QtWidgets, QtCore
-from probeinterface import get_probe
+from probeinterface import get_probe, Probe, read_prb, read_probeinterface
 from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
-import sys  # We need sys so that we can pass argv to QApplication
+import sys
 import os
 
 class ProbeWidget(QtWidgets.QWidget):
 
     doChannel = QtCore.pyqtSignal(int, int)
 
-
     def __init__(self, *args, **kwargs):
         super(ProbeWidget, self).__init__(*args, **kwargs)
+
+        #self.standardCoords = []
+
         layout=QtWidgets.QGridLayout()
 
-        manufacturer = 'neuronexus'
-        probe_name = 'A1x32-Poly3-10mm-50-177'
-        probe = get_probe(manufacturer, probe_name)
+        standardCoordsTmp = []
+        for i in range(1, 11):
+            for j in range(1, 11):
+                standardCoordsTmp.append((i, j))
+        self.standardCoords = numpy.array(standardCoordsTmp)
 
         self.graphWidget = pg.PlotWidget(parent=self)
-        #self.setCentralWidget(self.graphWidget)
         layout.addWidget(self.graphWidget)
         self.setLayout(layout)
 
         # plot data: x, y values
-        self.graphWidget.plot(probe.contact_positions, pen=None, symbol='o', symbolSize=10)
+        self.graphWidget.hideAxis('left')
+        self.graphWidget.hideAxis('bottom')
+        self.graphWidget.plot(self.standardCoords, pen=None, symbol='o', symbolSize=10, clickable=True)
+
+
+
+    def update(self, filename):
+        if filename.endswith('prb'):
+            probe = read_prb(filename)
+            self.graphWidget.clear()
+            self.graphWidget.plot(probe.probes[0].contact_positions, pen=None, symbol='o', symbolSize=10)
+        elif filename.endswith('json'):
+            print('json')
+            probe = read_probeinterface(filename)
+            self.graphWidget.clear()
+            self.graphWidget.plot(probe.probes[0].contact_positions, pen=None, symbol='o', symbolSize=10)
+        else: raise ValueError
+
 
     def make_grid(self, rows=10, cols=10):
         """
