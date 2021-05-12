@@ -170,6 +170,10 @@ class MainUI(object):
         self.action_load_connector_map = QtWidgets.QAction(main_application)
         self.action_load_connector_map.setObjectName(_from_utf_8("action_load_connector_map"))
         self.action_zoom_in = QtWidgets.QAction(main_application)
+
+        self.action_load_probe = QtWidgets.QAction(main_application)
+        self.action_load_probe.setObjectName(_from_utf_8("action_load_probe"))
+
         self.action_zoom_in.setObjectName(_from_utf_8("action_zoom_in"))
         self.action_zoom_out = QtWidgets.QAction(main_application)
         self.action_zoom_out.setObjectName(_from_utf_8("action_zoom_out"))
@@ -206,6 +210,9 @@ class MainUI(object):
         self.menu_File.addAction(self.action_save_as)
         self.menu_File.addSeparator()
         self.menu_File.addAction(self.action_load_connector_map)
+
+        self.menu_File.addAction(self.action_load_probe)
+
         self.menu_File.addAction(self.action_export_to_csv)
         self.menu_File.addAction(self.action_export_to_odml)
         self.menu_File.addSeparator()
@@ -302,6 +309,10 @@ class MainUI(object):
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))
         self.action_save_as.setToolTip(_translate("main_application", "Save project to a new file", None))
         self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))
+
+        self.action_load_probe.setText(_translate("main_application", "Load Probe (work in progress)", None))
+        self.action_load_probe.setShortcut(_translate("main_application", "Ctrl+P", None))
+
         self.action_zoom_in.setText(_translate("main_application", "Zoom in", None))
         self.action_zoom_in.setToolTip(_translate("main_application", "Zoom overview in", None))
         self.action_zoom_in.setShortcut(_translate("main_application", "Ctrl++", None))
