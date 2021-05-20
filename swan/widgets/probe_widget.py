@@ -14,7 +14,6 @@ class ProbeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(ProbeWidget, self).__init__(*args, **kwargs)
 
-        #self.standardCoords = []
 
         layout=QtWidgets.QGridLayout()
 
@@ -127,6 +126,8 @@ class ProbeWidget(QtWidgets.QWidget):
         self.currentchannel = channel
         lastchannel = self.lastchannel
         self.doChannel.emit(channel, lastchannel)
+
+
 
 
 
