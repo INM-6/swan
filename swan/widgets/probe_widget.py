@@ -1,4 +1,5 @@
 import numpy
+import numpy as np
 from PyQt5 import QtWidgets, QtCore
 from probeinterface import get_probe, Probe, read_prb, read_probeinterface
 from pyqtgraph import PlotWidget, plot
@@ -13,38 +14,52 @@ class ProbeWidget(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(ProbeWidget, self).__init__(*args, **kwargs)
 
-        #self.standardCoords = []
 
         layout=QtWidgets.QGridLayout()
 
-        standardCoordsTmp = []
+
+        self.chosenCoordsArr = []
+        self.chosenCoordsLi = []
+        self.standardCoordsLi = []
         for i in range(1, 11):
             for j in range(1, 11):
-                standardCoordsTmp.append((i, j))
-        self.standardCoords = numpy.array(standardCoordsTmp)
+                self.standardCoordsLi.append((i, j))
+        self.standardCoordsArr = numpy.array(self.standardCoordsLi)
 
         self.graphWidget = pg.PlotWidget(parent=self)
         layout.addWidget(self.graphWidget)
         self.setLayout(layout)
 
         # plot data: x, y values
+        self.plot_points(self.standardCoordsArr)
         self.graphWidget.hideAxis('left')
         self.graphWidget.hideAxis('bottom')
-        self.graphWidget.plot(self.standardCoords, pen=None, symbol='o', symbolSize=10, clickable=True)
 
+    def plot_points(self, Coords):
+        scatterplot = pg.ScatterPlotItem(pos = Coords)
+        scatterplot.sigClicked.connect(self.points_clicked)
+        self.graphWidget.addItem(scatterplot)
 
+    def points_clicked(self, item, points, ev):
+        point = points[0]
+        x, y = point.pos().x(), point.pos().y()
+        if [x, y] in self.standardCoordsArr:
+            print(self.standardCoordsLi.index((x, y)))
+        elif [x, y] in self.chosenCoordsArr:
+            print(self.chosenCoordsLi.index([x, y]))
+        else: raise IndexError
+        ev.accept()
 
     def update(self, filename):
         if filename.endswith('prb'):
             probe = read_prb(filename)
-            self.graphWidget.clear()
-            self.graphWidget.plot(probe.probes[0].contact_positions, pen=None, symbol='o', symbolSize=10)
         elif filename.endswith('json'):
-            print('json')
             probe = read_probeinterface(filename)
-            self.graphWidget.clear()
-            self.graphWidget.plot(probe.probes[0].contact_positions, pen=None, symbol='o', symbolSize=10)
         else: raise ValueError
+        self.graphWidget.clear()
+        self.chosenCoordsLi = probe.probes[0].contact_positions.tolist()
+        self.chosenCoordsArr = probe.probes[0].contact_positions
+        self.plot_points(self.chosenCoordsArr)
 
 
     def make_grid(self, rows=10, cols=10):
@@ -106,6 +121,8 @@ class ProbeWidget(QtWidgets.QWidget):
 
         """
         pass
+
+
 
     def select_only(self, channel):
         """
