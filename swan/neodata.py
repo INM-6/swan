@@ -151,8 +151,14 @@ class NeoData(QObject):
         self.set_events_and_labels()
         self.total_units_per_block = nums
 
-        self._wave_length = len(self.blocks[0].channel_indexes[0].units[0].spiketrains[0].waveforms[0].magnitude[0])
-        # TODO: Loop over all sessions to find the first session which has a unit with waveforms
+        waveform_sizes = []
+        for block in self.units:
+            for unit in block:
+                waveform_sizes.append(unit.spiketrains[0].waveforms.shape[-1])
+
+        if not np.unique(waveform_sizes).size == 1:
+            raise ValueError("Spike waveform widths across datasets must be the same!")
+        self._wave_length = np.unique(waveform_sizes)[0]
 
         self.sampling_rate = self.blocks[0].channel_indexes[0].units[0].spiketrains[0].sampling_rate
 
