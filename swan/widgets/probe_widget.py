@@ -13,8 +13,6 @@ class ProbeWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super(ProbeWidget, self).__init__(*args, **kwargs)
-
-
         layout=QtWidgets.QGridLayout()
 
         self.coordinates = []

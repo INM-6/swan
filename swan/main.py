@@ -968,17 +968,6 @@ class Main(QtWidgets.QMainWindow):
             except Exception as e:
                 print(e)
 
-    def load_probe(self, filename):
-
-        """
-        Loads the layout of the electrodes that were used to measure the activity
-
-        Work in progress
-        """
-
-
-        print('test passed')
-
     def load_preferences(self):
         """
         Loads the preferences from the preferences file.
