@@ -289,7 +289,7 @@ class Main(QtWidgets.QMainWindow):
                                                                    #filter='.prb'
                                                                    )
         try:
-            self.ui.probe_view.update(os.path.abspath(filename))
+            self.ui.probe_view.load_geometry(os.path.abspath(filename))
         except ValueError:
             QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded! (test option)")
 
@@ -967,17 +967,6 @@ class Main(QtWidgets.QMainWindow):
                 self.selector.select_only(self._my_storage.get_channel())
             except Exception as e:
                 print(e)
-
-    def load_probe(self, filename):
-
-        """
-        Loads the layout of the electrodes that were used to measure the activity
-
-        Work in progress
-        """
-
-
-        print('test passed')
 
     def load_preferences(self):
         """
