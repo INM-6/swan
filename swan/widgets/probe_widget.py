@@ -1,11 +1,7 @@
 import numpy
-import numpy as np
 from PyQt5 import QtWidgets, QtCore
-from probeinterface import get_probe, Probe, read_prb, read_probeinterface
-from pyqtgraph import PlotWidget, plot
+from probeinterface import read_prb, read_probeinterface
 import pyqtgraph as pg
-import sys
-import os
 
 class ProbeWidget(QtWidgets.QWidget):
 
@@ -38,13 +34,13 @@ class ProbeWidget(QtWidgets.QWidget):
         scatterplot.sigClicked.connect(self.points_clicked)
         self.graphWidget.addItem(scatterplot)
 
-    def points_clicked(self, item,  points, ev):
+    def points_clicked(self, item, points, ev):
         point = points[0]
         x, y = point.pos().x(), point.pos().y()
         try:
             print(self.coordinates.index([x, y]))
             self.dirty_channels.append(self.coordinates.index([x, y]))
-            self.select_channel(self, self.coordinates.index([x, y]))
+            self.select_channel(self.coordinates.index([x, y]))
         except ValueError:
             print('couldnt be found')
         ev.accept()
@@ -107,7 +103,7 @@ class ProbeWidget(QtWidgets.QWidget):
         """
         pass
 
-    def select_channel(self, item, channel):
+    def select_channel(self, channel):
         """
         Selects a channel and emits the doChannel signal
         which causes the program to change the channel.

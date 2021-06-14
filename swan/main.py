@@ -172,7 +172,7 @@ class Main(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
         # connect channel selection
-        self.ui.tools.selector.doChannel.connect(self.do_channel)
+        self.ui.probe_view.doChannel.connect(self.do_channel)
         self.ui.plotGrid.child.indicator_toggle.connect(self.plot_all)
         self.ui.plotGrid.child.visibility_toggle.connect(self._my_storage.changeVisibility)
 
