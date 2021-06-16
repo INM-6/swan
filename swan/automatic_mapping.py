@@ -655,24 +655,24 @@ def calculate_mapping_bu(virtual_unit_map, data, storage):
         extend = 0
         exclude = []
         for j, val in enumerate(storage.get_map().mapping[i + 1]):
-            print("Executing this in session {}".format(i))
-            print("J: {}, Val: {}".format(j, val))
+            # print("Executing this in session {}".format(i))
+            # print("J: {}, Val: {}".format(j, val))
 
             if val != 0:
                 print(distances[j])
 
                 min_arg = np.argmin(distances[j])
-                print("Min Arg: {}".format(min_arg))
+                # print("Min Arg: {}".format(min_arg))
 
                 if min_arg == j:
                     pass
                 elif distances[j, min_arg] < threshold and (j, min_arg) not in exclude:
-                    print("Swapping {} and {}".format(j, min_arg))
+                    # print("Swapping {} and {}".format(j, min_arg))
                     virtual_unit_map.swap(i + 1, j, min_arg)
                     exclude.append((j, min_arg))
                     exclude.append((min_arg, j))
                 elif distances[j, min_arg] >= threshold:
-                    print("Swapping {} and {}".format(j, data.total_units_per_block[i + 1] + extend))
+                    # print("Swapping {} and {}".format(j, data.total_units_per_block[i + 1] + extend))
                     virtual_unit_map.swap(i + 1, j, data.total_units_per_block[i + 1] + extend)
                     extend += 1
                     print(extend)
@@ -726,15 +726,15 @@ def swan_implementation(virtual_unit_map, data, storage):
     # Initialize an array shaped like "mapping" and set all values to np.nan
     history = np.zeros_like(mapping, dtype=np.float)
     history[history == 0.0] = None
-    print("Initial Mapping: {}".format(mapping))
+    # print("Initial Mapping: {}".format(mapping))
 
     # Loop over all columns/sessions except the last one
     for i in range(mapping.shape[1] - 1):
         # Loop over all rows/units
-        print("\nFirst loop: {}".format(i))
+        # print("\nFirst loop: {}".format(i))
         for j in range(mapping.shape[0]):
             # ignore zeros in the map (correspond to non-existent units)
-            print("\tSecond Loop: {}".format(j))
+            # print("\tSecond Loop: {}".format(j))
             if mapping[j][i] > 0:  # to avoid errors in float comparison
                 # Choose (j, i)th unit as the actor and obtain it's mean waveform
                 runit_actor = virtual_unit_map.get_realunit(i, j, data)
@@ -748,11 +748,11 @@ def swan_implementation(virtual_unit_map, data, storage):
                 # Loop over all columns/sessions again
                 for k in range(mapping.shape[1]):
                     # Loop over all rows/units again
-                    print("\t\tThird Loop: {}".format(k))
+                    # print("\t\tThird Loop: {}".format(k))
                     for l in range(mapping.shape[0]):
                         if mapping[l][k] > 0:
                             # Choose (l, k)th units as the support and obtain it's mean waveform
-                            print("\t\t\tFourth Loop {}\n".format(l))
+                            # print("\t\t\tFourth Loop {}\n".format(l))
                             runit_support = virtual_unit_map.get_realunit(k, l, data)
                             support_wave = data.get_data("average", runit_support)
                             support_rp = data.get_data("rate profile", runit_support)
@@ -799,7 +799,7 @@ def swan_implementation(virtual_unit_map, data, storage):
                 for k in loop_range:
                     # Find the argument of the minimum in the kth column
                     min_arg = np.argmin(distances[:, k])
-                    print("i: {}, j: {}, k: {}, min_arg: {}\n".format(i, j, k, min_arg))
+                    # print("i: {}, j: {}, k: {}, min_arg: {}\n".format(i, j, k, min_arg))
                     if min_arg == j:
                         # Do nothing if the minimum argument is the same as the row we're looping over
                         pass
@@ -849,7 +849,7 @@ def swan_implementation(virtual_unit_map, data, storage):
                         print(distances)
                         mapping = backup_mapping.copy()
     storage.change_map()
-    print("Total swaps: {}\n".format(swaps))
+    # print("Total swaps: {}\n".format(swaps))
 
 
 """
