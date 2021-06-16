@@ -1,3 +1,5 @@
+![swan-example](./doc/images/swan-logo.png)
+
 SWAN
 ====
 
