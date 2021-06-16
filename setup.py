@@ -1,5 +1,6 @@
 from setuptools import setup
 from sys import version_info
+from pathlib import Path
 
 
 def readme():
@@ -7,34 +8,21 @@ def readme():
         return f.read()
 
 
-if version_info < (3, 3):
-    raise RuntimeError("Required: Python version > 3.3")
+if version_info < (3, 9):
+    raise RuntimeError("Required: Python version > 3.9")
 
 with open("swan/version.py") as fp:
     d = {}
     exec(fp.read(), d)
     swan_version = d['version']
 
-install_requirements = [
-    'numpy',
-    'quantities',
-    'PyQt5',
-    'pyqtgraph',
-    'odml',
-    'elephant',
-    'pyopengl',
-    'matplotlib',
-    'scikit-learn',
-    'psutil',
-    'scipy',
-    'pandas',
-    'colorcet',
-]
+install_requirements = Path("./requirements.txt").read_text()
 
 setup(
-    name='swan',
+    name='python-swan',
     version=swan_version,
     packages=['swan',
+              'swan.app',
               'swan.gui',
               'swan.resources',
               'swan.base',
@@ -52,6 +40,7 @@ setup(
     description='Python based tool for tracking single units from spike sorted data across several '
                 'electrophysiological recording sessions.',
     long_description=readme(),
+    long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': ['swan = swan.app.start:launch']
     },
