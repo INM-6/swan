@@ -22,6 +22,7 @@ setup(
     name='python-swan',
     version=swan_version,
     packages=['swan',
+              'swan.app',
               'swan.gui',
               'swan.resources',
               'swan.base',
@@ -39,6 +40,7 @@ setup(
     description='Python based tool for tracking single units from spike sorted data across several '
                 'electrophysiological recording sessions.',
     long_description=readme(),
+    long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': ['swan = swan.app.start:launch']
     },
