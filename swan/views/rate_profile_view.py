@@ -420,9 +420,9 @@ class PgWidgetRateProfile(PyQtWidget2d):
                         session, global_unit_id = key
                         if len(profiles[key][0]) > 0 and len(profiles[key][1]) > 0:
                             if pooled_profiles.get(global_unit_id, None) is None:
-                                pooled_profiles[global_unit_id] = profiles[key] + [self.datas[key][1]]  # set y-values for gid
+                                pooled_profiles[global_unit_id] = profiles[key] + [self.datas[key][1]]
                             else:
-                                pooled_profiles[global_unit_id][1] += profiles[key][1]  # increment y-values for gid
+                                pooled_profiles[global_unit_id][1] += profiles[key][1]
 
                     for key in pooled_profiles:
                         self.plot_profile(x=pooled_profiles[key][0], y=pooled_profiles[key][1],
