@@ -378,36 +378,35 @@ class PgWidgetRateProfile(PyQtWidget2d):
 
             self.populate_event_list()
 
-            if layer == "individual":
-                clickable = True
-                for session in range(len(active)):
-                    for global_unit_id in range(len(active[session])):
-                        if active[session][global_unit_id]:
-                            unit = vum.get_realunit(session, global_unit_id, data)
-                            spiketrain = data.get_data("spiketrain", unit)
-                            col = vum.get_colour(global_unit_id)
-                            self.datas[(session, global_unit_id)] = [spiketrain, col, clickable]
+            for session in range(len(active)):
+                for global_unit_id in range(len(active[session])):
+                    if active[session][global_unit_id]:
+                        unit = vum.get_realunit(session, global_unit_id, data)
+                        spiketrain = data.get_data("spiketrain", unit)
+                        col = vum.get_colour(global_unit_id)
+                        self.datas[(session, global_unit_id)] = [spiketrain, col, True]
 
-                if self.trigger_event in self.events.keys():
-                    paramaters = {
-                        'trigger_event': self.trigger_event,
-                        'bcm': self.border_correction_multiplier,
-                        'kernel_width': self.kernel_width,
-                        't_pre': self.time_pre,
-                        't_post': self.time_post
-                    }
-                    profiles = dict()
+            if self.trigger_event in self.events.keys():
+                paramaters = {
+                    'trigger_event': self.trigger_event,
+                    'bcm': self.border_correction_multiplier,
+                    'kernel_width': self.kernel_width,
+                    't_pre': self.time_pre,
+                    't_post': self.time_post
+                }
+                profiles = dict()
 
-                    worker = RateProfileWorker(self.datas, profiles, self.events, paramaters, self.compute_psth)
-                    worker.start()
-                    while worker.isRunning():
-                        self._processing = worker.isRunning()
-                        self.rate_profile_settings.errorLabel.setText('Processing...')
-                        QtWidgets.QApplication.processEvents()
+                worker = RateProfileWorker(self.datas, profiles, self.events, paramaters, self.compute_psth)
+                worker.start()
+                while worker.isRunning():
                     self._processing = worker.isRunning()
-                    self.rate_profile_settings.errorLabel.setText('')
+                    self.rate_profile_settings.errorLabel.setText('Processing...')
+                    QtWidgets.QApplication.processEvents()
+                self._processing = worker.isRunning()
+                self.rate_profile_settings.errorLabel.setText('')
 
-                    self.clear_()
+                self.clear_()
+                if layer == "individual":
                     for key in profiles:
                         self.plot_profile(x=profiles[key][0], y=profiles[key][1],
                                           color=self.datas[key][1],
@@ -415,18 +414,35 @@ class PgWidgetRateProfile(PyQtWidget2d):
                                           session=key[0],
                                           clickable=self.datas[key][2])
 
-                    self.create_vertical_line(xval=0)
-                    self.set_x_label("Time", "s")
-                    self.set_y_label("Frequency", "Hz")
-                    self.set_plot_title("Rate Profiles around trigger {}".format(self.trigger_event))
-                    self.connect_plots()
+                elif layer == "pooled":
+                    pooled_profiles = {}
+                    for key in profiles:
+                        session, global_unit_id = key
+                        if len(profiles[key][0]) > 0 and len(profiles[key][1]) > 0:
+                            if pooled_profiles.get(global_unit_id, None) is None:
+                                pooled_profiles[global_unit_id] = profiles[key] + [self.datas[key][1]]
+                            else:
+                                pooled_profiles[global_unit_id][1] += profiles[key][1]
 
-            elif layer == "pooled":
-                raise ValueError("Layer not supported.")
+                    for key in pooled_profiles:
+                        self.plot_profile(x=pooled_profiles[key][0], y=pooled_profiles[key][1],
+                                          color=pooled_profiles[key][2],
+                                          unit_id=key,
+                                          session=-1,
+                                          clickable=False)
+
+                self.create_vertical_line(xval=0)
+                self.set_x_label("Time", "s")
+                self.set_y_label("Frequency", "Hz")
+                self.set_plot_title("Rate Profiles around trigger {}".format(self.trigger_event))
+                self.connect_plots()
+
         else:
             self.clear_()
 
     def update_plot(self):
+        layer = self.toolbar.get_checked_layers()[0]
+
         paramaters = {
             'trigger_event': self.trigger_event,
             'bcm': self.border_correction_multiplier,
@@ -446,12 +462,31 @@ class PgWidgetRateProfile(PyQtWidget2d):
         self.rate_profile_settings.errorLabel.setText('')
 
         self.clear_()
-        for key in profiles:
-            self.plot_profile(x=profiles[key][0], y=profiles[key][1],
-                              color=self.datas[key][1],
-                              unit_id=key[1],
-                              session=key[0],
-                              clickable=self.datas[key][2])
+        if layer == "individual":
+            for key in profiles:
+                self.plot_profile(x=profiles[key][0], y=profiles[key][1],
+                                  color=self.datas[key][1],
+                                  unit_id=key[1],
+                                  session=key[0],
+                                  clickable=self.datas[key][2])
+
+        elif layer == "pooled":
+            pooled_profiles = {}
+            for key in profiles:
+                session, global_unit_id = key
+                if len(profiles[key][0]) > 0 and len(profiles[key][1]) > 0:
+                    if pooled_profiles.get(global_unit_id, None) is None:
+                        pooled_profiles[global_unit_id] = profiles[key] + [self.datas[key][1]]  # set y-values for gid
+                    else:
+                        pooled_profiles[global_unit_id][1] += profiles[key][1]  # increment y-values for gid
+
+            for key in pooled_profiles:
+                self.plot_profile(x=pooled_profiles[key][0], y=pooled_profiles[key][1],
+                                  color=pooled_profiles[key][2],
+                                  unit_id=key,
+                                  session=-1,
+                                  clickable=False)
+
         self.create_vertical_line(xval=0)
         self.set_x_label("Time", "s")
         self.set_y_label("Frequency", "Hz")
