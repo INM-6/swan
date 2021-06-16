@@ -19,7 +19,7 @@ with open("swan/version.py") as fp:
 install_requirements = Path("./requirements.txt").read_text()
 
 setup(
-    name='swan',
+    name='python-swan',
     version=swan_version,
     packages=['swan',
               'swan.gui',
