@@ -49,28 +49,19 @@ We recommend installing SWAN in a conda or virtualenv environment. The installat
 
 ### Using Conda
 
-```shell script
+```shell
 conda create -n swan python=3
 conda activate swan
-pip install -e git+https://github.com/INM-6/swan.git#egg=swan
+pip install python-swan
 ```
 
 ### Using Python Virtualenv
 
-```shell script
+```shell
 virtualenv venv
 source activate venv/bin/activate
-pip install -e git+https://github.com/INM-6/swan.git#egg=swan
+pip install python-swan
 ```
-
-### Custom source location
-
-To install SWAN from source stored at a custom location on the system, use the following command in your desired conda or virtualenv environment.
-
-```shell script
-pip install -e /path/to/souce
-```
-
 
 ## Getting Started
 
