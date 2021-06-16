@@ -8,8 +8,8 @@ def readme():
         return f.read()
 
 
-if version_info < (3, 6):
-    raise RuntimeError("Required: Python version > 3.6")
+if version_info < (3, 9):
+    raise RuntimeError("Required: Python version > 3.9")
 
 with open("swan/version.py") as fp:
     d = {}
