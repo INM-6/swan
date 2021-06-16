@@ -1,5 +1,6 @@
 from setuptools import setup
 from sys import version_info
+from pathlib import Path
 
 
 def readme():
@@ -15,21 +16,7 @@ with open("swan/version.py") as fp:
     exec(fp.read(), d)
     swan_version = d['version']
 
-install_requirements = [
-    'numpy',
-    'quantities',
-    'PyQt5',
-    'pyqtgraph',
-    'odml',
-    'elephant',
-    'pyopengl',
-    'matplotlib',
-    'scikit-learn',
-    'psutil',
-    'scipy',
-    'pandas',
-    'colorcet',
-]
+install_requirements = Path("./requirements.txt").read_text()
 
 setup(
     name='swan',
