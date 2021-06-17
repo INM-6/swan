@@ -45,7 +45,7 @@ class ProbeWidget(QtWidgets.QWidget):
             print('couldnt be found')
         ev.accept()
 
-    def load_geometry(self, filename): #bsp load_geometry
+    def load_geometry(self, filename):
         if filename.endswith('prb'):
             probe = read_prb(filename)
         elif filename.endswith('json'):
@@ -120,10 +120,6 @@ class ProbeWidget(QtWidgets.QWidget):
         self.currentchannel = channel
         lastchannel = self.lastchannel
         self.doChannel.emit(channel, lastchannel)
-
-
-
-
 
 
     def select_only(self, channel):
