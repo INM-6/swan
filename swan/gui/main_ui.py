@@ -123,15 +123,15 @@ class MainUI(object):
 
         self.tools = PlotGridTools()
 
-        self.plotGridOptionsLayout = QtWidgets.QGridLayout()
-        self.plotGridOptionsLayout.setObjectName(_from_utf_8("PlotGridOptionsLayout"))
-
-        self.plotGridOptionsLayout.addWidget(self.tools)
-        self.plotGridOptions = CollapsibleWidget(parent=self.plotGrid, title="Options", animation_duration=400)
-        self.plotGridOptions.set_content_layout(self.plotGridOptionsLayout)
-
-        self.plotGrid.main_grid_layout.addWidget(self.plotGridOptions, 1, 0)
-        self.plotGrid.main_grid_layout.setRowStretch(0, 10)
+        # self.plotGridOptionsLayout = QtWidgets.QGridLayout()
+        # self.plotGridOptionsLayout.setObjectName(_from_utf_8("PlotGridOptionsLayout"))
+        #
+        # self.plotGridOptionsLayout.addWidget(self.tools)
+        # self.plotGridOptions = CollapsibleWidget(parent=self.plotGrid, title="Options", animation_duration=400)
+        # self.plotGridOptions.set_content_layout(self.plotGridOptionsLayout)
+        #
+        # self.plotGrid.main_grid_layout.addWidget(self.plotGridOptions, 1, 0)
+        # self.plotGrid.main_grid_layout.setRowStretch(0, 10)
 
         self.menu_bar = QtWidgets.QMenuBar(main_application)
         self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1159, 25))
@@ -167,8 +167,6 @@ class MainUI(object):
         self.action_recalculate_mapping.setObjectName(_from_utf_8("action_recalculate_mapping"))
         self.action_save_as = QtWidgets.QAction(main_application)
         self.action_save_as.setObjectName(_from_utf_8("action_save_as"))
-        self.action_load_connector_map = QtWidgets.QAction(main_application)
-        self.action_load_connector_map.setObjectName(_from_utf_8("action_load_connector_map"))
         self.action_zoom_in = QtWidgets.QAction(main_application)
 
         self.action_load_probe = QtWidgets.QAction(main_application)
@@ -209,7 +207,6 @@ class MainUI(object):
         self.menu_File.addAction(self.action_save_project)
         self.menu_File.addAction(self.action_save_as)
         self.menu_File.addSeparator()
-        self.menu_File.addAction(self.action_load_connector_map)
 
         self.menu_File.addAction(self.action_load_probe)
 
@@ -308,7 +305,6 @@ class MainUI(object):
                                                               None))
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))
         self.action_save_as.setToolTip(_translate("main_application", "Save project to a new file", None))
-        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))
 
         self.action_load_probe.setText(_translate("main_application", "Load Probe (work in progress)", None))
         self.action_load_probe.setShortcut(_translate("main_application", "Ctrl+P", None))

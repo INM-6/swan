@@ -18,12 +18,6 @@ class PlotGridTools(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
         
         self.layout = QtWidgets.QHBoxLayout()
-        
-        self.selector = SelectorWidget(self)
-
-        self.selector.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
-        
-        self.layout.addWidget(self.selector)
 
         self.layout.setContentsMargins(0, 0, 0, 0)
         
