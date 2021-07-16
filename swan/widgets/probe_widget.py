@@ -184,12 +184,10 @@ class ProbeWidget(QtWidgets.QWidget):
                 The channel id of the item.
 
         """
-
-        self.dirty_channels.append(channel)
-        self.brushes[channel] = pg.mkBrush(255, 0, 0, 255)
-        self.plot_points(numpy.array(self.coordinates), numpy.array(self.dirty_channels))
-        print(self.dirty_channels)
-        print(self.coordinates)
+        if channel not in self.dirty_channels:
+            self.dirty_channels.append(channel)
+            self.brushes[channel] = pg.mkBrush(255, 0, 0, 255)
+            self.plot_points(numpy.array(self.coordinates), numpy.array(self.dirty_channels))
 
     def reset_dirty(self):
         """
