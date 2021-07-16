@@ -1,3 +1,5 @@
+import math
+
 import numpy
 from PyQt5 import QtWidgets, QtCore
 from probeinterface import read_prb, read_probeinterface
@@ -15,22 +17,26 @@ class ProbeWidget(QtWidgets.QWidget):
         self.dirty_channels = []
         self.lastcannel = 1
         self.currentchannel = 1
+        self.brushes = []
 
-        for i in range(1, 11):
-            for j in range(1, 11):
+        for i in range(0, 10):
+            for j in range(0, 10):
                 self.coordinates.append([i, j])
+
+        for elem in self.coordinates:
+            self.brushes.append(pg.mkBrush(0, 255, 255, 255))
 
         self.graphWidget = pg.PlotWidget(parent=self)
         layout.addWidget(self.graphWidget)
         self.setLayout(layout)
 
         # plot data: x, y values
-        self.plot_points(numpy.array(self.coordinates))
+        self.plot_points(numpy.array(self.coordinates), numpy.array(self.dirty_channels))
         self.graphWidget.hideAxis('left')
         self.graphWidget.hideAxis('bottom')
 
-    def plot_points(self, coords):
-        scatterplot = pg.ScatterPlotItem(pos = coords)
+    def plot_points(self, coords, dirty):
+        scatterplot = pg.ScatterPlotItem(pos = coords, brush=self.brushes)
         scatterplot.sigClicked.connect(self.points_clicked)
         self.graphWidget.addItem(scatterplot)
 
@@ -38,8 +44,7 @@ class ProbeWidget(QtWidgets.QWidget):
         point = points[0]
         x, y = point.pos().x(), point.pos().y()
         try:
-            print(self.coordinates.index([x, y]))
-            self.dirty_channels.append(self.coordinates.index([x, y]))
+            #self.set_dirty(self.coordinates.index([x, y]))
             self.select_channel(self.coordinates.index([x, y]))
         except ValueError:
             print('couldnt be found')
@@ -55,7 +60,24 @@ class ProbeWidget(QtWidgets.QWidget):
         self.coordinates = probe.probes[0].contact_positions.tolist()
         self.chosenCoordsLi = probe.probes[0].contact_positions.tolist()
         self.chosenCoordsArr = probe.probes[0].contact_positions
-        self.plot_points(numpy.array(self.coordinates))
+        self.brushes.clear()
+        for elem in self.coordinates:
+            self.brushes.append(pg.mkBrush(0, 255, 255, 255))
+        self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
+
+    def reset_to_standard_grid(self):
+
+        coordCount = len(self.coordinates)
+        self.coordinates.clear()
+        self.brushes.clear()
+
+        for i in range(0, math.ceil(math.sqrt(coordCount))):
+            for j in range(0, math.ceil(math.sqrt(coordCount))):
+                self.coordinates.append([i, j])
+                self.brushes.append(pg.mkBrush(0, 255, 255, 255))
+        #print(self.coordinates)
+        self.graphWidget.clear()
+        self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
 
 
     def make_grid(self, rows=10, cols=10):
@@ -152,7 +174,7 @@ class ProbeWidget(QtWidgets.QWidget):
         """
         pass
 
-    def set_dirty(self, channel, dirty):
+    def set_dirty(self, channel):
         """
         Sets a item as dirty or not.
 
@@ -160,11 +182,14 @@ class ProbeWidget(QtWidgets.QWidget):
 
             *channel* (integer):
                 The channel id of the item.
-            *dirty* (boolean):
-                Whether or not the item is dirty.
 
         """
-        pass
+
+        self.dirty_channels.append(channel)
+        self.brushes[channel] = pg.mkBrush(255, 0, 0, 255)
+        self.plot_points(numpy.array(self.coordinates), numpy.array(self.dirty_channels))
+        print(self.dirty_channels)
+        print(self.coordinates)
 
     def reset_dirty(self):
         """

@@ -274,8 +274,6 @@ class Main(QtWidgets.QMainWindow):
 
         You have to choose a .prb project file which contains the formation of the electrodes.
 
-        NOT WORKING RIGHT NOW. WORK IN PROGRESS!
-
         """
 
         dialog_options = QtWidgets.QFileDialog.Options()
@@ -289,7 +287,20 @@ class Main(QtWidgets.QMainWindow):
         try:
             self.ui.probe_view.load_geometry(os.path.abspath(filename))
         except ValueError:
-            QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded! (test option)")
+            QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded!")
+
+    @QtCore.pyqtSlot(name="")
+    def on_action_reset_probe_triggered(self):
+        """
+        This method is call if you click on *File->Reset Probe Layout*.
+
+        Resets the probe view to the standard 10x10 grid.
+
+        WORK IN PROGRESS
+
+        """
+        print('reset probe layout: passed')
+        self.ui.probe_view.reset_to_standard_grid()
 
     @QtCore.pyqtSlot(name="")
     def on_action_load_project_triggered(self):
