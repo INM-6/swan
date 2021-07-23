@@ -16,6 +16,8 @@ Look at :mod:`src.run` for more information.
 from os.path import basename, split, join, exists
 import csv
 import webbrowser as web
+
+from probeinterface import read_prb
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 import os
 import pickle as pkl
@@ -25,11 +27,14 @@ import psutil
 # swan-specific imports
 from swan import about, title
 from swan.gui.main_ui import MainUI
+from swan.widgets import probe_widget
 from swan.widgets.file_dialog import File_Dialog
 from swan.widgets.preferences_dialog import Preferences_Dialog
 from swan.storage import MyStorage
 from swan.views.virtual_units_view import VirtualUnitsView
 from swan.export import Export
+
+
 
 
 class MemoryTask(QtWidgets.QProgressBar):
@@ -167,7 +172,7 @@ class Main(QtWidgets.QMainWindow):
         self.setWindowTitle(title)
 
         # connect channel selection
-        self.ui.tools.selector.doChannel.connect(self.do_channel)
+        self.ui.probe_view.doChannel.connect(self.do_channel)
         self.ui.plotGrid.child.indicator_toggle.connect(self.plot_all)
         self.ui.plotGrid.child.visibility_toggle.connect(self._my_storage.changeVisibility)
 
@@ -176,11 +181,10 @@ class Main(QtWidgets.QMainWindow):
 
         # shortcut reference
         self.plots = self.ui.plotGrid.child
-        self.selector = self.ui.tools.selector
         self.virtual_units_view = self.ui.virtual_units_view
 
         # connect channel loading
-        self.virtual_units_view.load.connect(self.load_channel)
+        #self.virtual_units_view.load.connect(self.load_channel)
 
         # store all views in one list for easy access
         self.views = [
@@ -220,6 +224,8 @@ class Main(QtWidgets.QMainWindow):
 
         self.showMaximized()
 
+
+
     @QtCore.pyqtSlot(name="")
     def on_action_new_project_triggered(self):
         """
@@ -257,10 +263,43 @@ class Main(QtWidgets.QMainWindow):
                     self.save_project()
                     self.update_project()
                     self.reset_dirty()
-                    self.selector.select_only(self._my_storage.get_channel())
                     self.set_status("Created new project successfully.")
                 else:
                     self.set_status("No files given. Nothing loaded.")
+
+    @QtCore.pyqtSlot(name="")
+    def on_action_load_probe_triggered(self):
+        """
+        This method is called if you click on *File->Load Probe*.
+
+        You have to choose a .prb project file which contains the formation of the electrodes.
+
+        """
+
+        dialog_options = QtWidgets.QFileDialog.Options()
+        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(parent=None,
+                                                                   caption="Load probe file (test option)",
+                                                                   directory=self._prodir,
+                                                                   options=dialog_options,
+                                                                   #filter='.prb'
+                                                                   )
+        try:
+            self.ui.probe_view.load_geometry(os.path.abspath(filename))
+        except ValueError:
+            QtWidgets.QMessageBox.critical(None, "Loading error", "The probe could not be loaded!")
+
+    @QtCore.pyqtSlot(name="")
+    def on_action_reset_probe_triggered(self):
+        """
+        This method is call if you click on *File->Reset Probe Layout*.
+
+        Resets the probe view to the standard 10x10 grid.
+
+        WORK IN PROGRESS
+
+        """
+        self.ui.probe_view.reset_to_standard_grid()
 
     @QtCore.pyqtSlot(name="")
     def on_action_load_project_triggered(self):
@@ -290,7 +329,6 @@ class Main(QtWidgets.QMainWindow):
                     self.update_project()
                     self.reset_dirty()
                     self.find_saved()
-                    self.selector.select_only(self._my_storage.get_channel())
                     self.set_status("Loaded project successfully.")
                 else:
                     self.set_status("No files given. Nothing loaded.")
@@ -331,27 +369,6 @@ class Main(QtWidgets.QMainWindow):
                 self._my_storage.save_project_as(filename)
                 self.update_project()
                 self.save_project()
-
-    @QtCore.pyqtSlot(name="")
-    def on_action_load_connector_map_triggered(self):
-        """
-        This method is called if you click on *File->Load connector map*.
-        
-        Loads a connector map given as a .csv file.
-        
-        Delegates the loading to :func:`load_connector_map`.
-        
-        """
-        dialog_options = QtWidgets.QFileDialog.Options()
-        dialog_options |= QtWidgets.QFileDialog.DontUseNativeDialog
-        filename, nonsense = QtWidgets.QFileDialog.getOpenFileName(parent=None,
-                                                                   caption="Load the connector file",
-                                                                   directory=self._prodir,
-                                                                   options=dialog_options)
-        try:
-            self.load_connector_map(filename)
-        except ValueError:
-            QtWidgets.QMessageBox.critical(None, "Loading error", "The connector map could not be loaded!")
 
     @QtCore.pyqtSlot(name="")
     def on_action_export_to_csv_triggered(self):
@@ -656,12 +673,6 @@ class Main(QtWidgets.QMainWindow):
 
             QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
 
-            # checking if the last channel's mapping was dirty
-            if self._current_dirty:
-                self.selector.set_dirty(lastchannel, True)
-
-            self._current_dirty = self.selector.get_item(channel).dirty
-
             # loading
             (n, m) = self._my_storage.load_channel(channel)
 
@@ -688,10 +699,6 @@ class Main(QtWidgets.QMainWindow):
             QtWidgets.QApplication.restoreOverrideCursor()
             self.memorytask.start_timer()
             return True
-
-        elif self._my_storage.is_loading():
-            self.selector.select_only(self._my_storage.get_channel())
-            return False
 
     def plot_all(self, i=None, j=None, visible=False):
         """
@@ -769,24 +776,24 @@ class Main(QtWidgets.QMainWindow):
         else:
             self.progress_bar.hide()
 
-    def load_channel(self, channel):
-        """
-        Loads a channel.
-
-        This method is connected to the load signal of the
-        :class:`src.VUnits` class.
-
-        **Arguments**
-
-            *channel* (integer):
-                The channel to load.
-
-        """
-        item = self.selector.get_item(channel)
-        if item != 0:
-            if item.selectable:
-                self.selector.select_channel(item, channel)
-                self.selector.select_only(channel)
+    # def load_channel(self, channel):  #this function is not used anymore and got geplaced in probe_widget.py
+    #     """
+    #     Loads a channel.
+    #
+    #     This method is connected to the load signal of the
+    #     :class:`src.VUnits` class.
+    #
+    #     **Arguments**
+    #
+    #         *channel* (integer):
+    #             The channel to load.
+    #
+    #     """
+    #     item = self.selector.get_item(channel)
+    #     if item != 0:
+    #         if item.selectable:
+    #             self.selector.select_channel(item, channel)
+    #             self.selector.select_only(channel)
 
     def dirty_project(self):
         """
@@ -854,25 +861,25 @@ class Main(QtWidgets.QMainWindow):
     def reset_dirty(self):
         """
         Resets the project to a not dirty state.
-        
+
         """
         self._current_dirty = False
         self._global_dirty = False
-        self.selector.reset_dirty()
+        #self.selector.reset_dirty()
 
     def find_saved(self):
         vum_all = self._my_storage.get_mappings()
-        self.selector.find_saved(vum_all)
+        #self.selector.find_saved(vum_all)
 
     def reset_current_dirty(self):
         """
         Resets the current channel.
 
         """
-        self._current_dirty = False
-        self.selector.set_dirty(self._my_storage.get_channel(), False)
-        if len(self.selector.get_dirty_channels()) == 0:
-            self._global_dirty = False
+        # self._current_dirty = False
+        # self.selector.set_dirty(self._my_storage.get_channel(), False)
+        # if len(self.selector.get_dirty_channels()) == 0:
+        #     self._global_dirty = False
 
     def check_dirs(self):
         """
@@ -895,47 +902,6 @@ class Main(QtWidgets.QMainWindow):
         # if not isdir(self._preferences["cacheDir"]):
         #     mkdir(self._preferences["cacheDir"])
         pathlib.Path(self._preferences["cacheDir"]).mkdir(parents=True, exist_ok=True)
-
-    def load_connector_map(self, filename):
-        """
-        Loads a connector map given as a .csv file.
-        
-        The file has to contain two columns. The first will be ignored but must exist
-        (e.g. the numbers 1-100) and the other one has to contain the mapped channel numbers.
-        Choose **,** as delimiter.
-        
-        **Arguments**
-        
-            *filename* (string):
-                The csv file to load.
-        
-            **Raises**: :class:`ValueError`
-                If the connector map could not be loaded.
-                
-        """
-        if filename:
-            delimiter = ','
-            try:
-                with open(filename, "r") as fn:
-                    channel_list = []
-                    reader = csv.reader(fn, delimiter=delimiter)
-                    for row in reader:
-                        # just read the second column
-                        channel_list.append(int(row[1]))
-                channels = self.selector.get_dirty_channels()
-
-                # overwrite existing mapping
-                self.selector.set_channels(channel_list)
-                self.selector.reset_sel()
-                self.selector.reset_dirty()
-
-                # the dirty channels and the selected one has to be set again
-                for channel in channels:
-                    self.selector.set_dirty(channel, True)
-
-                self.selector.select_only(self._my_storage.get_channel())
-            except Exception as e:
-                print(e)
 
     def load_preferences(self):
         """

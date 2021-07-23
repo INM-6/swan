@@ -16,7 +16,8 @@ from swan.widgets.plot_grid import MyPlotGrid
 from swan.views.isi_histograms_view import PgWidgetISI
 from swan.views.pca_3d_view import PgWidgetPCA
 from swan.views.rate_profile_view import PgWidgetRateProfile
-from swan.widgets.plot_grid_tools import PlotGridTools
+# from swan.widgets.plot_grid_tools import PlotGridTools
+from swan.widgets.probe_widget import ProbeWidget
 from swan.widgets.view_toolbar import CollapsibleWidget
 
 from swan.resources import icons
@@ -53,6 +54,17 @@ class MainUI(object):
                                       QtWidgets.QDockWidget.DockWidgetFloatable)
         self.plotGridDock.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
         self.plotGridDock.setWidget(self.plotGrid)
+
+        self.dock_probe_view = QtWidgets.QDockWidget("Probe View")
+        self.dock_probe_view.setObjectName(_from_utf_8("probeViewDock"))
+        self.dock_probe_view.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
+                                         QtWidgets.QDockWidget.DockWidgetFloatable)
+        self.dock_probe_view.setAllowedAreas(QtCore.Qt.AllDockWidgetAreas)
+
+        self.probe_view = ProbeWidget()
+        self.probe_view.setObjectName(_from_utf_8("probeView"))
+
+        self.dock_probe_view.setWidget(self.probe_view)
 
         self.dock_virtual_unit_view = QtWidgets.QDockWidget("Virtual Unit Mappings")
         self.dock_virtual_unit_view.setObjectName(_from_utf_8("virtualUnitsDock"))
@@ -109,17 +121,7 @@ class MainUI(object):
 
         self.dock_rate_profiles_view.setWidget(self.rate_profiles_view)
 
-        self.tools = PlotGridTools()
-
-        self.plotGridOptionsLayout = QtWidgets.QGridLayout()
-        self.plotGridOptionsLayout.setObjectName(_from_utf_8("PlotGridOptionsLayout"))
-
-        self.plotGridOptionsLayout.addWidget(self.tools)
-        self.plotGridOptions = CollapsibleWidget(parent=self.plotGrid, title="Options", animation_duration=400)
-        self.plotGridOptions.set_content_layout(self.plotGridOptionsLayout)
-
-        self.plotGrid.main_grid_layout.addWidget(self.plotGridOptions, 1, 0)
-        self.plotGrid.main_grid_layout.setRowStretch(0, 10)
+        # self.tools = PlotGridTools()
 
         self.menu_bar = QtWidgets.QMenuBar(main_application)
         self.menu_bar.setGeometry(QtCore.QRect(0, 0, 1159, 25))
@@ -155,9 +157,13 @@ class MainUI(object):
         self.action_recalculate_mapping.setObjectName(_from_utf_8("action_recalculate_mapping"))
         self.action_save_as = QtWidgets.QAction(main_application)
         self.action_save_as.setObjectName(_from_utf_8("action_save_as"))
-        self.action_load_connector_map = QtWidgets.QAction(main_application)
-        self.action_load_connector_map.setObjectName(_from_utf_8("action_load_connector_map"))
         self.action_zoom_in = QtWidgets.QAction(main_application)
+
+        self.action_load_probe = QtWidgets.QAction(main_application)
+        self.action_load_probe.setObjectName(_from_utf_8("action_load_probe"))
+        self.action_reset_probe = QtWidgets.QAction(main_application)
+        self.action_reset_probe.setObjectName(_from_utf_8("action_reset_probe"))
+
         self.action_zoom_in.setObjectName(_from_utf_8("action_zoom_in"))
         self.action_zoom_out = QtWidgets.QAction(main_application)
         self.action_zoom_out.setObjectName(_from_utf_8("action_zoom_out"))
@@ -193,7 +199,10 @@ class MainUI(object):
         self.menu_File.addAction(self.action_save_project)
         self.menu_File.addAction(self.action_save_as)
         self.menu_File.addSeparator()
-        self.menu_File.addAction(self.action_load_connector_map)
+
+        self.menu_File.addAction(self.action_load_probe)
+        self.menu_File.addAction(self.action_reset_probe)
+
         self.menu_File.addAction(self.action_export_to_csv)
         self.menu_File.addAction(self.action_export_to_odml)
         self.menu_File.addSeparator()
@@ -239,6 +248,7 @@ class MainUI(object):
         self.retranslate_ui(main_application)
 
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.plotGridDock, QtCore.Qt.Vertical)
+        main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_probe_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_virtual_unit_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_rate_profiles_view, QtCore.Qt.Vertical)
         main_application.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.dock_pca_3d_view, QtCore.Qt.Vertical)
@@ -283,11 +293,14 @@ class MainUI(object):
         self.action_collapse.setText(_translate("main_application", "Collapse", None))
         self.action_collapse.setToolTip(_translate("main_application", "Collapse selected unit row(s)", None))
         self.action_recalculate_mapping.setText(_translate("main_application", "Recalculate mapping...", None))
-        self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically",
-                                                              None))
+        self.action_recalculate_mapping.setToolTip(_translate("main_application", "Try to find a mapping automatically", None))
         self.action_save_as.setText(_translate("main_application", "Save project as...", None))
         self.action_save_as.setToolTip(_translate("main_application", "Save project to a new file", None))
-        self.action_load_connector_map.setText(_translate("main_application", "Load connector map...", None))
+
+        self.action_load_probe.setText(_translate("main_application", "Load Probe Layout", None))
+        self.action_load_probe.setShortcut(_translate("main_application", "Ctrl+P", None))
+        self.action_reset_probe.setText(_translate("main_application", "Reset Probe Layout", None))
+
         self.action_zoom_in.setText(_translate("main_application", "Zoom in", None))
         self.action_zoom_in.setToolTip(_translate("main_application", "Zoom overview in", None))
         self.action_zoom_in.setShortcut(_translate("main_application", "Ctrl++", None))
@@ -316,7 +329,7 @@ class MainUI(object):
     def load_icons(self):
         """
         Loads the icons.
-        
+
         """
         try:
             prefix = ":" + sep + "icons" + sep
@@ -358,3 +371,4 @@ class MainUI(object):
         except Exception as e:
             print("Icon Exception: {exception}".format(exception=e))
             pass
+
