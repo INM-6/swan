@@ -18,13 +18,16 @@ class ProbeWidget(QtWidgets.QWidget):
         self.lastcannel = 1
         self.currentchannel = 1
         self.brushes = []
+        self.blue_brush = pg.mkBrush(0, 0, 255, 255)
+        self.red_brush = pg.mkBrush(255, 0, 0, 255)
+        self.green_brush = pg.mkBrush(0, 255, 0, 255)
 
         for i in range(0, 10):
             for j in range(0, 10):
                 self.coordinates.append([i, j])
 
         for elem in self.coordinates:
-            self.brushes.append(pg.mkBrush(0, 255, 255, 255))
+            self.brushes.append(self.blue_brush)
 
         self.graphWidget = pg.PlotWidget(parent=self)
         layout.addWidget(self.graphWidget)
@@ -36,6 +39,7 @@ class ProbeWidget(QtWidgets.QWidget):
         self.graphWidget.hideAxis('bottom')
 
     def plot_points(self, coords, dirty):
+        self.brushes[self.currentchannel] = self.green_brush
         scatterplot = pg.ScatterPlotItem(pos = coords, brush=self.brushes)
         scatterplot.sigClicked.connect(self.points_clicked)
         self.graphWidget.addItem(scatterplot)
@@ -43,9 +47,13 @@ class ProbeWidget(QtWidgets.QWidget):
     def points_clicked(self, item, points, ev):
         point = points[0]
         x, y = point.pos().x(), point.pos().y()
+        self.brushes[self.currentchannel] = self.blue_brush
+        self.lastchannel = self.currentchannel
+        self.currentchannel = self.coordinates.index([x, y])
         try:
             #self.set_dirty(self.coordinates.index([x, y]))
             self.select_channel(self.coordinates.index([x, y]))
+            self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
         except ValueError:
             print('couldnt be found')
         ev.accept()
@@ -62,7 +70,7 @@ class ProbeWidget(QtWidgets.QWidget):
         self.chosenCoordsArr = probe.probes[0].contact_positions
         self.brushes.clear()
         for elem in self.coordinates:
-            self.brushes.append(pg.mkBrush(0, 255, 255, 255))
+            self.brushes.append(self.blue_brush)
         self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
 
     def reset_to_standard_grid(self):
@@ -74,7 +82,7 @@ class ProbeWidget(QtWidgets.QWidget):
         for i in range(0, math.ceil(math.sqrt(coordCount))):
             for j in range(0, math.ceil(math.sqrt(coordCount))):
                 self.coordinates.append([i, j])
-                self.brushes.append(pg.mkBrush(0, 255, 255, 255))
+                self.brushes.append(self.blue_brush)
         #print(self.coordinates)
         self.graphWidget.clear()
         self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
@@ -138,8 +146,6 @@ class ProbeWidget(QtWidgets.QWidget):
                 The channel id of the item.
 
         """
-        self.lastchannel = self.currentchannel
-        self.currentchannel = channel
         lastchannel = self.lastchannel
         self.doChannel.emit(channel, lastchannel)
 
