@@ -18,7 +18,6 @@ class ProbeWidget(QtWidgets.QWidget):
         self.lastcannel = 1
         self.currentchannel = 1
         self.brushes = []
-        self.blackCoords = []
         self.blue_brush = pg.mkBrush(0, 0, 255, 255)
         self.red_brush = pg.mkBrush(255, 0, 0, 255)
         self.green_brush = pg.mkBrush(0, 255, 0, 255)
@@ -48,16 +47,15 @@ class ProbeWidget(QtWidgets.QWidget):
     def points_clicked(self, item, points, ev):
         point = points[0]
         x, y = point.pos().x(), point.pos().y()
-        if self.brushes[self.coordinates.index([x, y])] != pg.mkBrush(0, 0, 0, 255):
-            self.brushes[self.currentchannel] = self.blue_brush
-            self.lastchannel = self.currentchannel
-            self.currentchannel = self.coordinates.index([x, y])
-            try:
-                #self.set_dirty(self.coordinates.index([x, y]))
-                self.select_channel(self.coordinates.index([x, y]))
-                self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
-            except ValueError:
-                print('couldnt be found')
+        self.brushes[self.currentchannel] = self.blue_brush
+        self.lastchannel = self.currentchannel
+        self.currentchannel = self.coordinates.index([x, y])
+        try:
+            #self.set_dirty(self.coordinates.index([x, y]))
+            self.select_channel(self.coordinates.index([x, y]))
+            self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
+        except ValueError:
+            print('couldnt be found')
         ev.accept()
 
     def load_geometry(self, filename):
@@ -68,8 +66,6 @@ class ProbeWidget(QtWidgets.QWidget):
         else: raise ValueError
         self.graphWidget.clear()
         self.coordinates = probe.probes[0].contact_positions.tolist()
-        self.chosenCoordsLi = probe.probes[0].contact_positions.tolist()
-        self.chosenCoordsArr = probe.probes[0].contact_positions
         self.brushes.clear()
         for elem in self.coordinates:
             self.brushes.append(self.blue_brush)
@@ -80,15 +76,14 @@ class ProbeWidget(QtWidgets.QWidget):
         coordCount = len(self.coordinates)
         self.coordinates.clear()
         self.brushes.clear()
-        self.blackCoords.clear()
 
         for i in range(0, math.ceil(math.sqrt(coordCount))):
             for j in range(0, math.ceil(math.sqrt(coordCount))):
                 self.coordinates.append([i, j])
                 self.brushes.append(self.blue_brush)
-        for k in range(1, len(self.coordinates)-coordCount+1):
-            self.brushes[-k] = pg.mkBrush(0, 0, 0, 255)
-            self.blackCoords.append(self.coordinates[-k])
+        difference = len(self.coordinates)-coordCount
+        self.coordinates = self.coordinates[:-difference]
+        self.brushes = self.brushes[:-difference]
         #print(self.coordinates)
         self.graphWidget.clear()
         self.plot_points(numpy.array(self.coordinates), self.dirty_channels)
