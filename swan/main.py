@@ -299,7 +299,6 @@ class Main(QtWidgets.QMainWindow):
         WORK IN PROGRESS
 
         """
-        print('reset probe layout: passed')
         self.ui.probe_view.reset_to_standard_grid()
 
     @QtCore.pyqtSlot(name="")
