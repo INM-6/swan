@@ -1,4 +1,4 @@
-Copyright (c) 2013-2015, Swan authors and contributors
+Copyright (c) 2013-2023, Forschungszentrum Jülich GmbH, INM-6, IAS-6
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
