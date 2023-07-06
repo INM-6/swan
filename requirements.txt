@@ -9,6 +9,6 @@ pyopengl==3.1.5
 matplotlib==3.4.2
 scikit-learn==0.24.2
 psutil==5.8.0
-scipy==1.6.3
+scipy==1.10.0
 pandas==1.2.4
 colorcet==2.0.6
